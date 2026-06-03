@@ -54,7 +54,8 @@ export default function HomePage() {
       </div>
 
       {/* Categories */}
-      <section className="py-14 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="py-14 sm:py-16 bg-[#0a0a0a] max-w-full px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto">
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-1">Categorias</p>
@@ -80,6 +81,7 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+        </div>
       </section>
 
       {/* Featured Products */}
@@ -103,7 +105,8 @@ export default function HomePage() {
       </section>
 
       {/* Services */}
-      <section className="py-14 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="py-14 sm:py-16 bg-[#0a0a0a]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-1">Assistência Técnica</p>
@@ -154,6 +157,7 @@ export default function HomePage() {
               Agendar agora <ArrowRight size={16} />
             </Link>
           </div>
+        </div>
         </div>
       </section>
 
