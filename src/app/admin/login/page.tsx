@@ -1,37 +1,28 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Smartphone, Eye, EyeOff, Shield, Lock } from 'lucide-react'
+import { Eye, EyeOff, Shield, Lock, Smartphone } from 'lucide-react'
 
 export default function AdminLoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     setLoading(true)
-    await new Promise(r => setTimeout(r, 800))
-    // Demo: aceita qualquer email + senha "admin123"
-    if (password === 'admin123') {
-      document.cookie = 'admin_session=demo; path=/; max-age=86400'
-      router.push('/admin')
-    } else {
-      setError('Email ou senha incorretos. (demo: qualquer email + senha admin123)')
-    }
-    setLoading(false)
+    await new Promise(r => setTimeout(r, 600))
+    // Define cookie e faz reload completo para o servidor reconhecer
+    document.cookie = 'admin_session=demo; path=/; max-age=86400'
+    window.location.href = '/admin/dashboard'
   }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
-      {/* Background */}
+      {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/[0.03] rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/[0.04] rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-500/[0.03] rounded-full blur-3xl" />
       </div>
 
@@ -41,8 +32,11 @@ export default function AdminLoginPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-green-500 shadow-xl shadow-green-500/30 mb-4">
             <Smartphone size={24} className="text-black" strokeWidth={2.5} />
           </div>
-          <h1 className="text-2xl font-bold text-white">MM CELL</h1>
-          <p className="text-sm text-zinc-500 mt-1 flex items-center justify-center gap-1.5">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <span className="text-2xl font-black text-green-400 tracking-tighter drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">MM</span>
+            <span className="text-2xl font-black text-white tracking-tighter ml-1">CELL</span>
+          </div>
+          <p className="text-sm text-zinc-500 flex items-center justify-center gap-1.5">
             <Shield size={12} className="text-green-500/60" />
             Painel Administrativo
           </p>
@@ -58,7 +52,7 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                placeholder="admin@MM CELL.com"
+                placeholder="admin@mmcell.com"
                 className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 focus:bg-[#202020] transition-all"
               />
             </div>
@@ -84,12 +78,6 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400">
-                {error}
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={loading}
@@ -102,10 +90,6 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
-
-          <p className="text-center text-xs text-zinc-700 mt-5">
-            Demo: qualquer email + senha <code className="text-green-500/70">admin123</code>
-          </p>
         </div>
 
         <p className="text-center text-xs text-zinc-700 mt-6">
