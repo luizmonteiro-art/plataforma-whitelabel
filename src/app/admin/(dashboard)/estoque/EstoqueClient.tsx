@@ -10,7 +10,7 @@ interface Props { initialProducts: Product[] }
 const emptyForm = {
   name: '', brand: '', category: 'iphone' as ProductCategory,
   condition: 'lacrado' as ProductCondition, price: '', promo_price: '',
-  stock_qty: '', description: '',
+  stock_qty: '', description: '', images: '',
 }
 
 export function EstoqueClient({ initialProducts }: Props) {
@@ -27,12 +27,16 @@ export function EstoqueClient({ initialProducts }: Props) {
 
   const openNew = () => { setForm(emptyForm); setEditProduct(null); setShowForm(true) }
 
+  const parseImages = (raw: string) =>
+    raw.split(',').map(s => s.trim()).filter(Boolean)
+
   const openEdit = (p: Product) => {
     setForm({
       name: p.name, brand: p.brand, category: p.category,
       condition: p.condition, price: String(p.price),
       promo_price: p.promo_price ? String(p.promo_price) : '',
       stock_qty: String(p.stock_qty), description: p.description,
+      images: p.images.join(', '),
     })
     setEditProduct(p)
     setShowForm(true)
@@ -40,21 +44,27 @@ export function EstoqueClient({ initialProducts }: Props) {
 
   const handleSave = () => {
     if (!form.name || !form.price || !form.stock_qty) return
+    const parsedImages = parseImages(form.images)
     if (editProduct) {
       setProducts(prev => prev.map(p => p.id === editProduct.id ? {
         ...p, ...form,
         price: Number(form.price),
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
         stock_qty: Number(form.stock_qty),
+        images: parsedImages,
       } : p))
     } else {
       const newProduct: Product = {
         id: String(Date.now()),
         slug: form.name.toLowerCase().replace(/\s+/g, '-'),
-        images: [],
         is_featured: false, is_active: true,
         created_at: new Date().toISOString(),
-        ...form,
+        name: form.name,
+        brand: form.brand,
+        category: form.category,
+        condition: form.condition,
+        description: form.description,
+        images: parsedImages,
         price: Number(form.price),
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
         stock_qty: Number(form.stock_qty),
@@ -111,12 +121,14 @@ export function EstoqueClient({ initialProducts }: Props) {
                 <tr key={p.id} className="hover:bg-white/[0.02] transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0">
-                        <Package size={14} className="text-zinc-600" />
+                      <div className="w-9 h-9 rounded-lg bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden">
+                        {p.images[0]
+                          ? <img src={p.images[0]} alt="" className="w-full h-full object-cover" />
+                          : <Package size={14} className="text-zinc-600" />}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-white truncate max-w-[160px]">{p.name}</p>
-                        <p className="text-xs text-zinc-600">{p.brand}</p>
+                        <p className="text-xs text-zinc-600">{p.brand} · {p.images.length} foto{p.images.length !== 1 ? 's' : ''}</p>
                       </div>
                     </div>
                   </td>
@@ -210,6 +222,21 @@ export function EstoqueClient({ initialProducts }: Props) {
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Qtd. em estoque *</label>
                   <input type="number" value={form.stock_qty} onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))} placeholder="5" className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Fotos (URLs separadas por vírgula)</label>
+                  <textarea value={form.images} onChange={e => setForm(f => ({ ...f, images: e.target.value }))} rows={2} placeholder="https://... , https://... , https://..." className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 resize-none transition-all font-mono text-xs" />
+                  <p className="text-[10px] text-zinc-700 mt-1">Cole links de imagens separados por vírgula. A 1ª foto é a principal; as demais aparecem no swipe.</p>
+                  {/* Preview das fotos cadastradas */}
+                  {parseImages(form.images).length > 0 && (
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {parseImages(form.images).map((url, i) => (
+                        <div key={i} className="w-12 h-12 rounded-lg overflow-hidden border border-white/[0.08] bg-[#111]">
+                          <img src={url} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Descrição</label>

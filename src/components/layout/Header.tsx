@@ -28,8 +28,8 @@ function MMLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   const sizes = { sm: 'text-lg', md: 'text-xl', lg: 'text-2xl' }
   return (
     <span className={cn('flex items-center select-none leading-none', sizes[size])}>
-      <span className="font-black text-green-400 tracking-tighter drop-shadow-[0_0_8px_rgba(34,197,94,0.7)]">MM</span>
-      <span className="font-black text-white tracking-tighter ml-1">CELL</span>
+      <span className="font-black text-green-400 tracking-tighter drop-shadow-[0_0_10px_rgba(34,197,94,0.8)] [text-shadow:0_1px_3px_rgba(0,0,0,0.8)]">MM</span>
+      <span className="font-black text-white tracking-tighter ml-1 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">CELL</span>
     </span>
   )
 }
@@ -64,8 +64,8 @@ export function Header() {
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
           scrolled
-            ? 'bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/30'
-            : 'bg-transparent'
+            ? 'bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/30'
+            : 'bg-gradient-to-b from-black/60 to-transparent backdrop-blur-[2px]'
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
