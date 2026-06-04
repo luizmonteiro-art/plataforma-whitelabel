@@ -79,20 +79,20 @@ export default function HomePage() {
             Ver tudo <ArrowRight size={14} />
           </Link>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* Carrossel deslizável — arraste para os lados */}
+        <div className="flex gap-3 overflow-x-auto scroll-hidden snap-x snap-mandatory pb-2 cursor-grab active:cursor-grabbing">
           {categoryCards.map(({ href, label, sublabel, iconKey, count }) => (
             <Link
               key={href}
               href={href}
-              className="group flex flex-col items-center gap-3 p-4 rounded-2xl bg-[#141414] border border-white/[0.06] hover:border-green-500/25 hover:bg-[#1a1a1a] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/[0.06] text-center"
+              className="group snap-start shrink-0 w-[130px] sm:w-[150px] flex flex-col items-center gap-3 p-4 rounded-2xl bg-[#141414] border border-white/[0.06] hover:border-green-500/30 hover:bg-[#1a1a1a] active:scale-95 transition-all duration-200 hover:shadow-lg hover:shadow-green-500/[0.08] text-center"
             >
-              {/* Ícone de marca com halo de glow no hover */}
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center group-hover:scale-110 group-hover:border-white/[0.15] transition-all duration-300 shadow-inner">
+              <div className="w-12 h-12 rounded-2xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center group-hover:scale-110 group-hover:border-green-500/25 active:scale-90 transition-all duration-200">
                 {categoryIcons[iconKey]}
               </div>
               <div>
-                <p className="text-xs sm:text-sm font-semibold text-white group-hover:text-green-400 transition-colors">{label}</p>
-                <p className="text-[10px] sm:text-xs text-zinc-600 hidden sm:block mt-0.5">{sublabel}</p>
+                <p className="text-xs font-semibold text-white group-hover:text-green-400 transition-colors leading-tight">{label}</p>
+                <p className="text-[10px] text-zinc-600 mt-0.5 leading-tight">{sublabel}</p>
               </div>
               <span className="text-[10px] font-medium text-green-500/60 bg-green-500/[0.07] px-2 py-0.5 rounded-full">{count} itens</span>
             </Link>

@@ -9,6 +9,7 @@ import {
   MessageCircle, AtSign, ChevronDown
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CustomerMenu } from './CustomerMenu'
 
 const navLinks = [
   { href: '/loja', label: 'Loja', icon: Smartphone },
@@ -69,6 +70,11 @@ export function Header() {
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+
+          {/* ── Menu cliente (esquerda) ── */}
+          <div className="mr-2">
+            <CustomerMenu />
+          </div>
 
           {/* ── LOGO animado ── */}
           <Link
