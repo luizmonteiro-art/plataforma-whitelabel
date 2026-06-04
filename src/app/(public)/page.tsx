@@ -1,20 +1,34 @@
 ﻿import Link from 'next/link'
-import { Smartphone, Battery, Monitor, Plug, HardDrive, Cpu, Sparkles, Camera, ArrowRight, Star, Shield, Clock, Wrench, CheckCircle } from 'lucide-react'
+import { Battery, Monitor, Plug, HardDrive, Cpu, Sparkles, Camera, ArrowRight, Star, Shield, Clock, Wrench, CheckCircle } from 'lucide-react'
 import { HeroBanner } from '@/components/store/HeroBanner'
 import { ProductCard } from '@/components/store/ProductCard'
 import { mockBanners, mockProducts, mockServices } from '@/data/mock'
+import {
+  AppleLogo, AndroidLogo, PhoneCaseLogo,
+  ScreenProtectorLogo, ChargerLogo, WrenchToolsLogo
+} from '@/components/icons/BrandIcons'
 
 const serviceIconMap: Record<string, React.ElementType> = {
   Monitor, Battery, Plug, HardDrive, Cpu, Sparkles, Camera, Wrench,
 }
 
+// Ícones SVG de marca para cada categoria
+const categoryIcons: Record<string, React.ReactNode> = {
+  iphone: <AppleLogo size={32} className="text-white" />,
+  android: <AndroidLogo size={32} className="text-[#3DDC84]" />,
+  capinha: <PhoneCaseLogo size={30} className="text-blue-400" />,
+  pelicula: <ScreenProtectorLogo size={30} className="text-cyan-400" />,
+  carregador: <ChargerLogo size={30} className="text-yellow-400" />,
+  assistencia: <WrenchToolsLogo size={30} className="text-orange-400" />,
+}
+
 const categoryCards = [
-  { href: '/loja?categoria=iphone', label: 'iPhones', sublabel: 'Apple', icon: '🍎', count: mockProducts.filter(p => p.category === 'iphone').length },
-  { href: '/loja?categoria=android', label: 'Android', sublabel: 'Samsung & mais', icon: '🤖', count: mockProducts.filter(p => p.category === 'android').length },
-  { href: '/loja?categoria=capinha', label: 'Capinhas', sublabel: 'Cases & covers', icon: '📱', count: mockProducts.filter(p => p.category === 'capinha').length },
-  { href: '/loja?categoria=pelicula', label: 'Películas', sublabel: 'Proteção de tela', icon: '🛡️', count: mockProducts.filter(p => p.category === 'pelicula').length },
-  { href: '/loja?categoria=carregador', label: 'Carregadores', sublabel: 'Originais & compatíveis', icon: '⚡', count: mockProducts.filter(p => p.category === 'carregador').length },
-  { href: '/servicos', label: 'Assistência', sublabel: 'Técnica especializada', icon: '🔧', count: mockServices.length },
+  { href: '/loja?categoria=iphone', label: 'iPhones', sublabel: 'Apple', iconKey: 'iphone', count: mockProducts.filter(p => p.category === 'iphone').length },
+  { href: '/loja?categoria=android', label: 'Android', sublabel: 'Samsung & mais', iconKey: 'android', count: mockProducts.filter(p => p.category === 'android').length },
+  { href: '/loja?categoria=capinha', label: 'Capinhas', sublabel: 'Cases & covers', iconKey: 'capinha', count: mockProducts.filter(p => p.category === 'capinha').length },
+  { href: '/loja?categoria=pelicula', label: 'Películas', sublabel: 'Proteção de tela', iconKey: 'pelicula', count: mockProducts.filter(p => p.category === 'pelicula').length },
+  { href: '/loja?categoria=carregador', label: 'Carregadores', sublabel: 'Originais & compatíveis', iconKey: 'carregador', count: mockProducts.filter(p => p.category === 'carregador').length },
+  { href: '/servicos', label: 'Assistência', sublabel: 'Técnica especializada', iconKey: 'assistencia', count: mockServices.length },
 ]
 
 const benefits = [
@@ -66,18 +80,21 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {categoryCards.map(({ href, label, sublabel, icon, count }) => (
+          {categoryCards.map(({ href, label, sublabel, iconKey, count }) => (
             <Link
               key={href}
               href={href}
-              className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-[#141414] border border-white/[0.06] hover:border-green-500/25 hover:bg-[#1a1a1a] transition-all duration-300 hover:-translate-y-1 text-center"
+              className="group flex flex-col items-center gap-3 p-4 rounded-2xl bg-[#141414] border border-white/[0.06] hover:border-green-500/25 hover:bg-[#1a1a1a] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/[0.06] text-center"
             >
-              <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">{icon}</span>
+              {/* Ícone de marca com halo de glow no hover */}
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center group-hover:scale-110 group-hover:border-white/[0.15] transition-all duration-300 shadow-inner">
+                {categoryIcons[iconKey]}
+              </div>
               <div>
                 <p className="text-xs sm:text-sm font-semibold text-white group-hover:text-green-400 transition-colors">{label}</p>
-                <p className="text-[10px] sm:text-xs text-zinc-600 hidden sm:block">{sublabel}</p>
+                <p className="text-[10px] sm:text-xs text-zinc-600 hidden sm:block mt-0.5">{sublabel}</p>
               </div>
-              <span className="text-[10px] font-medium text-green-500/70">{count} itens</span>
+              <span className="text-[10px] font-medium text-green-500/60 bg-green-500/[0.07] px-2 py-0.5 rounded-full">{count} itens</span>
             </Link>
           ))}
         </div>

@@ -1,6 +1,7 @@
 ﻿import Link from 'next/link'
 import Image from 'next/image'
 import { cn, formatCurrency, conditionLabel, conditionColor } from '@/lib/utils'
+import { BrandIcon } from '@/components/icons/BrandIcons'
 import type { Product } from '@/types'
 
 interface ProductCardProps {
@@ -69,7 +70,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
       {/* Content */}
       <div className="flex flex-col flex-1 p-3 sm:p-4 gap-2">
         <div>
-          <p className="text-[11px] text-zinc-600 uppercase font-medium tracking-wider mb-0.5">{product.brand}</p>
+          {/* Logo da marca + nome da marca */}
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-zinc-500 group-hover:text-zinc-300 transition-colors">
+              <BrandIcon brand={product.brand} size={13} />
+            </span>
+            <p className="text-[10px] text-zinc-600 uppercase font-medium tracking-wider">{product.brand}</p>
+          </div>
           <h3 className="text-sm font-semibold text-white leading-tight line-clamp-2 group-hover:text-green-400 transition-colors">
             {product.name}
           </h3>
