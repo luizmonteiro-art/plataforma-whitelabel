@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const WHATSAPP = '5511999999999'
+const WHATSAPP = '5519981499229'
 
 const menuSections = [
   {
@@ -30,7 +30,7 @@ const menuSections = [
   {
     title: 'Contato',
     items: [
-      { icon: Phone, label: '(11) 99999-9999', href: 'tel:+5511999999999', msg: '' },
+      { icon: Phone, label: '(11) 99999-9999', href: 'tel:+5519981499229', msg: '' },
       { icon: MapPin, label: 'Nossa localização', href: '/sobre', msg: 'Olá! Preciso do endereço da loja.' },
       { icon: Clock, label: 'Seg–Sex 08h–18h', href: '/sobre', msg: '' },
       { icon: AtSign, label: '@mmcell', href: 'https://instagram.com/mmcell', msg: '' },

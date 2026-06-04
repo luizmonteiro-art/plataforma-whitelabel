@@ -1,5 +1,7 @@
-﻿import Link from 'next/link'
-import { Smartphone, MapPin, Clock, Phone, AtSign, MessageCircle } from 'lucide-react'
+import Link from 'next/link'
+import { MapPin, Clock, Phone, AtSign, MessageCircle } from 'lucide-react'
+
+const WA = 'https://wa.me/5519981499229'
 
 export function Footer() {
   return (
@@ -17,25 +19,25 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-3">
               <a
-                href="https://instagram.com"
+                href="https://instagram.com/mmcell"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-green-400 hover:border-green-500/30 hover:bg-green-500/10 transition-all"
+                className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-green-400 hover:border-green-500/30 hover:bg-green-500/10 transition-all active:scale-90"
               >
                 <AtSign size={16} />
               </a>
               <a
-                href="https://wa.me/5511999999999"
+                href={WA}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/10 transition-all"
+                className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/10 transition-all active:scale-90"
               >
                 <MessageCircle size={16} />
               </a>
             </div>
           </div>
 
-          {/* Links */}
+          {/* Navegação */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Navegação</h3>
             <ul className="space-y-2">
@@ -60,14 +62,7 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Serviços</h3>
             <ul className="space-y-2">
-              {[
-                'Troca de Tela',
-                'Troca de Bateria',
-                'Reparo de Conector',
-                'Desbloqueio',
-                'Recuperação de Dados',
-                'Reparo de Placa',
-              ].map((s) => (
+              {['Troca de Tela', 'Troca de Bateria', 'Reparo de Conector', 'Desbloqueio', 'Recuperação de Dados', 'Reparo de Placa'].map((s) => (
                 <li key={s}>
                   <Link href="/servicos" className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
                     {s}
@@ -87,8 +82,8 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={16} className="text-green-500 shrink-0" />
-                <a href="tel:+5511999999999" className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
-                  (11) 99999-9999
+                <a href="tel:+5519981499229" className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
+                  (19) 98149-9229
                 </a>
               </li>
               <li className="flex items-start gap-3">
@@ -99,18 +94,24 @@ export function Footer() {
                   <span className="text-zinc-600">Domingo: Fechado</span>
                 </span>
               </li>
+              <li>
+                <a
+                  href={`${WA}?text=${encodeURIComponent('Olá! Vim pelo site da MM CELL.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-medium transition-all active:scale-95"
+                >
+                  <MessageCircle size={13} /> Falar no WhatsApp
+                </a>
+              </li>
             </ul>
           </div>
         </div>
 
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-zinc-600">
-            © 2024 MM CELL. Todos os direitos reservados.
-          </p>
-          <p className="text-xs text-zinc-700">
-            Feito com dedicação para você
-          </p>
+          <p className="text-xs text-zinc-600">© 2024 MM CELL. Todos os direitos reservados.</p>
+          <p className="text-xs text-zinc-700">Feito com dedicação para você</p>
         </div>
       </div>
     </footer>

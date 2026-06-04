@@ -19,8 +19,8 @@ const navLinks = [
 ]
 
 const quickInfo = [
-  { icon: Phone, label: '(11) 99999-9999', href: 'tel:+5511999999999', color: 'text-green-400' },
-  { icon: MessageCircle, label: 'WhatsApp', href: 'https://wa.me/5511999999999', color: 'text-emerald-400' },
+  { icon: Phone, label: '(11) 99999-9999', href: 'tel:+5519981499229', color: 'text-green-400' },
+  { icon: MessageCircle, label: 'WhatsApp', href: 'https://wa.me/5519981499229', color: 'text-emerald-400' },
   { icon: MapPin, label: 'Centro — São Paulo/SP', href: '/sobre', color: 'text-blue-400' },
   { icon: Clock, label: 'Seg–Sex 08h–18h | Sáb 08h–13h', href: '/sobre', color: 'text-zinc-400' },
 ]
@@ -245,11 +245,11 @@ export function Header() {
 
         {/* Info rápida */}
         <div className="px-4 py-3 border-b border-white/[0.04] space-y-1">
-          <a href="tel:+5511999999999" className="flex items-center gap-2.5 py-1.5">
+          <a href="tel:+5519981499229" className="flex items-center gap-2.5 py-1.5">
             <Phone size={13} className="text-green-400 shrink-0" />
             <span className="text-xs text-zinc-400">(11) 99999-9999</span>
           </a>
-          <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 py-1.5">
+          <a href="https://wa.me/5519981499229" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 py-1.5">
             <MessageCircle size={13} className="text-emerald-400 shrink-0" />
             <span className="text-xs text-zinc-400">WhatsApp — clique para conversar</span>
           </a>
