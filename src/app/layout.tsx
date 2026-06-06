@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MM CELL — Loja de Celulares & Assistência Técnica",
+  title: "M CELL — Loja de Celulares & Assistência Técnica",
   description: "iPhones lacrados e seminovos, Android, acessórios e assistência técnica especializada. Agende seu serviço online.",
   keywords: ["iphone", "celular", "assistência técnica", "troca de tela", "bateria", "seminovo"],
 };
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${inter.variable} h-full antialiased`} style={{ backgroundColor: '#0a0a0a' }}>
       <body className="min-h-full flex flex-col bg-[#0a0a0a] text-white font-[family-name:var(--font-inter)]">
         {children}
       </body>

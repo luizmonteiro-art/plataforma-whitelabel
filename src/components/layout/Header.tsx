@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   Menu, X, Smartphone, Wrench, Calendar, Info,
@@ -25,12 +26,25 @@ const quickInfo = [
   { icon: Clock, label: 'Seg–Sex 08h–18h | Sáb 08h–13h', href: '/sobre', color: 'text-zinc-400' },
 ]
 
-function MMLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const sizes = { sm: 'text-lg', md: 'text-xl', lg: 'text-2xl' }
+const logoHeights = { sm: 28, md: 36, lg: 44 }
+
+function MCellLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+  const h = logoHeights[size]
   return (
-    <span className={cn('flex items-center select-none leading-none', sizes[size])}>
-      <span className="font-black text-green-400 tracking-tighter drop-shadow-[0_0_10px_rgba(34,197,94,0.8)] [text-shadow:0_1px_3px_rgba(0,0,0,0.8)]">MM</span>
-      <span className="font-black text-white tracking-tighter ml-1 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">CELL</span>
+    <span className="flex items-center gap-2 select-none leading-none">
+      <Image
+        src="/mcelllogo.jpeg"
+        alt="M CELL"
+        height={h}
+        width={h}
+        className="object-contain rounded-sm drop-shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+        priority
+      />
+      <span className="flex flex-col leading-none">
+        <span className={cn('font-black text-white tracking-tight', size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-lg' : 'text-sm')}>
+          M <span className="text-green-400">CELL</span>
+        </span>
+      </span>
     </span>
   )
 }
@@ -91,7 +105,7 @@ export function Header() {
               drop-shadow-[0_0_0px_rgba(34,197,94,0)]
               group-hover:drop-shadow-[0_0_12px_rgba(34,197,94,0.5)]"
             >
-              <MMLogo size="md" />
+              <MCellLogo size="md" />
             </span>
             <span className="hidden sm:inline text-[9px] font-semibold text-green-500/50 uppercase tracking-widest border border-green-500/20 px-1.5 py-0.5 rounded transition-all group-hover:border-green-500/40 group-hover:text-green-400/70">
               Store
@@ -140,7 +154,7 @@ export function Header() {
                 <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl bg-[#161616] border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden">
                   <div className="px-4 py-3 border-b border-white/[0.06]">
                     <div className="flex items-center gap-1.5">
-                      <MMLogo size="sm" />
+                      <MCellLogo size="sm" />
                       <span className="text-[10px] text-zinc-600 ml-1">Celulares & Assistência Técnica</span>
                     </div>
                   </div>
@@ -230,10 +244,8 @@ export function Header() {
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 leading-none select-none">
-              <span className="text-lg font-black text-green-400 tracking-tighter drop-shadow-[0_0_6px_rgba(34,197,94,0.6)]">MM</span>
-              <span className="text-lg font-black text-white tracking-tighter ml-1">CELL</span>
-            </span>
+            <Image src="/mcelllogo.jpeg" alt="M CELL" height={28} width={28} className="object-contain rounded-sm" />
+            <span className="text-sm font-black text-white">M <span className="text-green-400">CELL</span></span>
           </div>
           <button
             onClick={() => setDrawerOpen(false)}

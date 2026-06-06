@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Menu, X, Smartphone, Wrench, Calendar, MapPin,
   Phone, MessageCircle, Package, Info, Clock, AtSign, ChevronRight
@@ -83,9 +84,9 @@ export function CustomerMenu() {
           <div className="absolute left-0 top-full mt-2 w-[280px] sm:w-[300px] rounded-2xl bg-[#111] border border-white/[0.08] shadow-2xl shadow-black/60 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
             {/* Header */}
             <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
-              <div className="flex items-center gap-1.5 select-none">
-                <span className="text-base font-black text-green-400 tracking-tighter drop-shadow-[0_0_8px_rgba(34,197,94,0.7)]">MM</span>
-                <span className="text-base font-black text-white tracking-tighter ml-0.5">CELL</span>
+              <div className="flex items-center gap-2">
+                <Image src="/mcelllogo.jpeg" alt="M CELL" height={22} width={22} className="object-contain rounded-sm" />
+                <span className="text-sm font-black text-white">M <span className="text-green-400">CELL</span></span>
               </div>
               <span className="text-[10px] text-zinc-600">Celulares & Assistência</span>
             </div>
@@ -134,7 +135,7 @@ export function CustomerMenu() {
             {/* WhatsApp CTA fixo */}
             <div className="p-3 border-t border-white/[0.06]">
               <a
-                href={whatsappHref('Olá! Vim pelo site da MM CELL e gostaria de mais informações.')}
+                href={whatsappHref('Olá! Vim pelo site da M CELL e gostaria de mais informações.')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-emerald-500/20"
@@ -161,7 +162,7 @@ export function WhatsAppFloat() {
 
   return (
     <a
-      href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent('Olá! Vim pelo site da MM CELL.')}`}
+      href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent('Olá! Vim pelo site da M CELL.')}`}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-5 z-50 group"

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, EyeOff, Shield, Lock, Smartphone } from 'lucide-react'
+import Image from 'next/image'
+import { Eye, EyeOff, Shield, Lock } from 'lucide-react'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -29,13 +30,19 @@ export default function AdminLoginPage() {
       <div className="relative w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-green-500 shadow-xl shadow-green-500/30 mb-4">
-            <Smartphone size={24} className="text-black" strokeWidth={2.5} />
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/mcelllogo.jpeg"
+              alt="M CELL"
+              height={90}
+              width={90}
+              className="object-contain rounded-2xl drop-shadow-[0_0_28px_rgba(34,197,94,0.4)]"
+              priority
+            />
           </div>
-          <div className="flex items-center justify-center gap-1 mb-1">
-            <span className="text-2xl font-black text-green-400 tracking-tighter drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">MM</span>
-            <span className="text-2xl font-black text-white tracking-tighter ml-1">CELL</span>
-          </div>
+          <h1 className="text-2xl font-black text-white tracking-tight mb-1">
+            M <span className="text-green-400">CELL</span>
+          </h1>
           <p className="text-sm text-zinc-500 flex items-center justify-center gap-1.5">
             <Shield size={12} className="text-green-500/60" />
             Painel Administrativo
@@ -52,7 +59,7 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                placeholder="admin@mmcell.com"
+                placeholder="admin@mcell.com"
                 className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 focus:bg-[#202020] transition-all"
               />
             </div>

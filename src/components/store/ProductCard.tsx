@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ArrowRight } from 'lucide-react'
 import { cn, formatCurrency, conditionLabel, conditionColor } from '@/lib/utils'
 import { BrandIcon } from '@/components/icons/BrandIcons'
 import type { Product } from '@/types'
@@ -142,6 +143,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {product.stock_qty === 0 && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
             <span className="text-xs font-semibold text-zinc-300 bg-black/80 px-3 py-1 rounded-full">Esgotado</span>
+          </div>
+        )}
+
+        {/* Hover overlay — ver detalhes */}
+        {product.stock_qty > 0 && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-end justify-center pb-4 pointer-events-none">
+            <span className="flex items-center gap-1.5 px-4 py-1.5 bg-green-500 text-black text-xs font-bold rounded-full shadow-lg translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+              Ver detalhes <ArrowRight size={11} />
+            </span>
           </div>
         )}
       </div>

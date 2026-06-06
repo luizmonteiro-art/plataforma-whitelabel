@@ -1,15 +1,17 @@
 ﻿'use client'
 
 import { useState } from 'react'
-import { Settings, Save, Smartphone, Clock, Phone, MapPin, AtSign, Palette } from 'lucide-react'
+import { Settings, Save, Smartphone, Clock, Phone, MapPin, AtSign, Palette, RotateCcw, Database } from 'lucide-react'
+import { useAdminStore } from '@/contexts/AdminStore'
 
 export default function ConfiguracoesAdminPage() {
+  const { resetToDefaults, products, serviceOrders, appointments } = useAdminStore()
   const [config, setConfig] = useState({
-    store_name: 'MM CELL',
+    store_name: 'M CELL',
     whatsapp: '11999999999',
     phone: '(11) 99999-9999',
     address: 'Rua das Flores, 123 — Centro, São Paulo/SP',
-    instagram: '@MM CELLstore',
+    instagram: '@M CELLstore',
     hours_weekday: '08:00 - 18:00',
     hours_saturday: '08:00 - 13:00',
     accent_color: '#22c55e',
@@ -24,7 +26,7 @@ export default function ConfiguracoesAdminPage() {
 
   const fields = [
     { section: 'Identidade da loja', icon: Smartphone, items: [
-      { key: 'store_name', label: 'Nome da loja', placeholder: 'MM CELL' },
+      { key: 'store_name', label: 'Nome da loja', placeholder: 'M CELL' },
       { key: 'about', label: 'Descrição / Sobre', placeholder: 'Descreva sua loja...', multiline: true },
     ]},
     { section: 'Contato', icon: Phone, items: [
@@ -111,13 +113,41 @@ export default function ConfiguracoesAdminPage() {
         </div>
       </div>
 
-      <button
-        onClick={handleSave}
-        className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-green-500/25 text-sm"
-      >
-        <Save size={15} />
-        {saved ? 'Salvo!' : 'Salvar configurações'}
-      </button>
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          onClick={handleSave}
+          className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-green-500/25 text-sm active:scale-95"
+        >
+          <Save size={15} />
+          {saved ? 'Salvo!' : 'Salvar configurações'}
+        </button>
+
+        {/* Status do store */}
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#141414] border border-white/[0.06]">
+          <Database size={13} className="text-green-400" />
+          <span className="text-xs text-zinc-400">
+            {products.length} produtos · {serviceOrders.length} O.S. · {appointments.length} agendamentos
+          </span>
+          <span className="text-[10px] text-green-500/60 bg-green-500/10 px-1.5 py-0.5 rounded-full font-medium">Salvo localmente</span>
+        </div>
+      </div>
+
+      {/* Reset */}
+      <div className="rounded-2xl bg-red-500/[0.04] border border-red-500/20 p-5">
+        <div className="flex items-start gap-4">
+          <RotateCcw size={18} className="text-red-400 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-white mb-0.5">Restaurar dados originais</p>
+            <p className="text-xs text-zinc-500 mb-4">Apaga todas as alterações feitas no admin e volta aos dados de demonstração. Esta ação não pode ser desfeita.</p>
+            <button
+              onClick={() => { if (confirm('Tem certeza? Todos os dados do admin serão resetados para o padrão.')) resetToDefaults() }}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/25 text-red-400 hover:bg-red-500/20 rounded-xl text-xs font-medium transition-all active:scale-95"
+            >
+              <RotateCcw size={13} /> Restaurar padrão
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

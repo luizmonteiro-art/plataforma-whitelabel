@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingCart, Wrench, Calendar,
-  Settings, Smartphone, ChevronLeft, ChevronRight, LogOut, Tag, X, Menu
+  Settings, Smartphone, ChevronLeft, ChevronRight, LogOut, Tag, X, Menu, FileText
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -15,7 +16,8 @@ const navItems = [
   { href: '/admin/vendas', label: 'Vendas', icon: ShoppingCart },
   { href: '/admin/servicos', label: 'Ordens de Serviço', icon: Wrench },
   { href: '/admin/agendamentos', label: 'Agendamentos', icon: Calendar },
-  { href: '/admin/promocoes', label: 'Promoções', icon: Tag },
+  { href: '/admin/orcamentos', label: 'Orçamentos', icon: FileText },
+  { href: '/admin/promocoes', label: 'Promoções & Feed', icon: Tag },
   { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
@@ -43,16 +45,22 @@ export function AdminSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }:
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={cn('flex items-center h-16 border-b border-white/[0.06] px-4', collapsed ? 'justify-center' : 'gap-2')}>
+      <div className={cn('flex items-center h-16 border-b border-white/[0.06] px-4', collapsed ? 'justify-center' : 'gap-3')}>
         {collapsed ? (
-          <span className="text-base font-black text-green-400 tracking-tighter drop-shadow-[0_0_6px_rgba(34,197,94,0.5)]">MM</span>
+          <span className="text-base font-black text-green-400 tracking-tighter drop-shadow-[0_0_6px_rgba(34,197,94,0.5)]">M</span>
         ) : (
-          <div className="flex flex-col leading-none select-none">
-            <div className="flex items-center gap-0.5">
-              <span className="text-base font-black text-green-400 tracking-tighter drop-shadow-[0_0_6px_rgba(34,197,94,0.5)]">MM</span>
-              <span className="text-base font-black text-white tracking-tighter ml-1">CELL</span>
+          <div className="flex items-center gap-2.5 select-none">
+            <Image
+              src="/mcelllogo.jpeg"
+              alt="M CELL"
+              height={28}
+              width={28}
+              className="object-contain rounded-sm drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+            />
+            <div className="flex flex-col leading-none">
+              <span className="text-sm font-black text-white tracking-tight">M <span className="text-green-400">CELL</span></span>
+              <p className="text-[9px] text-green-500/60 uppercase tracking-widest mt-0.5">Painel Admin</p>
             </div>
-            <p className="text-[9px] text-green-500/60 uppercase tracking-widest">Painel Admin</p>
           </div>
         )}
       </div>

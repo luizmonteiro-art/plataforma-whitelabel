@@ -26,7 +26,7 @@ export default function SobrePage() {
         {/* About */}
         <div>
           <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-1">Sobre nós</p>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-5">MM CELL</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-5">M CELL</h1>
           <div className="space-y-4 text-sm text-zinc-400 leading-relaxed">
             <p>Somos uma loja especializada em iPhones e smartphones, oferecendo aparelhos seminovos e lacrados com procedência garantida, além de assistência técnica especializada.</p>
             <p>Nossa missão é oferecer tecnologia de qualidade com atendimento próximo, transparente e preços justos. Cada aparelho passa por rigorosa avaliação antes de ser colocado à venda.</p>
@@ -46,7 +46,7 @@ export default function SobrePage() {
           {/* WhatsApp CTA */}
           <div className="mt-8">
             <a
-              href={`${WA}?text=${encodeURIComponent('Olá! Preciso de informações sobre a MM CELL.')}`}
+              href={`${WA}?text=${encodeURIComponent('Olá! Preciso de informações sobre a M CELL.')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 text-sm"

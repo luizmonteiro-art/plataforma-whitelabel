@@ -10,12 +10,12 @@ import type { Service } from '@/types'
 
 const schema = z.object({
   name: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
-  phone: z.string().min(10, 'Telefone inv�lido').max(20),
-  service_id: z.string().min(1, 'Selecione um servi�o'),
+  phone: z.string().min(10, 'Telefone inválido').max(20),
+  service_id: z.string().min(1, 'Selecione um serviço'),
   device: z.string().min(3, 'Descreva o aparelho'),
-  problem: z.string().min(10, 'Descreva o problema (m�n. 10 caracteres)'),
+  problem: z.string().min(10, 'Descreva o problema (mín. 10 caracteres)'),
   date: z.string().min(1, 'Selecione a data'),
-  time: z.string().min(1, 'Selecione o hor�rio'),
+  time: z.string().min(1, 'Selecione o horário'),
 })
 
 type FormData = z.infer<typeof schema>
@@ -54,9 +54,7 @@ export function AgendarClient({ services }: Props) {
   const selectedDate = watch('date')
   const selectedTime = watch('time')
   const selectedName = watch('name')
-  const selectedPhone = watch('phone')
   const selectedDevice = watch('device')
-  const selectedProblem = watch('problem')
 
   const onSubmit = async (data: FormData) => {
     await new Promise(r => setTimeout(r, 800))
@@ -66,13 +64,13 @@ export function AgendarClient({ services }: Props) {
   if (submitted) {
     const service = services.find(s => s.id === submitted.service_id)
     const msg = encodeURIComponent(
-      `Ol�! Gostaria de confirmar meu agendamento:\n\n` +
+      `Olá! Gostaria de confirmar meu agendamento:\n\n` +
       `*Nome:* ${submitted.name}\n` +
       `*Aparelho:* ${submitted.device}\n` +
-      `*Servi�o:* ${service?.name}\n` +
+      `*Serviço:* ${service?.name}\n` +
       `*Problema:* ${submitted.problem}\n` +
       `*Data:* ${new Date(submitted.date + 'T12:00:00').toLocaleDateString('pt-BR')}\n` +
-      `*Hor�rio:* ${submitted.time}`
+      `*Horário:* ${submitted.time}`
     )
 
     return (
@@ -102,7 +100,7 @@ export function AgendarClient({ services }: Props) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Personal */}
+      {/* Dados pessoais */}
       <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
         <div className="px-5 py-3.5 border-b border-white/[0.04]">
           <h3 className="text-sm font-semibold text-white">Seus dados</h3>
@@ -112,7 +110,7 @@ export function AgendarClient({ services }: Props) {
             <label className="block text-xs font-medium text-zinc-400 mb-1.5">Nome completo *</label>
             <input
               {...register('name')}
-              placeholder="Jo�o Silva"
+              placeholder="João Silva"
               className={cn(
                 'w-full bg-[#1a1a1a] border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:bg-[#202020] transition-all',
                 errors.name ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-green-500/40'
@@ -135,10 +133,10 @@ export function AgendarClient({ services }: Props) {
         </div>
       </div>
 
-      {/* Device + Service */}
+      {/* Aparelho e serviço */}
       <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
         <div className="px-5 py-3.5 border-b border-white/[0.04]">
-          <h3 className="text-sm font-semibold text-white">Aparelho e servi�o</h3>
+          <h3 className="text-sm font-semibold text-white">Aparelho e serviço</h3>
         </div>
         <div className="p-5 space-y-4">
           <div>
@@ -158,7 +156,7 @@ export function AgendarClient({ services }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Servi�o desejado *</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Serviço desejado *</label>
             <div className="relative">
               <select
                 {...register('service_id')}
@@ -167,10 +165,10 @@ export function AgendarClient({ services }: Props) {
                   errors.service_id ? 'border-red-500/50' : 'border-white/[0.08] focus:border-green-500/40'
                 )}
               >
-                <option value="">Selecione um servi�o...</option>
+                <option value="">Selecione um serviço...</option>
                 {services.map(s => (
                   <option key={s.id} value={s.id} className="bg-[#1a1a1a]">
-                    {s.name} � A partir de R$ {s.price_from}
+                    {s.name} — A partir de R$ {s.price_from}
                   </option>
                 ))}
               </select>
@@ -200,11 +198,11 @@ export function AgendarClient({ services }: Props) {
         </div>
       </div>
 
-      {/* Date + Time */}
+      {/* Data e horário */}
       <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
         <div className="px-5 py-3.5 border-b border-white/[0.04]">
-          <h3 className="text-sm font-semibold text-white">Data e hor�rio</h3>
-          <p className="text-xs text-zinc-600 mt-0.5">Atendemos de segunda a s�bado, das 08h �s 18h</p>
+          <h3 className="text-sm font-semibold text-white">Data e horário</h3>
+          <p className="text-xs text-zinc-600 mt-0.5">Atendemos de segunda a sábado, das 08h às 18h</p>
         </div>
         <div className="p-5 space-y-4">
           <div>
@@ -226,7 +224,7 @@ export function AgendarClient({ services }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-2">Hor�rio *</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-2">Horário *</label>
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
               {timeSlots.map(slot => {
                 const isSelected = watch('time') === slot
@@ -248,15 +246,15 @@ export function AgendarClient({ services }: Props) {
         </div>
       </div>
 
-      {/* Summary + Submit */}
+      {/* Resumo */}
       {selectedDate && selectedTime && selectedService && selectedName && (
         <div className="rounded-2xl bg-green-500/5 border border-green-500/20 p-4 text-sm">
           <p className="font-semibold text-green-400 mb-2">Resumo do agendamento</p>
           <div className="space-y-1 text-zinc-400 text-xs">
-            <p>Servi�o: <span className="text-white font-medium">{selectedService.name}</span></p>
+            <p>Serviço: <span className="text-white font-medium">{selectedService.name}</span></p>
             {selectedDevice && <p>Aparelho: <span className="text-white font-medium">{selectedDevice}</span></p>}
             <p>Data: <span className="text-white font-medium">{new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</span></p>
-            <p>Hor�rio: <span className="text-white font-medium">{selectedTime}</span></p>
+            <p>Horário: <span className="text-white font-medium">{selectedTime}</span></p>
           </div>
         </div>
       )}

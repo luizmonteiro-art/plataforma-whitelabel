@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { MapPin, Clock, Phone, AtSign, MessageCircle } from 'lucide-react'
 
 const WA = 'https://wa.me/5519981499229'
@@ -10,9 +11,12 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-1.5 leading-none select-none">
-              <span className="text-2xl font-black text-green-400 tracking-tighter drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">MM</span>
-              <span className="text-2xl font-black text-white tracking-tighter">CELL</span>
+            <div className="flex items-center gap-3">
+              <Image src="/mcelllogo.jpeg" alt="M CELL" height={40} width={40} className="object-contain rounded-lg drop-shadow-[0_0_10px_rgba(34,197,94,0.3)]" />
+              <div className="flex flex-col leading-none">
+                <span className="text-base font-black text-white tracking-tight">M <span className="text-green-400">CELL</span></span>
+                <span className="text-[10px] text-zinc-600 mt-0.5">Celulares & Assistência</span>
+              </div>
             </div>
             <p className="text-sm text-zinc-500 leading-relaxed">
               Sua loja especializada em iPhones e smartphones. Seminovos, lacrados e assistência técnica com garantia.
@@ -96,7 +100,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href={`${WA}?text=${encodeURIComponent('Olá! Vim pelo site da MM CELL.')}`}
+                  href={`${WA}?text=${encodeURIComponent('Olá! Vim pelo site da M CELL.')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-medium transition-all active:scale-95"
@@ -110,7 +114,7 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-zinc-600">© 2024 MM CELL. Todos os direitos reservados.</p>
+          <p className="text-xs text-zinc-600">© 2024 M CELL. Todos os direitos reservados.</p>
           <p className="text-xs text-zinc-700">Feito com dedicação para você</p>
         </div>
       </div>
