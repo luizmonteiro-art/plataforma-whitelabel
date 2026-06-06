@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Search, Edit2, Trash2, X, Package, ChevronDown, ArrowLeft } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Search, Edit2, Trash2, X, Package, ChevronDown, ArrowLeft, ImagePlus, Upload } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, categoryLabel, conditionLabel, conditionColor, cn } from '@/lib/utils'
 import { useProducts } from '@/contexts/AdminStore'
@@ -12,7 +12,7 @@ interface Props { initialProducts: Product[] }
 const emptyForm = {
   name: '', brand: '', category: 'iphone' as ProductCategory,
   condition: 'lacrado' as ProductCondition, price: '', promo_price: '',
-  stock_qty: '', description: '', images: '',
+  stock_qty: '', description: '', images: [] as string[],
 }
 
 export function EstoqueClient({ initialProducts: _ }: Props) {
@@ -23,6 +23,8 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -31,30 +33,57 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
 
   const openNew = () => { setForm(emptyForm); setEditProduct(null); setShowForm(true) }
 
-  const parseImages = (raw: string) => raw.split(',').map(s => s.trim()).filter(Boolean)
-
   const openEdit = (p: Product) => {
     setForm({
       name: p.name, brand: p.brand, category: p.category,
       condition: p.condition, price: String(p.price),
       promo_price: p.promo_price ? String(p.promo_price) : '',
       stock_qty: String(p.stock_qty), description: p.description,
-      images: p.images.join(', '),
+      images: [...p.images],
     })
     setEditProduct(p)
     setShowForm(true)
   }
 
+  // Converte arquivo(s) para base64 e adiciona ao form
+  const handleImageFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    Array.from(files).slice(0, 8).forEach(file => {
+      if (!file.type.startsWith('image/')) return
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string
+        setForm(f => ({ ...f, images: [...f.images, base64] }))
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const removeImage = (idx: number) => {
+    setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== idx) }))
+  }
+
+  // Drag-and-drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+  const handleDragLeave = () => setIsDragging(false)
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    handleImageFiles(e.dataTransfer.files)
+  }
+
   const handleSave = () => {
     if (!form.name || !form.price || !form.stock_qty) return
-    const parsedImages = parseImages(form.images)
     if (editProduct) {
       setProducts(prev => prev.map(p => p.id === editProduct.id ? {
         ...p, ...form,
         price: Number(form.price),
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
         stock_qty: Number(form.stock_qty),
-        images: parsedImages,
+        images: form.images,
       } : p))
     } else {
       const newProduct: Product = {
@@ -64,7 +93,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         created_at: new Date().toISOString(),
         name: form.name, brand: form.brand, category: form.category,
         condition: form.condition, description: form.description,
-        images: parsedImages,
+        images: form.images,
         price: Number(form.price),
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
         stock_qty: Number(form.stock_qty),
@@ -178,18 +207,25 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
               <h3 className="text-sm font-semibold text-white">{editProduct ? 'Editar produto' : 'Novo produto'}</h3>
               <button onClick={() => setShowForm(false)} className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-all"><X size={16} /></button>
             </div>
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+
+            <div className="p-6 space-y-4 max-h-[72vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
+
+                {/* Nome */}
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Nome *</label>
                   <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="iPhone 15 Pro..."
                     className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
                 </div>
+
+                {/* Marca */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Marca *</label>
                   <input value={form.brand} onChange={e => setForm(f => ({ ...f, brand: e.target.value }))} placeholder="Apple"
                     className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
                 </div>
+
+                {/* Categoria */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Categoria</label>
                   <div className="relative">
@@ -200,6 +236,8 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                     <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
                   </div>
                 </div>
+
+                {/* Condição */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Condição</label>
                   <div className="relative">
@@ -212,44 +250,121 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                     <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
                   </div>
                 </div>
+
+                {/* Preço */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Preço (R$) *</label>
                   <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="4299"
                     className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
                 </div>
+
+                {/* Preço promo */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Preço promo (R$)</label>
                   <input type="number" value={form.promo_price} onChange={e => setForm(f => ({ ...f, promo_price: e.target.value }))} placeholder="3899 (opcional)"
                     className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
                 </div>
+
+                {/* Qtd */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Qtd. em estoque *</label>
                   <input type="number" value={form.stock_qty} onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))} placeholder="5"
                     className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
                 </div>
+
+                {/* Upload de fotos */}
                 <div className="col-span-2">
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Fotos (URLs separadas por vírgula)</label>
-                  <textarea value={form.images} onChange={e => setForm(f => ({ ...f, images: e.target.value }))} rows={2}
-                    placeholder="https://... , https://..."
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 resize-none transition-all font-mono text-xs" />
-                  {parseImages(form.images).length > 0 && (
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {parseImages(form.images).map((url, i) => (
-                        <div key={i} className="w-12 h-12 rounded-lg overflow-hidden border border-white/[0.08] bg-[#111]">
-                          <img src={url} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  <label className="block text-xs font-medium text-zinc-400 mb-2">
+                    Fotos do produto
+                    <span className="text-zinc-600 font-normal ml-1">({form.images.length}/8 adicionadas)</span>
+                  </label>
+
+                  {/* Zona de upload */}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={cn(
+                      'relative flex flex-col items-center justify-center gap-2 py-6 rounded-xl border-2 border-dashed cursor-pointer transition-all',
+                      isDragging
+                        ? 'border-green-500/60 bg-green-500/5'
+                        : 'border-white/[0.10] bg-[#1a1a1a] hover:border-green-500/40 hover:bg-green-500/[0.03]'
+                    )}
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                      {isDragging
+                        ? <Upload size={18} className="text-green-400" />
+                        : <ImagePlus size={18} className="text-green-400" />
+                      }
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-white">
+                        {isDragging ? 'Solte as imagens aqui' : 'Toque para escolher fotos'}
+                      </p>
+                      <p className="text-xs text-zinc-600 mt-0.5">
+                        Galeria do celular · Pasta do computador · Arraste aqui
+                      </p>
+                      <p className="text-[10px] text-zinc-700 mt-1">JPG, PNG, WEBP — até 8 fotos</p>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="sr-only"
+                      onChange={e => handleImageFiles(e.target.files)}
+                      // "capture" attribute removed so both camera and gallery appear on mobile
+                    />
+                  </div>
+
+                  {/* Preview das fotos */}
+                  {form.images.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 mt-3">
+                      {form.images.map((src, i) => (
+                        <div key={i} className="relative group/img aspect-square rounded-xl overflow-hidden border border-white/[0.08] bg-[#111]">
+                          <img src={src} alt="" className="w-full h-full object-cover" />
+                          {/* Badge principal */}
+                          {i === 0 && (
+                            <span className="absolute top-1 left-1 text-[8px] font-bold bg-green-500 text-black px-1.5 py-0.5 rounded-full">
+                              CAPA
+                            </span>
+                          )}
+                          {/* Botão remover */}
+                          <button
+                            onClick={e => { e.stopPropagation(); removeImage(i) }}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity hover:bg-red-500"
+                          >
+                            <X size={10} />
+                          </button>
                         </div>
                       ))}
+
+                      {/* Botão de adicionar mais */}
+                      {form.images.length < 8 && (
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="aspect-square rounded-xl border-2 border-dashed border-white/[0.10] bg-[#1a1a1a] flex flex-col items-center justify-center gap-1 hover:border-green-500/40 hover:bg-green-500/[0.03] transition-all"
+                        >
+                          <Plus size={16} className="text-zinc-600" />
+                          <span className="text-[9px] text-zinc-700">Mais</span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
+
+                {/* Descrição */}
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Descrição</label>
                   <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2}
                     placeholder="Descrição do produto..."
                     className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 resize-none transition-all" />
                 </div>
+
               </div>
             </div>
+
             <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
               <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] transition-all">Cancelar</button>
               <button onClick={handleSave} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-xl text-sm transition-all active:scale-95">Salvar</button>
