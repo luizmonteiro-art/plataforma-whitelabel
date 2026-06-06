@@ -28,9 +28,9 @@ export const conditionLabel: Record<string, string> = {
 }
 
 export const conditionColor: Record<string, string> = {
-  novo: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  seminovo: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  lacrado: 'bg-green-500/20 text-green-400 border-green-500/30',
+  novo: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  seminovo: 'bg-amber-500/25 text-amber-300 border-amber-400/40',
+  lacrado: 'bg-green-500/20 text-green-300 border-green-500/30',
 }
 
 export const serviceStatusLabel: Record<string, string> = {

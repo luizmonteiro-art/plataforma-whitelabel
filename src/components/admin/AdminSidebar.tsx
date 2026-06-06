@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingCart, Wrench, Calendar,
-  Settings, Smartphone, ChevronLeft, ChevronRight, LogOut, Tag, X, Menu, FileText
+  Settings, Smartphone, ChevronLeft, ChevronRight, LogOut, Tag, X, Menu, FileText, Stethoscope
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -17,6 +17,7 @@ const navItems = [
   { href: '/admin/servicos', label: 'Ordens de Serviço', icon: Wrench },
   { href: '/admin/agendamentos', label: 'Agendamentos', icon: Calendar },
   { href: '/admin/orcamentos', label: 'Orçamentos', icon: FileText },
+  { href: '/admin/assistencia', label: 'Serviços', icon: Stethoscope },
   { href: '/admin/promocoes', label: 'Promoções & Feed', icon: Tag },
   { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
 ]
