@@ -169,22 +169,30 @@ export default function AdminDashboardPage() {
         </div>
         <div className="divide-y divide-white/[0.04]">
           {serviceOrders.slice(0, 4).map(order => (
-            <div key={order.id} className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors">
-              <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0">
-                <Wrench size={14} className="text-zinc-500" />
+            <Link
+              key={order.id}
+              href="/admin/servicos"
+              className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.04] active:bg-white/[0.07] transition-colors cursor-pointer group/row"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover/row:border-green-500/25 group-hover/row:bg-green-500/[0.06] transition-all">
+                <Wrench size={14} className="text-zinc-500 group-hover/row:text-green-400 transition-colors" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{order.customer_name}</p>
+                <p className="text-sm font-medium text-white truncate group-hover/row:text-green-400 transition-colors">{order.customer_name}</p>
                 <p className="text-xs text-zinc-500 truncate">{order.device_brand} {order.device_model} — {order.problem}</p>
               </div>
-              <div className="text-right shrink-0">
+              <div className="text-right shrink-0 flex flex-col items-end gap-1">
                 <span className={cn('text-[10px] font-medium px-2 py-1 rounded-full border', serviceStatusColor[order.status])}>
                   {serviceStatusLabel[order.status]}
                 </span>
-                <p className="text-[10px] text-zinc-700 mt-1">{formatDateTime(order.created_at)}</p>
+                <p className="text-[10px] text-zinc-700">{formatDateTime(order.created_at)}</p>
               </div>
-            </div>
+              <ArrowUpRight size={13} className="text-zinc-700 group-hover/row:text-green-400 transition-colors shrink-0" />
+            </Link>
           ))}
+          {serviceOrders.length === 0 && (
+            <div className="px-5 py-8 text-center text-xs text-zinc-600">Nenhuma ordem de serviço registrada.</div>
+          )}
         </div>
       </div>
 
@@ -195,27 +203,35 @@ export default function AdminDashboardPage() {
           <Link href="/admin/agendamentos" className="text-xs text-green-400 hover:text-green-300 transition-colors">Ver todos</Link>
         </div>
         <div className="divide-y divide-white/[0.04]">
-          {appointments.map(appt => (
-            <div key={appt.id} className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors">
-              <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0">
-                <Calendar size={14} className="text-zinc-500" />
+          {appointments.slice(0, 5).map(appt => (
+            <Link
+              key={appt.id}
+              href="/admin/agendamentos"
+              className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.04] active:bg-white/[0.07] transition-colors cursor-pointer group/row"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover/row:border-green-500/25 group-hover/row:bg-green-500/[0.06] transition-all">
+                <Calendar size={14} className="text-zinc-500 group-hover/row:text-green-400 transition-colors" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">{appt.customer_name}</p>
+                <p className="text-sm font-medium text-white group-hover/row:text-green-400 transition-colors">{appt.customer_name}</p>
                 <p className="text-xs text-zinc-500 truncate">{appt.service_name} — {appt.device_info}</p>
               </div>
-              <div className="text-right shrink-0">
+              <div className="text-right shrink-0 flex flex-col items-end gap-1">
                 <span className={cn('text-[10px] font-medium px-2 py-1 rounded-full border',
                   appt.status === 'confirmado' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                  appt.status === 'pendente' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                  appt.status === 'pendente' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
                   'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
                 )}>
                   {appointmentStatusLabel[appt.status]}
                 </span>
-                <p className="text-[10px] text-zinc-700 mt-1">{formatDateTime(appt.scheduled_at)}</p>
+                <p className="text-[10px] text-zinc-700">{formatDateTime(appt.scheduled_at)}</p>
               </div>
-            </div>
+              <ArrowUpRight size={13} className="text-zinc-700 group-hover/row:text-green-400 transition-colors shrink-0" />
+            </Link>
           ))}
+          {appointments.length === 0 && (
+            <div className="px-5 py-8 text-center text-xs text-zinc-600">Nenhum agendamento registrado.</div>
+          )}
         </div>
       </div>
     </div>
