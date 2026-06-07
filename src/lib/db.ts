@@ -3,6 +3,7 @@
  * Todas as queries filtram por STORE_ID (uma variável de ambiente por deploy).
  */
 
+import { cache } from 'react'
 import { supabase } from './supabase'
 import type { Product, Service, Appointment, ServiceOrder, Sale, Banner, Quote } from '@/types'
 
@@ -25,14 +26,17 @@ export interface StoreConfig {
   logo_url: string
 }
 
-export async function getStoreConfig(): Promise<StoreConfig | null> {
+// cache() deduplica chamadas simultâneas no mesmo request de servidor.
+// generateMetadata e RootLayout chamam getStoreConfig — sem cache() isso
+// dispara 2 queries ao Supabase; com cache() é sempre 1 query por request.
+export const getStoreConfig = cache(async (): Promise<StoreConfig | null> => {
   const { data } = await supabase
     .from('store_config')
     .select('*')
     .eq('store_id', STORE_ID)
     .single()
   return data
-}
+})
 
 export async function updateStoreConfig(config: Partial<Omit<StoreConfig, 'id' | 'store_id'>>) {
   const { data, error } = await supabase

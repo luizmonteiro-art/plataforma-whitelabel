@@ -77,8 +77,9 @@ const testimonials = [
   },
 ]
 
-// Renderiza a cada request para refletir produtos/serviços/banners do Supabase
-export const dynamic = 'force-dynamic'
+// ISR: revalida a cada 60s em vez de renderizar do zero a cada visita.
+// Produtos/banners atualizados no admin aparecem em até 1 minuto.
+export const revalidate = 60
 
 export default async function HomePage() {
   const [products, services, banners] = await Promise.all([

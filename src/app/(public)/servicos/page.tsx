@@ -14,7 +14,7 @@ const steps = [
   { num: '5', title: 'Entrega', desc: 'Retire seu aparelho pronto com garantia' },
 ]
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function ServicosPage() {
   const [allServices, config] = await Promise.all([

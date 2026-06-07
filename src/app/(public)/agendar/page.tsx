@@ -2,7 +2,7 @@
 import { getServices, getStoreConfig } from '@/lib/db'
 import { AgendarClient } from './AgendarClient'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function AgendarPage() {
   const [allServices, config] = await Promise.all([
