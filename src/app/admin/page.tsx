@@ -1,9 +1,6 @@
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
 
-export default async function AdminRootPage() {
-  const cookieStore = await cookies()
-  const session = cookieStore.get('admin_session')
-  if (!session) redirect('/admin/login')
+// O proxy.ts protege todas as rotas /admin/* — se chegou aqui, está autenticado.
+export default function AdminRootPage() {
   redirect('/admin/dashboard')
 }

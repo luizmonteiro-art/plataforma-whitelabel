@@ -8,6 +8,24 @@ import { Calendar, Clock, CheckCircle, ChevronDown, Smartphone, MessageCircle } 
 import { cn } from '@/lib/utils'
 import type { Service } from '@/types'
 
+// Importação dinâmica do db — só roda no client, sem impacto no bundle SSR
+async function saveAppointment(payload: {
+  customer_name: string
+  customer_phone: string
+  service_id: string
+  service_name: string
+  device_info: string
+  problem: string
+  scheduled_at: string
+}) {
+  try {
+    const { upsertAppointment } = await import('@/lib/db')
+    await upsertAppointment(payload)
+  } catch (err) {
+    console.error('Erro ao salvar agendamento:', err)
+  }
+}
+
 const schema = z.object({
   name: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
   phone: z.string().min(10, 'Telefone inválido').max(20),
@@ -40,9 +58,10 @@ function getMaxDate() {
 
 interface Props {
   services: Service[]
+  waNumber?: string
 }
 
-export function AgendarClient({ services }: Props) {
+export function AgendarClient({ services, waNumber = '5519981499229' }: Props) {
   const [submitted, setSubmitted] = useState<FormData | null>(null)
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -57,7 +76,17 @@ export function AgendarClient({ services }: Props) {
   const selectedDevice = watch('device')
 
   const onSubmit = async (data: FormData) => {
-    await new Promise(r => setTimeout(r, 800))
+    const service = services.find(s => s.id === data.service_id)
+    // Salva no Supabase (fire-and-forget — não bloqueia a UX se falhar)
+    await saveAppointment({
+      customer_name: data.name,
+      customer_phone: data.phone,
+      service_id: data.service_id,
+      service_name: service?.name ?? '',
+      device_info: data.device,
+      problem: data.problem,
+      scheduled_at: `${data.date}T${data.time}:00`,
+    })
     setSubmitted(data)
   }
 
@@ -86,7 +115,7 @@ export function AgendarClient({ services }: Props) {
         </p>
         <p className="text-zinc-600 text-xs mb-8">Nossa equipe entrará em contato para confirmar. Aguarde!</p>
         <a
-          href={`https://wa.me/5519981499229?text=${msg}`}
+          href={`https://wa.me/${waNumber}?text=${msg}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-emerald-500/25 text-sm"

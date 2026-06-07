@@ -1,4 +1,4 @@
-import { mockProducts } from '@/data/mock'
+import { getProducts } from '@/lib/db'
 import { CatalogClient } from './CatalogClient'
 
 interface Props {
@@ -6,6 +6,9 @@ interface Props {
 }
 
 export default async function LojaPage({ searchParams }: Props) {
-  const params = await searchParams
-  return <CatalogClient products={mockProducts} initialCategory={params.categoria} />
+  const [params, products] = await Promise.all([
+    searchParams,
+    getProducts().catch(() => []),
+  ])
+  return <CatalogClient products={products} initialCategory={params.categoria} />
 }

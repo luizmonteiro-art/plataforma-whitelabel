@@ -1,22 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Image from 'next/image'
-import { Eye, EyeOff, Shield, Lock } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { Eye, EyeOff, Shield, Lock, AlertCircle } from 'lucide-react'
+import { getSupabaseBrowser, supabaseConfigured } from '@/lib/supabase-browser'
 
-export default function AdminLoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+  const searchParams = useSearchParams()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    await new Promise(r => setTimeout(r, 600))
-    // Define cookie e faz reload completo para o servidor reconhecer
-    document.cookie = 'admin_session=demo; path=/; max-age=86400'
-    window.location.href = '/admin/dashboard'
+    setError(null)
+
+    const supabase = getSupabaseBrowser()
+
+    if (!supabase || !supabaseConfigured) {
+      // Modo sem Supabase — aceita qualquer login para facilitar desenvolvimento local
+      window.location.href = searchParams.get('next') ?? '/admin/dashboard'
+      return
+    }
+
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (authError) {
+      setError('Email ou senha incorretos.')
+      setLoading(false)
+      return
+    }
+
+    // Redireciona para a página que o usuário tentou acessar (ou dashboard)
+    window.location.href = searchParams.get('next') ?? '/admin/dashboard'
   }
 
   return (
@@ -52,6 +72,12 @@ export default function AdminLoginPage() {
         {/* Card */}
         <div className="rounded-2xl bg-[#141414] border border-white/[0.08] p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400">
+                <AlertCircle size={14} className="flex-shrink-0" />
+                {error}
+              </div>
+            )}
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5">Email</label>
               <input
@@ -104,5 +130,13 @@ export default function AdminLoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }

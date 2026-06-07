@@ -5,6 +5,7 @@ import { Plus, Wrench, MessageCircle, X, ChevronDown, Edit2, Paperclip, CheckCir
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, serviceStatusLabel, serviceStatusColor, cn } from '@/lib/utils'
 import { useServiceOrders } from '@/contexts/AdminStore'
+import { upsertServiceOrder, deleteServiceOrder } from '@/lib/db'
 import type { ServiceOrder, ServiceStatus } from '@/types'
 
 interface Props { initialOrders: ServiceOrder[] }
@@ -44,28 +45,33 @@ export function ServicosClient({ initialOrders: _ }: Props) {
 
   const WA = 'https://wa.me/5519981499229'
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!form.customer_name || !form.device_brand || !form.problem) return
+    // id gerado no client — service_orders.id é TEXT PRIMARY KEY (sem default no DB)
     const newOrder: ServiceOrder = {
-      id: `OS${String(Date.now()).slice(-4)}`,
+      id: `OS${String(Date.now()).slice(-6)}`,
       ...form,
       status: 'recebido',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
-    setOrders(prev => [newOrder, ...prev])
+    const saved = await upsertServiceOrder(newOrder).catch(() => newOrder)
+    setOrders(prev => [saved, ...prev])
     setShowForm(false)
     setForm(emptyForm)
   }
 
   const moveStatus = (id: string, status: ServiceStatus) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status, updated_at: new Date().toISOString() } : o))
+    const updated_at = new Date().toISOString()
+    upsertServiceOrder({ id, status, updated_at }).catch(console.error)
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status, updated_at } : o))
     if (editOrder?.id === id) setEditOrder(prev => prev ? { ...prev, status } : null)
   }
 
-  const finalizeOrder = (id: string) => {
+  const finalizeOrder = async (id: string) => {
     const order = orders.find(o => o.id === id)
     if (!order) return
+    await upsertServiceOrder({ id, status: 'entregue', updated_at: new Date().toISOString() }).catch(console.error)
     setOrders(prev => prev.filter(o => o.id !== id))
     setArchived(prev => [...prev, { ...order, status: 'entregue', archived_at: new Date().toISOString() }])
     if (editOrder?.id === id) setEditOrder(null)
@@ -102,9 +108,11 @@ export function ServicosClient({ initialOrders: _ }: Props) {
     e.target.value = ''
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editOrder) return
-    setOrders(prev => prev.map(o => o.id === editOrder.id ? { ...editOrder, updated_at: new Date().toISOString() } : o))
+    const updated = { ...editOrder, updated_at: new Date().toISOString() }
+    await upsertServiceOrder(updated).catch(console.error)
+    setOrders(prev => prev.map(o => o.id === editOrder.id ? updated : o))
     setEditOrder(null)
   }
 

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Plus, Tag, Percent, X, Package, Upload, Image as ImageIcon, ArrowUp, ArrowDown, Eye, EyeOff, ArrowLeft, Newspaper, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, cn } from '@/lib/utils'
-import { mockProducts, mockBanners } from '@/data/mock'
+import { getBanners, upsertBanner, deleteBanner as deleteBannerDb, getProducts } from '@/lib/db'
 import type { Banner, Product } from '@/types'
 
 type Tab = 'banners' | 'descontos' | 'feed'
@@ -31,9 +31,14 @@ const TAG_OPTIONS = [
 export default function PromocoesAdminPage() {
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('banners')
-  const [banners, setBanners] = useState<Banner[]>(mockBanners)
-  const [promoProducts, setPromoProducts] = useState<Product[]>(mockProducts)
+  const [banners, setBanners] = useState<Banner[]>([])
+  const [promoProducts, setPromoProducts] = useState<Product[]>([])
   const [posts, setPosts] = useState<Post[]>([])
+
+  useEffect(() => {
+    getBanners().then(setBanners).catch(console.error)
+    getProducts().then(setPromoProducts).catch(console.error)
+  }, [])
 
   // Banner state
   const [showBannerForm, setShowBannerForm] = useState(false)
@@ -47,7 +52,14 @@ export default function PromocoesAdminPage() {
   const postFileRef = useRef<HTMLInputElement>(null)
 
   // Banner functions
-  const toggleBanner = (id: string) => setBanners(prev => prev.map(b => b.id === id ? { ...b, is_active: !b.is_active } : b))
+  const toggleBanner = (id: string) => {
+    setBanners(prev => {
+      const next = prev.map(b => b.id === id ? { ...b, is_active: !b.is_active } : b)
+      const updated = next.find(b => b.id === id)
+      if (updated) upsertBanner({ id, is_active: updated.is_active }).catch(console.error)
+      return next
+    })
+  }
 
   const moveBanner = (id: string, dir: 'up' | 'down') => {
     setBanners(prev => {
@@ -57,6 +69,9 @@ export default function PromocoesAdminPage() {
       const next = [...prev]
       const swap = dir === 'up' ? idx - 1 : idx + 1
       ;[next[idx], next[swap]] = [next[swap], next[idx]]
+      // persist new order positions
+      upsertBanner({ id: next[idx].id, order: idx }).catch(console.error)
+      upsertBanner({ id: next[swap].id, order: swap }).catch(console.error)
       return next
     })
   }
@@ -75,27 +90,34 @@ export default function PromocoesAdminPage() {
     if (!file) return
     const reader = new FileReader()
     reader.onload = ev => {
-      setBanners(prev => prev.map(b => b.id === id ? { ...b, image_url: ev.target?.result as string } : b))
+      const image_url = ev.target?.result as string
+      setBanners(prev => prev.map(b => b.id === id ? { ...b, image_url } : b))
+      upsertBanner({ id, image_url }).catch(console.error)
     }
     reader.readAsDataURL(file)
     e.target.value = ''
   }
 
-  const createBanner = () => {
+  const createBanner = async () => {
     if (!bannerForm.title) return
-    setBanners(prev => [...prev, {
-      id: String(Date.now()),
+    const payload = {
       ...bannerForm,
       image_url: bannerForm.image_url || 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1200',
       is_active: true,
-      order: prev.length + 1,
-    }])
+      order: banners.length + 1,
+    }
+    const saved = await upsertBanner(payload).catch(() => null)
+    const newBanner: Banner = saved ?? { id: String(Date.now()), ...payload }
+    setBanners(prev => [...prev, newBanner])
     setShowBannerForm(false)
     setBannerForm({ title: '', subtitle: '', badge: '', cta_text: 'Aproveitar', cta_href: '/loja', image_url: '' })
   }
 
-  const deleteBanner = (id: string) => {
-    if (confirm('Remover este banner?')) setBanners(prev => prev.filter(b => b.id !== id))
+  const deleteBanner = async (id: string) => {
+    if (confirm('Remover este banner?')) {
+      await deleteBannerDb(id).catch(console.error)
+      setBanners(prev => prev.filter(b => b.id !== id))
+    }
   }
 
   // Post functions

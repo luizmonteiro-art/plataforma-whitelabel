@@ -1,9 +1,18 @@
 ﻿import { Calendar, Shield, Clock, Star } from 'lucide-react'
-import { mockServices } from '@/data/mock'
+import { getServices, getStoreConfig } from '@/lib/db'
 import { AgendarClient } from './AgendarClient'
 
-export default function AgendarPage() {
-  const services = mockServices.filter(s => s.is_active)
+export const dynamic = 'force-dynamic'
+
+export default async function AgendarPage() {
+  const [allServices, config] = await Promise.all([
+    getServices().catch(() => []),
+    getStoreConfig().catch(() => null),
+  ])
+  const services = allServices.filter(s => s.is_active)
+  const waNumber = config?.whatsapp
+    ? `55${config.whatsapp.replace(/\D/g, '')}`
+    : '5519981499229'
 
   return (
     <div className="min-h-screen">
@@ -27,7 +36,7 @@ export default function AgendarPage() {
 
       {/* Form */}
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-        <AgendarClient services={services} />
+        <AgendarClient services={services} waNumber={waNumber} />
       </div>
     </div>
   )

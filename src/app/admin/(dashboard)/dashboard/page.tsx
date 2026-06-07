@@ -8,17 +8,23 @@ import Link from 'next/link'
 
 function MiniChart({ data }: { data: number[] }) {
   const max = Math.max(...data, 1)
-  const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+  const shortDay = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+  const today = new Date()
+  const labels = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(today.getDate() - (6 - i))
+    return i === 6 ? 'Hoje' : shortDay[d.getDay()]
+  })
   return (
     <div className="flex items-end gap-1.5 h-20">
       {data.map((v, i) => (
         <div key={i} className="flex-1 flex flex-col items-center gap-1">
           <div
-            className="w-full rounded-sm bg-green-500/70 hover:bg-green-500 transition-colors min-h-[2px]"
+            className={`w-full rounded-sm transition-colors min-h-[2px] ${i === 6 ? 'bg-green-500' : 'bg-green-500/50 hover:bg-green-500/80'}`}
             style={{ height: `${(v / max) * 100}%` }}
-            title={`${days[i]}: ${formatCurrency(v)}`}
+            title={`${labels[i]}: ${formatCurrency(v)}`}
           />
-          <span className="text-[9px] text-zinc-600">{days[i]}</span>
+          <span className={`text-[9px] ${i === 6 ? 'text-green-400' : 'text-zinc-600'}`}>{labels[i]}</span>
         </div>
       ))}
     </div>
@@ -41,7 +47,18 @@ export default function AdminDashboardPage() {
 
   const dismissAlert = (id: string) => setDismissedAlerts(prev => [...prev, id])
 
-  const chartData = [3200, 4100, 2800, 5200, 3900, 1800, 0]
+  // Calcula receita dos últimos 7 dias a partir das vendas reais
+  const chartData = (() => {
+    const today = new Date()
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today)
+      d.setDate(today.getDate() - (6 - i)) // 0=6 dias atrás, 6=hoje
+      const dayStr = d.toDateString()
+      return sales
+        .filter(s => new Date(s.created_at).toDateString() === dayStr)
+        .reduce((acc, s) => acc + s.total, 0)
+    })
+  })()
 
   const statCards = [
     { label: 'Receita Total', value: formatCurrency(totalRevenue), sub: `${sales.length} vendas registradas`, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', href: '/admin/vendas' },
@@ -111,7 +128,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-white">Receita (últimos 7 dias)</h3>
-              <p className="text-xs text-zinc-600">Demonstrativo semanal</p>
+              <p className="text-xs text-zinc-600">{sales.length > 0 ? 'Baseado nas vendas registradas' : 'Nenhuma venda registrada ainda'}</p>
             </div>
             <span className="text-lg font-bold text-emerald-400">{formatCurrency(chartData.reduce((a, b) => a + b, 0))}</span>
           </div>

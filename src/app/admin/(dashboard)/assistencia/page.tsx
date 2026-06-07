@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useServices } from '@/contexts/AdminStore'
+import { upsertService, deleteService } from '@/lib/db'
 import { formatCurrency, cn } from '@/lib/utils'
 import type { Service } from '@/types'
 
@@ -85,7 +86,7 @@ export default function AssistenciaPage() {
     setShowForm(true)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) return
     const data: Omit<Service, 'id'> = {
       ...form,
@@ -93,21 +94,30 @@ export default function AssistenciaPage() {
       duration_minutes: Number(durationInput) || 60,
     }
     if (editService) {
-      setServices(prev => prev.map(s => s.id === editService.id ? { ...s, ...data } : s))
+      const updated = { ...editService, ...data }
+      await upsertService(updated).catch(console.error)
+      setServices(prev => prev.map(s => s.id === editService.id ? updated : s))
     } else {
-      const newService: Service = { id: String(Date.now()), ...data }
+      const saved = await upsertService(data).catch(() => null)
+      const newService: Service = saved ?? { id: String(Date.now()), ...data }
       setServices(prev => [...prev, newService])
     }
     setShowForm(false)
   }
 
-  const toggleActive = (id: string) => {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, is_active: !s.is_active } : s))
+  const toggleActive = async (id: string) => {
+    const service = services.find(s => s.id === id)
+    if (!service) return
+    const is_active = !service.is_active
+    await upsertService({ id, is_active }).catch(console.error)
+    setServices(prev => prev.map(s => s.id === id ? { ...s, is_active } : s))
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('Remover este serviço do catálogo?'))
+  const handleDelete = async (id: string) => {
+    if (confirm('Remover este serviço do catálogo?')) {
+      await deleteService(id).catch(console.error)
       setServices(prev => prev.filter(s => s.id !== id))
+    }
   }
 
   const inputCls = 'w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 transition-all'

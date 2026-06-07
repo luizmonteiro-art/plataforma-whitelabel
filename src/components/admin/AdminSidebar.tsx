@@ -38,8 +38,13 @@ export function AdminSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }:
     return pathname.startsWith(href)
   }
 
-  const handleLogout = () => {
-    document.cookie = 'admin_session=; path=/; max-age=0'
+  const handleLogout = async () => {
+    // Encerra a sessão no Supabase (limpa os cookies de auth)
+    try {
+      const { getSupabaseBrowser } = await import('@/lib/supabase-browser')
+      const supabase = getSupabaseBrowser()
+      if (supabase) await supabase.auth.signOut()
+    } catch {}
     router.push('/admin/login')
   }
 

@@ -1,26 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Trash2, MessageCircle, X, FileText, Copy, CheckCircle, ArrowLeft, Wrench, ChevronDown, Printer } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
-import { mockServices } from '@/data/mock'
+import { getServices, getQuotes, upsertQuote, deleteQuote, getStoreConfig, upsertServiceOrder } from '@/lib/db'
+import { useServiceOrders } from '@/contexts/AdminStore'
+import type { Service, Quote, QuoteItem, QuoteStatus, ServiceOrder } from '@/types'
 
-type OrcStatus = 'pendente' | 'aprovado' | 'recusado' | 'expirado'
-
-interface LineItem { id: string; descricao: string; qty: number; unitario: number }
-interface Orcamento {
-  id: string
-  customer_name: string
-  customer_phone: string
-  device: string
-  items: LineItem[]
-  desconto: number
-  observacoes: string
-  validade: string
-  status: OrcStatus
-  created_at: string
-}
+type OrcStatus = QuoteStatus
+type LineItem = QuoteItem
+type Orcamento = Quote
 
 const statusColors: Record<OrcStatus, string> = {
   pendente: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
@@ -31,13 +21,14 @@ const statusColors: Record<OrcStatus, string> = {
 
 const emptyItem = (): LineItem => ({ id: String(Date.now()), descricao: '', qty: 1, unitario: 0 })
 
-const WA = '5519981499229'
+// O id é um UUID (coluna do Supabase) — exibe uma forma curta e legível.
+const displayId = (id: string) => id.slice(0, 8).toUpperCase()
 
-function formatWhatsApp(orc: Orcamento): string {
+function formatWhatsApp(orc: Orcamento, storeName: string, storePhone: string): string {
   const total = orc.items.reduce((s, i) => s + i.qty * i.unitario, 0) - orc.desconto
   const lines = [
-    `*ORÇAMENTO #${orc.id}*`,
-    `*M CELL* — Celulares & Assistência`,
+    `*ORÇAMENTO #${displayId(orc.id)}*`,
+    `*${storeName}* — Celulares & Assistência`,
     ``,
     `*Cliente:* ${orc.customer_name}`,
     `*Aparelho:* ${orc.device}`,
@@ -51,7 +42,7 @@ function formatWhatsApp(orc: Orcamento): string {
     orc.observacoes ? `*Observações:* ${orc.observacoes}` : '',
     `*Validade:* ${new Date(orc.validade + 'T12:00:00').toLocaleDateString('pt-BR')}`,
     ``,
-    `Para aprovar, responda esta mensagem ou ligue: (19) 98149-9229`,
+    `Para aprovar, responda esta mensagem ou ligue: ${storePhone}`,
   ].filter(l => l !== '')
 
   return lines.join('\n')
@@ -59,10 +50,28 @@ function formatWhatsApp(orc: Orcamento): string {
 
 export default function OrcamentosPage() {
   const router = useRouter()
+  const [, setServiceOrders] = useServiceOrders()
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([])
   const [showForm, setShowForm] = useState(false)
   const [viewing, setViewing] = useState<Orcamento | null>(null)
   const [copied, setCopied] = useState(false)
+  const [services, setServices] = useState<Service[]>([])
+
+  // Config da loja (multi-tenant) — carregada do Supabase
+  const [storeWA, setStoreWA] = useState('5519981499229')
+  const [storeName, setStoreName] = useState('M CELL')
+  const [storePhone, setStorePhone] = useState('(19) 98149-9229')
+
+  useEffect(() => {
+    getServices().then(setServices).catch(console.error)
+    getQuotes().then(setOrcamentos).catch(console.error)
+    getStoreConfig().then(cfg => {
+      if (!cfg) return
+      if (cfg.whatsapp) setStoreWA(`55${cfg.whatsapp.replace(/\D/g, '')}`)
+      if (cfg.store_name) setStoreName(cfg.store_name)
+      if (cfg.phone) setStorePhone(cfg.phone)
+    }).catch(console.error)
+  }, [])
 
   // Form state
   const [name, setName] = useState('')
@@ -89,28 +98,57 @@ export default function OrcamentosPage() {
 
   const resetForm = () => { setName(''); setPhone(''); setDevice(''); setItems([emptyItem()]); setDesconto(0); setObs(''); }
 
-  const createOrcamento = () => {
+  const createOrcamento = async () => {
     if (!name || !device || items.some(i => !i.descricao)) return
     const orc: Orcamento = {
-      id: `ORC${String(Date.now()).slice(-4)}`,
+      id: crypto.randomUUID(),
       customer_name: name, customer_phone: phone, device,
       items, desconto, observacoes: obs, validade,
       status: 'pendente',
       created_at: new Date().toISOString(),
     }
-    setOrcamentos(prev => [orc, ...prev])
+    const saved = await upsertQuote(orc).catch(() => orc)
+    setOrcamentos(prev => [saved, ...prev])
     setShowForm(false)
     resetForm()
-    setViewing(orc)
+    setViewing(saved)
   }
 
   const updateStatus = (id: string, status: OrcStatus) => {
+    upsertQuote({ id, status }).catch(console.error)
     setOrcamentos(prev => prev.map(o => o.id === id ? { ...o, status } : o))
     if (viewing?.id === id) setViewing(prev => prev ? { ...prev, status } : null)
   }
 
-  const convertToOS = (orc: Orcamento) => {
-    // Navega para a página de serviços com um state (em produção usaria URL params ou context)
+  const removeOrcamento = async (id: string) => {
+    if (!confirm('Excluir este orçamento?')) return
+    await deleteQuote(id).catch(console.error)
+    setOrcamentos(prev => prev.filter(o => o.id !== id))
+    setViewing(null)
+  }
+
+  const convertToOS = async (orc: Orcamento) => {
+    const total = orc.items.reduce((s, i) => s + i.qty * i.unitario, 0) - orc.desconto
+    const problem = orc.items.map(i => i.descricao).filter(Boolean).join(', ') || 'Convertido de orçamento'
+    // id gerado no client — service_orders.id é TEXT PRIMARY KEY (formato OS……)
+    const order: ServiceOrder = {
+      id: `OS${String(Date.now()).slice(-6)}`,
+      customer_name: orc.customer_name,
+      customer_phone: orc.customer_phone,
+      device_brand: orc.device,
+      device_model: '',
+      problem,
+      diagnosis: orc.observacoes || undefined,
+      price: total,
+      status: 'recebido',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    const saved = await upsertServiceOrder(order).catch(() => order)
+    setServiceOrders(prev => [saved, ...prev])
+    // Marca o orçamento como aprovado ao virar O.S.
+    updateStatus(orc.id, 'aprovado')
+    setViewing(null)
     router.push('/admin/servicos')
   }
 
@@ -163,7 +201,7 @@ export default function OrcamentosPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-white">{orc.customer_name}</p>
-                    <span className="text-xs font-mono text-zinc-600">{orc.id}</span>
+                    <span className="text-xs font-mono text-zinc-600">{displayId(orc.id)}</span>
                     <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', statusColors[orc.status])}>
                       {orc.status}
                     </span>
@@ -213,7 +251,7 @@ export default function OrcamentosPage() {
               <div>
                 <p className="text-xs font-medium text-zinc-500 mb-2">Adicionar serviço rápido:</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {mockServices.filter(s => s.is_active).map(s => (
+                  {services.filter(s => s.is_active).map(s => (
                     <button key={s.id} onClick={() => addServiceItem(s.name, s.price_from)}
                       className="px-2.5 py-1.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-xs text-zinc-400 hover:text-green-400 hover:border-green-500/25 transition-all active:scale-95 flex items-center gap-1.5">
                       <Wrench size={10} /> {s.name} — {formatCurrency(s.price_from)}
@@ -303,7 +341,7 @@ export default function OrcamentosPage() {
           <div className="w-full max-w-lg bg-[#161616] border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-white">Orçamento {viewing.id}</h3>
+                <h3 className="text-sm font-semibold text-white">Orçamento {displayId(viewing.id)}</h3>
                 <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', statusColors[viewing.status])}>
                   {viewing.status}
                 </span>
@@ -314,8 +352,8 @@ export default function OrcamentosPage() {
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {/* Preview do orçamento */}
               <div className="rounded-xl bg-[#111] border border-white/[0.06] p-5 font-mono text-xs space-y-1">
-                <p className="font-bold text-white text-sm">ORÇAMENTO #{viewing.id}</p>
-                <p className="text-green-400 font-bold">M CELL — Celulares & Assistência</p>
+                <p className="font-bold text-white text-sm">ORÇAMENTO #{displayId(viewing.id)}</p>
+                <p className="text-green-400 font-bold">{storeName} — Celulares & Assistência</p>
                 <div className="border-t border-white/[0.06] my-2" />
                 <p className="text-zinc-400">Cliente: <span className="text-white">{viewing.customer_name}</span></p>
                 <p className="text-zinc-400">Aparelho: <span className="text-white">{viewing.device}</span></p>
@@ -358,12 +396,12 @@ export default function OrcamentosPage() {
               {/* Ações */}
               <div className="grid grid-cols-2 gap-2">
                 <a
-                  href={`https://wa.me/${WA}?text=${encodeURIComponent(formatWhatsApp(viewing))}`}
+                  href={`https://wa.me/${storeWA}?text=${encodeURIComponent(formatWhatsApp(viewing, storeName, storePhone))}`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-semibold rounded-xl text-sm transition-all">
                   <MessageCircle size={15} /> Enviar pelo WhatsApp
                 </a>
-                <button onClick={() => copyText(formatWhatsApp(viewing))}
+                <button onClick={() => copyText(formatWhatsApp(viewing, storeName, storePhone))}
                   className={cn('flex items-center justify-center gap-2 py-3 border rounded-xl text-sm font-medium transition-all active:scale-95',
                     copied ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white')}>
                   {copied ? <><CheckCircle size={15} /> Copiado!</> : <><Copy size={15} /> Copiar texto</>}
@@ -375,6 +413,10 @@ export default function OrcamentosPage() {
                 <button onClick={() => window.print()}
                   className="flex items-center justify-center gap-2 py-3 bg-white/[0.04] border border-white/[0.08] text-zinc-400 hover:text-white active:scale-95 rounded-xl text-sm font-medium transition-all">
                   <Printer size={15} /> Imprimir
+                </button>
+                <button onClick={() => removeOrcamento(viewing.id)}
+                  className="col-span-2 flex items-center justify-center gap-2 py-3 bg-red-500/10 border border-red-500/25 text-red-400 hover:bg-red-500/20 active:scale-95 rounded-xl text-sm font-medium transition-all">
+                  <Trash2 size={15} /> Excluir orçamento
                 </button>
               </div>
             </div>

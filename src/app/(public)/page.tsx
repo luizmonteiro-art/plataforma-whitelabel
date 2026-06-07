@@ -3,7 +3,7 @@ import { Battery, Monitor, Plug, HardDrive, Cpu, Sparkles, Camera, ArrowRight, S
 import { HeroBanner } from '@/components/store/HeroBanner'
 import { ProductCard } from '@/components/store/ProductCard'
 import { FadeIn, StaggerChildren, StaggerItem } from '@/components/ui/FadeIn'
-import { mockBanners, mockProducts, mockServices } from '@/data/mock'
+import { getProducts, getServices, getBanners } from '@/lib/db'
 import {
   AppleLogo, AndroidLogo, PhoneCaseLogo,
   ScreenProtectorLogo, ChargerLogo, WrenchToolsLogo
@@ -22,14 +22,15 @@ const categoryIcons: Record<string, React.ReactNode> = {
   assistencia: <WrenchToolsLogo size={30} className="text-orange-400" />,
 }
 
-const categoryCards = [
-  { href: '/loja?categoria=iphone', label: 'iPhones', sublabel: 'Apple', iconKey: 'iphone', count: mockProducts.filter(p => p.category === 'iphone').length },
-  { href: '/loja?categoria=android', label: 'Android', sublabel: 'Samsung & mais', iconKey: 'android', count: mockProducts.filter(p => p.category === 'android').length },
-  { href: '/loja?categoria=capinha', label: 'Capinhas', sublabel: 'Cases & covers', iconKey: 'capinha', count: mockProducts.filter(p => p.category === 'capinha').length },
-  { href: '/loja?categoria=pelicula', label: 'Películas', sublabel: 'Proteção de tela', iconKey: 'pelicula', count: mockProducts.filter(p => p.category === 'pelicula').length },
-  { href: '/loja?categoria=carregador', label: 'Carregadores', sublabel: 'Originais & compatíveis', iconKey: 'carregador', count: mockProducts.filter(p => p.category === 'carregador').length },
-  { href: '/servicos', label: 'Assistência', sublabel: 'Técnica especializada', iconKey: 'assistencia', count: mockServices.length },
-]
+// Contagens são computadas em runtime com dados reais (ver HomePage)
+const categoryCardDefs = [
+  { href: '/loja?categoria=iphone',    label: 'iPhones',     sublabel: 'Apple',                  iconKey: 'iphone',     categoryKey: 'iphone' },
+  { href: '/loja?categoria=android',   label: 'Android',     sublabel: 'Samsung & mais',          iconKey: 'android',    categoryKey: 'android' },
+  { href: '/loja?categoria=capinha',   label: 'Capinhas',    sublabel: 'Cases & covers',          iconKey: 'capinha',    categoryKey: 'capinha' },
+  { href: '/loja?categoria=pelicula',  label: 'Películas',   sublabel: 'Proteção de tela',        iconKey: 'pelicula',   categoryKey: 'pelicula' },
+  { href: '/loja?categoria=carregador',label: 'Carregadores',sublabel: 'Originais & compatíveis', iconKey: 'carregador', categoryKey: 'carregador' },
+  { href: '/servicos',                 label: 'Assistência', sublabel: 'Técnica especializada',   iconKey: 'assistencia',categoryKey: null },
+] as const
 
 const benefits = [
   { icon: Shield, label: 'Garantia', desc: '90 dias em todos os serviços' },
@@ -76,11 +77,27 @@ const testimonials = [
   },
 ]
 
-export default function HomePage() {
-  const featuredProducts = mockProducts.filter(p => p.is_featured && p.is_active).slice(0, 4)
-  const activeBanners = mockBanners.filter(b => b.is_active)
-  const activeServices = mockServices.filter(s => s.is_active).slice(0, 6)
-  const promoProducts = mockProducts.filter(p => p.promo_price && p.is_active).slice(0, 4)
+// Renderiza a cada request para refletir produtos/serviços/banners do Supabase
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
+  const [products, services, banners] = await Promise.all([
+    getProducts().catch(() => []),
+    getServices().catch(() => []),
+    getBanners().catch(() => []),
+  ])
+
+  const featuredProducts = products.filter(p => p.is_featured && p.is_active).slice(0, 4)
+  const activeBanners    = banners.filter(b => b.is_active)
+  const activeServices   = services.filter(s => s.is_active).slice(0, 6)
+  const promoProducts    = products.filter(p => p.promo_price && p.is_active).slice(0, 4)
+
+  const categoryCards = categoryCardDefs.map(def => ({
+    ...def,
+    count: def.categoryKey
+      ? products.filter(p => p.category === def.categoryKey && p.is_active).length
+      : services.length,
+  }))
 
   return (
     <div className="min-h-screen">
@@ -287,10 +304,10 @@ export default function HomePage() {
 
           <StaggerChildren className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {[
-              ...mockProducts.filter(p => p.is_active && p.condition === 'lacrado').slice(0, 2),
-              ...mockProducts.filter(p => p.is_active && p.promo_price).slice(0, 2),
-              ...mockProducts.filter(p => p.is_active && p.condition === 'seminovo').slice(0, 2),
-              ...mockProducts.filter(p => p.is_active && p.category === 'acessorio').slice(0, 2),
+              ...products.filter(p => p.is_active && p.condition === 'lacrado').slice(0, 2),
+              ...products.filter(p => p.is_active && p.promo_price).slice(0, 2),
+              ...products.filter(p => p.is_active && p.condition === 'seminovo').slice(0, 2),
+              ...products.filter(p => p.is_active && p.category === 'acessorio').slice(0, 2),
             ].slice(0, 8).map((product) => {
               const isPromo = !!product.promo_price
               const isNew = product.condition === 'lacrado'

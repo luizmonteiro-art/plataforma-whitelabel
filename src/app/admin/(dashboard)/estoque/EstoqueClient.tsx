@@ -5,6 +5,7 @@ import { Plus, Search, Edit2, Trash2, X, Package, ChevronDown, ArrowLeft, ImageP
 import { useRouter } from 'next/navigation'
 import { formatCurrency, categoryLabel, conditionLabel, conditionColor, cn } from '@/lib/utils'
 import { useProducts } from '@/contexts/AdminStore'
+import { upsertProduct, deleteProduct, uploadImage } from '@/lib/db'
 import type { Product, ProductCategory, ProductCondition } from '@/types'
 
 interface Props { initialProducts: Product[] }
@@ -24,6 +25,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [isDragging, setIsDragging] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filtered = products.filter(p =>
@@ -45,18 +47,18 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
     setShowForm(true)
   }
 
-  // Converte arquivo(s) para base64 e adiciona ao form
-  const handleImageFiles = (files: FileList | null) => {
+  // Faz upload das imagens para o Supabase Storage (com fallback p/ base64) e adiciona ao form
+  const handleImageFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return
-    Array.from(files).slice(0, 8).forEach(file => {
-      if (!file.type.startsWith('image/')) return
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string
-        setForm(f => ({ ...f, images: [...f.images, base64] }))
-      }
-      reader.readAsDataURL(file)
-    })
+    const imageFiles = Array.from(files).slice(0, 8).filter(f => f.type.startsWith('image/'))
+    if (imageFiles.length === 0) return
+    setUploading(true)
+    try {
+      const urls = await Promise.all(imageFiles.map(f => uploadImage(f, 'products')))
+      setForm(f => ({ ...f, images: [...f.images, ...urls] }))
+    } finally {
+      setUploading(false)
+    }
   }
 
   const removeImage = (idx: number) => {
@@ -75,22 +77,22 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
     handleImageFiles(e.dataTransfer.files)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name || !form.price || !form.stock_qty) return
     if (editProduct) {
-      setProducts(prev => prev.map(p => p.id === editProduct.id ? {
-        ...p, ...form,
+      const updated: Product = {
+        ...editProduct, ...form,
         price: Number(form.price),
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
         stock_qty: Number(form.stock_qty),
         images: form.images,
-      } : p))
+      }
+      const saved = await upsertProduct(updated).catch(() => null)
+      setProducts(prev => prev.map(p => p.id === editProduct.id ? (saved ?? updated) : p))
     } else {
-      const newProduct: Product = {
-        id: String(Date.now()),
+      const payload = {
         slug: form.name.toLowerCase().replace(/\s+/g, '-'),
-        is_featured: false, is_active: true,
-        created_at: new Date().toISOString(),
+        is_featured: false as const, is_active: true as const,
         name: form.name, brand: form.brand, category: form.category,
         condition: form.condition, description: form.description,
         images: form.images,
@@ -98,13 +100,22 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
         stock_qty: Number(form.stock_qty),
       }
+      const saved = await upsertProduct(payload).catch(() => null)
+      const newProduct: Product = saved ?? {
+        id: String(Date.now()),
+        created_at: new Date().toISOString(),
+        ...payload,
+      }
       setProducts(prev => [newProduct, ...prev])
     }
     setShowForm(false)
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('Remover este produto?')) setProducts(prev => prev.filter(p => p.id !== id))
+  const handleDelete = async (id: string) => {
+    if (confirm('Remover este produto?')) {
+      await deleteProduct(id).catch(console.error)
+      setProducts(prev => prev.filter(p => p.id !== id))
+    }
   }
 
   return (
@@ -293,14 +304,16 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                     )}
                   >
                     <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                      {isDragging
-                        ? <Upload size={18} className="text-green-400" />
-                        : <ImagePlus size={18} className="text-green-400" />
+                      {uploading
+                        ? <Upload size={18} className="text-green-400 animate-pulse" />
+                        : isDragging
+                          ? <Upload size={18} className="text-green-400" />
+                          : <ImagePlus size={18} className="text-green-400" />
                       }
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-medium text-white">
-                        {isDragging ? 'Solte as imagens aqui' : 'Toque para escolher fotos'}
+                        {uploading ? 'Enviando imagens…' : isDragging ? 'Solte as imagens aqui' : 'Toque para escolher fotos'}
                       </p>
                       <p className="text-xs text-zinc-600 mt-0.5">
                         Galeria do celular · Pasta do computador · Arraste aqui

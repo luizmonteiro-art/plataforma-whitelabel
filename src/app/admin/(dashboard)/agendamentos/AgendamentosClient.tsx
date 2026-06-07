@@ -5,6 +5,7 @@ import { Calendar, CheckCircle, X, Clock, MessageCircle, Star, ArrowLeft, AlertT
 import { useRouter } from 'next/navigation'
 import { formatDateTime, appointmentStatusLabel, cn } from '@/lib/utils'
 import { useAppointments } from '@/contexts/AdminStore'
+import { upsertAppointment } from '@/lib/db'
 import type { Appointment, AppointmentStatus } from '@/types'
 
 interface Props { initialAppointments: Appointment[] }
@@ -26,7 +27,8 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
   const [editAppt, setEditAppt] = useState<Appointment | null>(null)
   const [filter, setFilter] = useState<AppointmentStatus | 'todos'>('todos')
 
-  const updateStatus = (id: string, status: AppointmentStatus) => {
+  const updateStatus = async (id: string, status: AppointmentStatus) => {
+    await upsertAppointment({ id, status }).catch(console.error)
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
   }
 
@@ -34,8 +36,9 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
     setPrioritized(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editAppt) return
+    await upsertAppointment(editAppt).catch(console.error)
     setAppointments(prev => prev.map(a => a.id === editAppt.id ? editAppt : a))
     setEditAppt(null)
   }

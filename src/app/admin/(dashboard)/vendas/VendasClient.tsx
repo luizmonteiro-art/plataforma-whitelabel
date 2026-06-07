@@ -5,6 +5,7 @@ import { Plus, TrendingUp, X, ChevronDown, Target, Trash2, CheckCircle, XCircle,
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, paymentMethodLabel, cn } from '@/lib/utils'
 import { useSales, useProducts } from '@/contexts/AdminStore'
+import { insertSale, upsertSale, deleteSale, upsertProduct } from '@/lib/db'
 import type { Sale, PaymentMethod } from '@/types'
 
 interface SaleWithStatus extends Sale {
@@ -24,7 +25,7 @@ type DateFilter = 'todos' | 'hoje' | 'semana' | 'mes'
 export function VendasClient({ initialSales: _ }: Props) {
   const router = useRouter()
   const [rawSales, setSalesRaw] = useSales()
-  const [storeProducts] = useProducts()
+  const [storeProducts, setProducts] = useProducts()
   const [sales, setSalesLocal] = useState<SaleWithStatus[]>(() =>
     rawSales.map(s => ({ ...s, saleStatus: 'aprovado' as const }))
   )
@@ -104,14 +105,19 @@ export function VendasClient({ initialSales: _ }: Props) {
     setEditItems(prev => prev.filter((_, i) => i !== idx))
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editSale || editItems.length === 0) return
-    setSales(prev => prev.map(s => s.id === editSale.id ? {
-      ...s,
+    const changes = {
+      id: editSale.id,
       items: editItems,
       total: editTotal,
       customer_name: editCustomer || undefined,
       payment_method: editPayment,
+    }
+    await upsertSale(changes).catch(console.error)
+    setSales(prev => prev.map(s => s.id === editSale.id ? {
+      ...s,
+      ...changes,
       saleStatus: editStatus,
     } : s))
     setEditSale(null)
@@ -144,18 +150,28 @@ export function VendasClient({ initialSales: _ }: Props) {
   const pendingRevenue = sales.filter(s => s.saleStatus === 'pendente').reduce((a, s) => a + s.total, 0)
   const metaPercent = Math.min(100, Math.round((totalRevenue / meta) * 100))
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const product = storeProducts.find(p => p.id === formProduct)
     if (!product) return
     const qty = Number(formQty) || 1
     const total = (product.promo_price ?? product.price) * qty
-    const newSale: SaleWithStatus = {
-      id: `VD${String(Date.now()).slice(-4)}`,
+    const payload = {
       items: [{ product_id: product.id, product_name: product.name, quantity: qty, unit_price: product.promo_price ?? product.price }],
       total,
       payment_method: formPayment,
       customer_name: formCustomer || undefined,
-      created_at: new Date().toISOString(),
+    }
+    const saved = await insertSale(payload).catch(() => null)
+
+    // Decrementa o estoque do produto vendido (persiste + atualiza UI)
+    const newStock = Math.max(0, product.stock_qty - qty)
+    upsertProduct({ id: product.id, stock_qty: newStock }).catch(console.error)
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock_qty: newStock } : p))
+
+    const newSale: SaleWithStatus = {
+      id: saved?.id ?? `VD${String(Date.now()).slice(-4)}`,
+      created_at: saved?.created_at ?? new Date().toISOString(),
+      ...payload,
       saleStatus: 'aprovado',
     }
     setSales(prev => [newSale, ...prev])
@@ -166,8 +182,9 @@ export function VendasClient({ initialSales: _ }: Props) {
   const changeStatus = (id: string, status: SaleWithStatus['saleStatus']) =>
     setSales(prev => prev.map(s => s.id === id ? { ...s, saleStatus: status } : s))
 
-  const removeSale = (id: string) => {
+  const removeSale = async (id: string) => {
     if (!confirm('Remover esta venda?')) return
+    await deleteSale(id).catch(console.error)
     setSales(prev => prev.filter(s => s.id !== id))
   }
 

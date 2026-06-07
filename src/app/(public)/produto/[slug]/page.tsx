@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, MessageCircle, Calendar, CheckCircle, Package } from 'lucide-react'
-import { mockProducts } from '@/data/mock'
+import { getProducts, getStoreConfig } from '@/lib/db'
 import { formatCurrency, conditionLabel, conditionColor, cn } from '@/lib/utils'
 
 interface Props {
@@ -11,16 +11,23 @@ interface Props {
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params
-  const product = mockProducts.find(p => p.slug === slug && p.is_active)
+  const [products, config] = await Promise.all([
+    getProducts().catch(() => []),
+    getStoreConfig().catch(() => null),
+  ])
+  const product = products.find(p => p.slug === slug && p.is_active)
   if (!product) notFound()
+
+  const waNumber = config?.whatsapp ? `55${config.whatsapp.replace(/\D/g, '')}` : '5511999999999'
 
   const discount = product.promo_price
     ? Math.round(((product.price - product.promo_price) / product.price) * 100)
     : 0
 
-  const related = mockProducts.filter(p => p.category === product.category && p.id !== product.id && p.is_active).slice(0, 3)
+  const related = products.filter(p => p.category === product.category && p.id !== product.id && p.is_active).slice(0, 3)
 
   const whatsappMsg = encodeURIComponent(`Olá! Tenho interesse no produto: *${product.name}* (${conditionLabel[product.condition]}) — ${formatCurrency(product.promo_price ?? product.price)}. Ainda disponível?`)
+  const whatsappUrl = `https://wa.me/${waNumber}?text=${whatsappMsg}`
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
@@ -117,7 +124,7 @@ export default async function ProductPage({ params }: Props) {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <a
-              href={`https://wa.me/5511999999999?text=${whatsappMsg}`}
+              href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-emerald-500/25 text-sm"

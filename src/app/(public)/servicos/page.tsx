@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { Monitor, Battery, Plug, HardDrive, Cpu, Sparkles, Camera, Wrench, ArrowRight, Clock, Shield, Star, MessageCircle } from 'lucide-react'
-import { mockServices } from '@/data/mock'
-
-const WA = 'https://wa.me/5519981499229'
+import { getServices, getStoreConfig } from '@/lib/db'
 
 const iconMap: Record<string, React.ElementType> = {
   Monitor, Battery, Plug, HardDrive, Cpu, Sparkles, Camera, Wrench,
@@ -16,8 +14,16 @@ const steps = [
   { num: '5', title: 'Entrega', desc: 'Retire seu aparelho pronto com garantia' },
 ]
 
-export default function ServicosPage() {
-  const services = mockServices.filter(s => s.is_active)
+export const dynamic = 'force-dynamic'
+
+export default async function ServicosPage() {
+  const [allServices, config] = await Promise.all([
+    getServices().catch(() => []),
+    getStoreConfig().catch(() => null),
+  ])
+  const services = allServices.filter(s => s.is_active)
+  const wa = config?.whatsapp ? `55${config.whatsapp.replace(/\D/g, '')}` : '5519981499229'
+  const WA = `https://wa.me/${wa}`
 
   return (
     <div className="min-h-screen">

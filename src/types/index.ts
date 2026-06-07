@@ -90,3 +90,25 @@ export interface Banner {
   is_active: boolean
   order: number
 }
+
+export type QuoteStatus = 'pendente' | 'aprovado' | 'recusado' | 'expirado'
+
+export interface QuoteItem {
+  id: string
+  descricao: string
+  qty: number
+  unitario: number
+}
+
+export interface Quote {
+  id: string
+  customer_name: string
+  customer_phone: string
+  device: string
+  items: QuoteItem[]
+  desconto: number
+  observacoes: string
+  validade: string
+  status: QuoteStatus
+  created_at: string
+}
