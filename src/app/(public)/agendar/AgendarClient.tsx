@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import type { Service } from '@/types'
 
 // Importação dinâmica do db — só roda no client, sem impacto no bundle SSR
-async function saveAppointment(payload: {
+async function saveAppointment(storeId: string, payload: {
   customer_name: string
   customer_phone: string
   service_id: string
@@ -19,8 +19,8 @@ async function saveAppointment(payload: {
   scheduled_at: string
 }) {
   try {
-    const { upsertAppointment } = await import('@/lib/db')
-    await upsertAppointment(payload)
+    const { createPublicAppointment } = await import('@/lib/db')
+    await createPublicAppointment(storeId, payload)
   } catch (err) {
     console.error('Erro ao salvar agendamento:', err)
   }
@@ -57,11 +57,12 @@ function getMaxDate() {
 }
 
 interface Props {
+  storeId: string
   services: Service[]
   waNumber?: string
 }
 
-export function AgendarClient({ services, waNumber = '5519981499229' }: Props) {
+export function AgendarClient({ storeId, services, waNumber = '5519981499229' }: Props) {
   const [submitted, setSubmitted] = useState<FormData | null>(null)
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -78,7 +79,7 @@ export function AgendarClient({ services, waNumber = '5519981499229' }: Props) {
   const onSubmit = async (data: FormData) => {
     const service = services.find(s => s.id === data.service_id)
     // Salva no Supabase (fire-and-forget — não bloqueia a UX se falhar)
-    await saveAppointment({
+    await saveAppointment(storeId, {
       customer_name: data.name,
       customer_phone: data.phone,
       service_id: data.service_id,

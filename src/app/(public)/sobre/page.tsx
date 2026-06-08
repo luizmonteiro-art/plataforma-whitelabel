@@ -1,5 +1,6 @@
 import { MapPin, Clock, Phone, AtSign, MessageCircle, Shield, Star, Users, Wrench } from 'lucide-react'
 import { getStoreConfig } from '@/lib/db'
+import { getStoreIdFromHeaders } from '@/lib/store-headers'
 
 const stats = [
   { icon: Users, value: '500+', label: 'Clientes atendidos' },
@@ -11,7 +12,8 @@ const stats = [
 export const revalidate = 300
 
 export default async function SobrePage() {
-  const config = await getStoreConfig().catch(() => null)
+  const storeId = await getStoreIdFromHeaders()
+  const config = await getStoreConfig(storeId).catch(() => null)
 
   const storeName  = config?.store_name    ?? 'M CELL'
   const about      = config?.about         ?? 'Somos uma loja especializada em iPhones e smartphones, oferecendo aparelhos seminovos e lacrados com procedência garantida, além de assistência técnica especializada.'

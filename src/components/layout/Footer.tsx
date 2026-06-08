@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, Clock, Phone, AtSign, MessageCircle } from 'lucide-react'
+import { MapPin, Clock, Phone, AtSign, MessageCircle, Store } from 'lucide-react'
+import type { Brand } from '@/lib/brand'
+import { waLink } from '@/lib/brand'
 
-const WA = 'https://wa.me/5519981499229'
-
-export function Footer() {
+export function Footer({ brand }: { brand: Brand }) {
+  const hasWa = !!brand.whatsapp
   return (
     <footer className="bg-[#080808] border-t border-white/[0.06] mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -12,32 +13,40 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <Image src="/mcelllogo.jpeg" alt="M CELL" height={40} width={40} className="object-contain rounded-lg drop-shadow-[0_0_10px_rgba(34,197,94,0.3)]" />
+              {brand.logoUrl ? (
+                <Image src={brand.logoUrl} alt={brand.name} height={40} width={40} className="object-contain rounded-lg" />
+              ) : (
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10 border border-green-500/20">
+                  <Store size={18} className="text-green-400" />
+                </span>
+              )}
               <div className="flex flex-col leading-none">
-                <span className="text-base font-black text-white tracking-tight">M <span className="text-green-400">CELL</span></span>
+                <span className="text-base font-black text-white tracking-tight">{brand.name}</span>
                 <span className="text-[10px] text-zinc-600 mt-0.5">Celulares & Assistência</span>
               </div>
             </div>
-            <p className="text-sm text-zinc-500 leading-relaxed">
-              Sua loja especializada em iPhones e smartphones. Seminovos, lacrados e assistência técnica com garantia.
-            </p>
+            {brand.about && (
+              <p className="text-sm text-zinc-500 leading-relaxed">{brand.about}</p>
+            )}
             <div className="flex items-center gap-3">
-              <a
-                href="https://instagram.com/mmcell"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-green-400 hover:border-green-500/30 hover:bg-green-500/10 transition-all active:scale-90"
-              >
-                <AtSign size={16} />
-              </a>
-              <a
-                href={WA}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/10 transition-all active:scale-90"
-              >
-                <MessageCircle size={16} />
-              </a>
+              {brand.instagramUrl && (
+                <a
+                  href={brand.instagramUrl}
+                  target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-green-400 hover:border-green-500/30 hover:bg-green-500/10 transition-all active:scale-90"
+                >
+                  <AtSign size={16} />
+                </a>
+              )}
+              {hasWa && (
+                <a
+                  href={waLink(brand)}
+                  target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/10 transition-all active:scale-90"
+                >
+                  <MessageCircle size={16} />
+                </a>
+              )}
             </div>
           </div>
 
@@ -80,41 +89,48 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Contato</h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <MapPin size={16} className="text-green-500 mt-0.5 shrink-0" />
-                <span className="text-sm text-zinc-500">Rua das Flores, 123<br />Centro — São Paulo, SP</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={16} className="text-green-500 shrink-0" />
-                <a href="tel:+5519981499229" className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
-                  (19) 98149-9229
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <Clock size={16} className="text-green-500 mt-0.5 shrink-0" />
-                <span className="text-sm text-zinc-500">
-                  Seg – Sex: 08h às 18h<br />
-                  Sábado: 08h às 13h<br />
-                  <span className="text-zinc-600">Domingo: Fechado</span>
-                </span>
-              </li>
-              <li>
-                <a
-                  href={`${WA}?text=${encodeURIComponent('Olá! Vim pelo site da M CELL.')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-medium transition-all active:scale-95"
-                >
-                  <MessageCircle size={13} /> Falar no WhatsApp
-                </a>
-              </li>
+              {brand.address && (
+                <li className="flex items-start gap-3">
+                  <MapPin size={16} className="text-green-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-zinc-500">{brand.address}</span>
+                </li>
+              )}
+              {brand.phone && (
+                <li className="flex items-center gap-3">
+                  <Phone size={16} className="text-green-500 shrink-0" />
+                  <a href={`tel:${brand.phone.replace(/[^\d+]/g, '')}`} className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
+                    {brand.phone}
+                  </a>
+                </li>
+              )}
+              {(brand.hoursWeekday || brand.hoursSaturday) && (
+                <li className="flex items-start gap-3">
+                  <Clock size={16} className="text-green-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-zinc-500">
+                    {brand.hoursWeekday && <>Seg – Sex: {brand.hoursWeekday}<br /></>}
+                    {brand.hoursSaturday && <>Sábado: {brand.hoursSaturday}<br /></>}
+                    <span className="text-zinc-600">Domingo: Fechado</span>
+                  </span>
+                </li>
+              )}
+              {brand.whatsapp && (
+                <li>
+                  <a
+                    href={waLink(brand, `Olá! Vim pelo site da ${brand.name}.`)}
+                    target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-medium transition-all active:scale-95"
+                  >
+                    <MessageCircle size={13} /> Falar no WhatsApp
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </div>
 
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-zinc-600">© 2024 M CELL. Todos os direitos reservados.</p>
+          <p className="text-xs text-zinc-600">© {new Date().getFullYear()} {brand.name}. Todos os direitos reservados.</p>
           <p className="text-xs text-zinc-700">Feito com dedicação para você</p>
         </div>
       </div>

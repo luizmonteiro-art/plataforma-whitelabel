@@ -1,13 +1,15 @@
 ﻿import { Calendar, Shield, Clock, Star } from 'lucide-react'
 import { getServices, getStoreConfig } from '@/lib/db'
+import { getStoreIdFromHeaders } from '@/lib/store-headers'
 import { AgendarClient } from './AgendarClient'
 
 export const revalidate = 60
 
 export default async function AgendarPage() {
+  const storeId = await getStoreIdFromHeaders()
   const [allServices, config] = await Promise.all([
-    getServices().catch(() => []),
-    getStoreConfig().catch(() => null),
+    getServices(storeId).catch(() => []),
+    getStoreConfig(storeId).catch(() => null),
   ])
   const services = allServices.filter(s => s.is_active)
   const waNumber = config?.whatsapp
@@ -36,7 +38,7 @@ export default async function AgendarPage() {
 
       {/* Form */}
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-        <AgendarClient services={services} waNumber={waNumber} />
+        <AgendarClient storeId={storeId} services={services} waNumber={waNumber} />
       </div>
     </div>
   )

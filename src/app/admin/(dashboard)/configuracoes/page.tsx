@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react'
 import { Settings, Save, Smartphone, Clock, Phone, Palette, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { getStoreConfig, updateStoreConfig, type StoreConfig } from '@/lib/db'
+import { useAdminStore } from '@/contexts/AdminStore'
 
 type FieldItem = { key: keyof StoreConfig; label: string; placeholder: string; multiline?: boolean }
 
 const PRESET_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#8b5cf6', '#ef4444', '#ec4899', '#06b6d4', '#eab308']
 
 export default function ConfiguracoesAdminPage() {
+  const { storeId } = useAdminStore()
   const [config, setConfig] = useState<Partial<StoreConfig>>({
     store_name: '',
     whatsapp: '',
@@ -24,7 +26,7 @@ export default function ConfiguracoesAdminPage() {
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
-    getStoreConfig()
+    getStoreConfig(storeId)
       .then(data => {
         if (data) setConfig(data)
         setStatus('idle')
@@ -33,12 +35,12 @@ export default function ConfiguracoesAdminPage() {
         setStatus('error')
         setErrorMsg('Erro ao carregar configurações. Verifique a conexão com o Supabase.')
       })
-  }, [])
+  }, [storeId])
 
   const handleSave = async () => {
     setStatus('saving')
     try {
-      await updateStoreConfig(config)
+      await updateStoreConfig(storeId, config)
       setStatus('saved')
       // Atualiza a cor no tema ao vivo
       if (config.accent_color) {
@@ -217,8 +219,7 @@ export default function ConfiguracoesAdminPage() {
       </button>
 
       <p className="text-xs text-zinc-600">
-        Store ID: <span className="font-mono text-zinc-400">{process.env.NEXT_PUBLIC_STORE_ID ?? 'não definido'}</span>
-        {' '}— cada loja tem um ID único definido nas variáveis de ambiente do Vercel.
+        Store ID: <span className="font-mono text-zinc-400">{storeId || 'não definido'}</span>
       </p>
     </div>
   )

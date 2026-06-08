@@ -5,6 +5,7 @@ import { Plus, Tag, Percent, X, Package, Upload, Image as ImageIcon, ArrowUp, Ar
 import { useRouter } from 'next/navigation'
 import { formatCurrency, cn } from '@/lib/utils'
 import { getBanners, upsertBanner, deleteBanner as deleteBannerDb, getProducts } from '@/lib/db'
+import { useAdminStore } from '@/contexts/AdminStore'
 import type { Banner, Product } from '@/types'
 
 type Tab = 'banners' | 'descontos' | 'feed'
@@ -30,15 +31,17 @@ const TAG_OPTIONS = [
 
 export default function PromocoesAdminPage() {
   const router = useRouter()
+  const { storeId } = useAdminStore()
   const [tab, setTab] = useState<Tab>('banners')
   const [banners, setBanners] = useState<Banner[]>([])
   const [promoProducts, setPromoProducts] = useState<Product[]>([])
   const [posts, setPosts] = useState<Post[]>([])
 
   useEffect(() => {
-    getBanners().then(setBanners).catch(console.error)
-    getProducts().then(setPromoProducts).catch(console.error)
-  }, [])
+    if (!storeId) return
+    getBanners(storeId).then(setBanners).catch(console.error)
+    getProducts(storeId).then(setPromoProducts).catch(console.error)
+  }, [storeId])
 
   // Banner state
   const [showBannerForm, setShowBannerForm] = useState(false)
@@ -56,7 +59,7 @@ export default function PromocoesAdminPage() {
     setBanners(prev => {
       const next = prev.map(b => b.id === id ? { ...b, is_active: !b.is_active } : b)
       const updated = next.find(b => b.id === id)
-      if (updated) upsertBanner({ id, is_active: updated.is_active }).catch(console.error)
+      if (updated) upsertBanner(storeId, { id, is_active: updated.is_active }).catch(console.error)
       return next
     })
   }
@@ -70,8 +73,8 @@ export default function PromocoesAdminPage() {
       const swap = dir === 'up' ? idx - 1 : idx + 1
       ;[next[idx], next[swap]] = [next[swap], next[idx]]
       // persist new order positions
-      upsertBanner({ id: next[idx].id, order: idx }).catch(console.error)
-      upsertBanner({ id: next[swap].id, order: swap }).catch(console.error)
+      upsertBanner(storeId, { id: next[idx].id, order: idx }).catch(console.error)
+      upsertBanner(storeId, { id: next[swap].id, order: swap }).catch(console.error)
       return next
     })
   }
@@ -92,7 +95,7 @@ export default function PromocoesAdminPage() {
     reader.onload = ev => {
       const image_url = ev.target?.result as string
       setBanners(prev => prev.map(b => b.id === id ? { ...b, image_url } : b))
-      upsertBanner({ id, image_url }).catch(console.error)
+      upsertBanner(storeId, { id, image_url }).catch(console.error)
     }
     reader.readAsDataURL(file)
     e.target.value = ''
@@ -106,7 +109,7 @@ export default function PromocoesAdminPage() {
       is_active: true,
       order: banners.length + 1,
     }
-    const saved = await upsertBanner(payload).catch(() => null)
+    const saved = await upsertBanner(storeId, payload).catch(() => null)
     const newBanner: Banner = saved ?? { id: String(Date.now()), ...payload }
     setBanners(prev => [...prev, newBanner])
     setShowBannerForm(false)
@@ -115,7 +118,7 @@ export default function PromocoesAdminPage() {
 
   const deleteBanner = async (id: string) => {
     if (confirm('Remover este banner?')) {
-      await deleteBannerDb(id).catch(console.error)
+      await deleteBannerDb(storeId, id).catch(console.error)
       setBanners(prev => prev.filter(b => b.id !== id))
     }
   }

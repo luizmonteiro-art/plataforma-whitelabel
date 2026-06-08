@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { getStoreConfig } from "@/lib/db";
+import { getStoreIdFromHeaders } from "@/lib/store-headers";
 import StoreTheme from "@/components/StoreTheme";
 
 const inter = Inter({
@@ -11,19 +13,30 @@ const inter = Inter({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const config = await getStoreConfig().catch(() => null)
-  const name = config?.store_name ?? "Fast App"
-  return {
-    title: `${name} — Loja de Celulares & Assistência Técnica`,
-    description: config?.about ?? "iPhones lacrados e seminovos, Android, acessórios e assistência técnica especializada.",
+  try {
+    const storeId = await getStoreIdFromHeaders()
+    const config = storeId ? await getStoreConfig(storeId) : null
+    const name = config?.store_name ?? "Plataforma White-Label"
+    return {
+      title: `${name} — Loja de Celulares & Assistência Técnica`,
+      description: config?.about ?? "Loja de celulares e assistência técnica.",
+    }
+  } catch {
+    return { title: "Plataforma White-Label" }
   }
 }
 
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const config = await getStoreConfig().catch(() => null)
-  const accentColor = config?.accent_color ?? "#22c55e"
+  let accentColor = "#22c55e"
+  try {
+    const storeId = await getStoreIdFromHeaders()
+    if (storeId) {
+      const config = await getStoreConfig(storeId)
+      accentColor = config?.accent_color ?? "#22c55e"
+    }
+  } catch {}
 
   return (
     <html lang="pt-BR" className={`${inter.variable} h-full antialiased`} style={{ backgroundColor: '#0a0a0a' }}>

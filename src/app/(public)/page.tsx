@@ -4,6 +4,7 @@ import { HeroBanner } from '@/components/store/HeroBanner'
 import { ProductCard } from '@/components/store/ProductCard'
 import { FadeIn, StaggerChildren, StaggerItem } from '@/components/ui/FadeIn'
 import { getProducts, getServices, getBanners } from '@/lib/db'
+import { getStoreIdFromHeaders } from '@/lib/store-headers'
 import {
   AppleLogo, AndroidLogo, PhoneCaseLogo,
   ScreenProtectorLogo, ChargerLogo, WrenchToolsLogo
@@ -82,10 +83,11 @@ const testimonials = [
 export const revalidate = 60
 
 export default async function HomePage() {
+  const storeId = await getStoreIdFromHeaders()
   const [products, services, banners] = await Promise.all([
-    getProducts().catch(() => []),
-    getServices().catch(() => []),
-    getBanners().catch(() => []),
+    getProducts(storeId).catch(() => []),
+    getServices(storeId).catch(() => []),
+    getBanners(storeId).catch(() => []),
   ])
 
   const featuredProducts = products.filter(p => p.is_featured && p.is_active).slice(0, 4)

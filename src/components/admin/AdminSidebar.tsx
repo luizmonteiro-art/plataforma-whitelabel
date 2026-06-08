@@ -9,17 +9,19 @@ import {
   Settings, Smartphone, ChevronLeft, ChevronRight, LogOut, Tag, X, Menu, FileText, Stethoscope
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { usePlan, useStoreConfig } from '@/contexts/AdminStore'
+import type { ModuleFlag } from '@/lib/plans'
 
-const navItems = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { href: '/admin/estoque', label: 'Estoque', icon: Package },
-  { href: '/admin/vendas', label: 'Vendas', icon: ShoppingCart },
-  { href: '/admin/servicos', label: 'Ordens de Serviço', icon: Wrench },
-  { href: '/admin/agendamentos', label: 'Agendamentos', icon: Calendar },
-  { href: '/admin/orcamentos', label: 'Orçamentos', icon: FileText },
-  { href: '/admin/assistencia', label: 'Serviços', icon: Stethoscope },
-  { href: '/admin/promocoes', label: 'Promoções & Feed', icon: Tag },
-  { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
+const navItems: { href: string; label: string; icon: React.ElementType; exact?: boolean; module: ModuleFlag }[] = [
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: 'DASHBOARD' },
+  { href: '/admin/estoque', label: 'Estoque', icon: Package, module: 'ESTOQUE' },
+  { href: '/admin/vendas', label: 'Vendas', icon: ShoppingCart, module: 'VENDAS' },
+  { href: '/admin/servicos', label: 'Ordens de Serviço', icon: Wrench, module: 'ORDENS_SERVICO' },
+  { href: '/admin/agendamentos', label: 'Agendamentos', icon: Calendar, module: 'AGENDAMENTOS' },
+  { href: '/admin/orcamentos', label: 'Orçamentos', icon: FileText, module: 'ORCAMENTOS' },
+  { href: '/admin/assistencia', label: 'Serviços', icon: Stethoscope, module: 'AGENDAMENTOS' },
+  { href: '/admin/promocoes', label: 'Promoções & Feed', icon: Tag, module: 'PROMOCOES' },
+  { href: '/admin/configuracoes', label: 'Configurações', icon: Settings, module: 'CONFIGURACOES' },
 ]
 
 interface Props {
@@ -32,6 +34,12 @@ interface Props {
 export function AdminSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Props) {
   const pathname = usePathname()
   const router = useRouter()
+  const { hasModule } = usePlan()
+  const config = useStoreConfig()
+  const storeName = config?.store_name?.trim() || 'Minha Loja'
+  const initial = storeName.charAt(0).toUpperCase()
+  const accent = config?.accent_color || '#22c55e'
+  const visibleNavItems = navItems.filter(item => hasModule(item.module))
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href
@@ -53,19 +61,26 @@ export function AdminSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }:
       {/* Logo */}
       <div className={cn('flex items-center h-16 border-b border-white/[0.06] px-4', collapsed ? 'justify-center' : 'gap-3')}>
         {collapsed ? (
-          <span className="text-base font-black text-green-400 tracking-tighter drop-shadow-[0_0_6px_rgba(34,197,94,0.5)]">M</span>
+          config?.logo_url ? (
+            <Image src={config.logo_url} alt={storeName} height={28} width={28} className="object-contain rounded-md" />
+          ) : (
+            <span className="text-base font-black tracking-tighter" style={{ color: accent }}>{initial}</span>
+          )
         ) : (
-          <div className="flex items-center gap-2.5 select-none">
-            <Image
-              src="/mcelllogo.jpeg"
-              alt="M CELL"
-              height={28}
-              width={28}
-              className="object-contain rounded-sm drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
-            />
-            <div className="flex flex-col leading-none">
-              <span className="text-sm font-black text-white tracking-tight">M <span className="text-green-400">CELL</span></span>
-              <p className="text-[9px] text-green-500/60 uppercase tracking-widest mt-0.5">Painel Admin</p>
+          <div className="flex items-center gap-2.5 select-none min-w-0">
+            {config?.logo_url ? (
+              <Image src={config.logo_url} alt={storeName} height={28} width={28} className="object-contain rounded-md shrink-0" />
+            ) : (
+              <span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-black text-black"
+                style={{ backgroundColor: accent }}
+              >
+                {initial}
+              </span>
+            )}
+            <div className="flex flex-col leading-none min-w-0">
+              <span className="text-sm font-black text-white tracking-tight truncate">{storeName}</span>
+              <p className="text-[9px] uppercase tracking-widest mt-0.5" style={{ color: accent, opacity: 0.7 }}>Painel Admin</p>
             </div>
           </div>
         )}
@@ -73,7 +88,7 @@ export function AdminSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }:
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
-        {navItems.map(({ href, label, icon: Icon, exact }) => (
+        {visibleNavItems.map(({ href, label, icon: Icon, exact }) => (
           <Link
             key={href}
             href={href}

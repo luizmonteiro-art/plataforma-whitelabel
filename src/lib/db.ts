@@ -1,15 +1,28 @@
 /**
  * db.ts — Camada de acesso ao Supabase multi-tenant.
- * Todas as queries filtram por STORE_ID (uma variável de ambiente por deploy).
+ * Todas as funções recebem storeId explicitamente.
+ * Server Components usam getStoreIdFromHeaders() para obtê-lo.
+ * Client Components recebem storeId via props/context (do AdminStoreProvider).
  */
 
 import { cache } from 'react'
-import { supabase } from './supabase'
+import { supabase as anonClient } from './supabase'
+import { getSupabaseBrowser } from './supabase-browser'
 import type { Product, Service, Appointment, ServiceOrder, Sale, Banner, Quote } from '@/types'
 
-export const STORE_ID = process.env.NEXT_PUBLIC_STORE_ID ?? 'default'
+/**
+ * Seletor de cliente Supabase, ciente do contexto (RLS):
+ *  - No browser → cliente com sessão (cookies). As políticas RLS usam o e-mail
+ *    do usuário autenticado (owns_store) para liberar leitura/escrita da loja.
+ *  - No server → cliente anon (sem sessão). Cobre as leituras públicas da
+ *    vitrine, liberadas por políticas RLS de SELECT público.
+ */
+function db() {
+  if (typeof window !== 'undefined') return getSupabaseBrowser() ?? anonClient
+  return anonClient
+}
 
-// ─── store_config ──────────────────────────────────────────────────────────
+// ─── store_config ──────────────────────────────────────────────────
 
 export interface StoreConfig {
   id: string
@@ -27,211 +40,233 @@ export interface StoreConfig {
 }
 
 // cache() deduplica chamadas simultâneas no mesmo request de servidor.
-// generateMetadata e RootLayout chamam getStoreConfig — sem cache() isso
-// dispara 2 queries ao Supabase; com cache() é sempre 1 query por request.
-export const getStoreConfig = cache(async (): Promise<StoreConfig | null> => {
-  const { data } = await supabase
+export const getStoreConfig = cache(async (storeId: string): Promise<StoreConfig | null> => {
+  if (!storeId) return null
+  const { data } = await db()
     .from('store_config')
     .select('*')
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .single()
   return data
 })
 
-export async function updateStoreConfig(config: Partial<Omit<StoreConfig, 'id' | 'store_id'>>) {
-  const { data, error } = await supabase
+export async function updateStoreConfig(storeId: string, config: Partial<Omit<StoreConfig, 'id' | 'store_id'>>) {
+  const { data, error } = await db()
     .from('store_config')
     .update({ ...config, updated_at: new Date().toISOString() })
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .select()
     .single()
   if (error) throw error
   return data as StoreConfig
 }
 
-// ─── products ─────────────────────────────────────────────────────────────
+// ─── products ─────────────────────────────────────────────────────
 
-export async function getProducts(): Promise<Product[]> {
-  const { data, error } = await supabase
+export async function getProducts(storeId: string): Promise<Product[]> {
+  const { data, error } = await db()
     .from('products')
     .select('*')
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as Product[]
 }
 
-export async function upsertProduct(product: Partial<Product> & { id?: string }) {
-  const { data, error } = await supabase
+export async function countProducts(storeId: string): Promise<number> {
+  const { count, error } = await db()
     .from('products')
-    .upsert({ ...product, store_id: STORE_ID })
+    .select('*', { count: 'exact', head: true })
+    .eq('store_id', storeId)
+  if (error) throw error
+  return count ?? 0
+}
+
+export async function upsertProduct(storeId: string, product: Partial<Product> & { id?: string }) {
+  const { data, error } = await db()
+    .from('products')
+    .upsert({ ...product, store_id: storeId })
     .select()
     .single()
   if (error) throw error
   return data as Product
 }
 
-export async function deleteProduct(id: string) {
-  const { error } = await supabase
-    .from('products').delete().eq('id', id).eq('store_id', STORE_ID)
+export async function deleteProduct(storeId: string, id: string) {
+  const { error } = await db()
+    .from('products').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }
 
-// ─── services ─────────────────────────────────────────────────────────────
+// ─── services ─────────────────────────────────────────────────────
 
-export async function getServices(): Promise<Service[]> {
-  const { data, error } = await supabase
+export async function getServices(storeId: string): Promise<Service[]> {
+  const { data, error } = await db()
     .from('services')
     .select('*')
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .order('created_at', { ascending: true })
   if (error) throw error
   return (data ?? []) as Service[]
 }
 
-export async function upsertService(service: Partial<Service> & { id?: string }) {
-  const { data, error } = await supabase
+export async function upsertService(storeId: string, service: Partial<Service> & { id?: string }) {
+  const { data, error } = await db()
     .from('services')
-    .upsert({ ...service, store_id: STORE_ID })
+    .upsert({ ...service, store_id: storeId })
     .select()
     .single()
   if (error) throw error
   return data as Service
 }
 
-export async function deleteService(id: string) {
-  const { error } = await supabase
-    .from('services').delete().eq('id', id).eq('store_id', STORE_ID)
+export async function deleteService(storeId: string, id: string) {
+  const { error } = await db()
+    .from('services').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }
 
-// ─── appointments ─────────────────────────────────────────────────────────
+// ─── appointments ─────────────────────────────────────────────────
 
-export async function getAppointments(): Promise<Appointment[]> {
-  const { data, error } = await supabase
+export async function getAppointments(storeId: string): Promise<Appointment[]> {
+  const { data, error } = await db()
     .from('appointments')
     .select('*')
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .order('scheduled_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as Appointment[]
 }
 
-export async function upsertAppointment(appt: Partial<Appointment> & { id?: string }) {
-  const { data, error } = await supabase
+export async function upsertAppointment(storeId: string, appt: Partial<Appointment> & { id?: string }) {
+  const { data, error } = await db()
     .from('appointments')
-    .upsert({ ...appt, store_id: STORE_ID })
+    .upsert({ ...appt, store_id: storeId })
     .select()
     .single()
   if (error) throw error
   return data as Appointment
 }
 
-export async function deleteAppointment(id: string) {
-  const { error } = await supabase
-    .from('appointments').delete().eq('id', id).eq('store_id', STORE_ID)
+export async function deleteAppointment(storeId: string, id: string) {
+  const { error } = await db()
+    .from('appointments').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }
 
-// ─── service_orders ───────────────────────────────────────────────────────
+/**
+ * Criação de agendamento pelo visitante público (site /agendar).
+ * Sob RLS, o anon pode INSERIR mas não pode SELECIONAR a linha de volta —
+ * por isso este insert NÃO usa .select() (evita erro de RETURNING bloqueado).
+ */
+export async function createPublicAppointment(
+  storeId: string,
+  appt: Omit<Appointment, 'id' | 'created_at' | 'status'> & { status?: Appointment['status'] },
+) {
+  const { error } = await db()
+    .from('appointments')
+    .insert({ ...appt, store_id: storeId })
+  if (error) throw error
+}
 
-export async function getServiceOrders(): Promise<ServiceOrder[]> {
-  const { data, error } = await supabase
+// ─── service_orders ───────────────────────────────────────────────
+
+export async function getServiceOrders(storeId: string): Promise<ServiceOrder[]> {
+  const { data, error } = await db()
     .from('service_orders')
     .select('*')
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as ServiceOrder[]
 }
 
-export async function upsertServiceOrder(order: Partial<ServiceOrder> & { id?: string }) {
-  const { data, error } = await supabase
+export async function upsertServiceOrder(storeId: string, order: Partial<ServiceOrder> & { id?: string }) {
+  const { data, error } = await db()
     .from('service_orders')
-    .upsert({ ...order, store_id: STORE_ID })
+    .upsert({ ...order, store_id: storeId })
     .select()
     .single()
   if (error) throw error
   return data as ServiceOrder
 }
 
-export async function deleteServiceOrder(id: string) {
-  const { error } = await supabase
-    .from('service_orders').delete().eq('id', id).eq('store_id', STORE_ID)
+export async function deleteServiceOrder(storeId: string, id: string) {
+  const { error } = await db()
+    .from('service_orders').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }
 
-// ─── sales ────────────────────────────────────────────────────────────────
+// ─── sales ────────────────────────────────────────────────────────
 
-export async function getSales(): Promise<Sale[]> {
-  const { data, error } = await supabase
+export async function getSales(storeId: string): Promise<Sale[]> {
+  const { data, error } = await db()
     .from('sales')
     .select('*')
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as Sale[]
 }
 
-export async function insertSale(sale: Omit<Sale, 'id' | 'created_at'>) {
-  const { data, error } = await supabase
+export async function insertSale(storeId: string, sale: Omit<Sale, 'id' | 'created_at'>) {
+  const { data, error } = await db()
     .from('sales')
-    .insert({ ...sale, store_id: STORE_ID })
+    .insert({ ...sale, store_id: storeId })
     .select()
     .single()
   if (error) throw error
   return data as Sale
 }
 
-export async function upsertSale(sale: Partial<Sale> & { id: string }) {
-  const { data, error } = await supabase
+export async function upsertSale(storeId: string, sale: Partial<Sale> & { id: string }) {
+  const { data, error } = await db()
     .from('sales')
-    .upsert({ ...sale, store_id: STORE_ID })
+    .upsert({ ...sale, store_id: storeId })
     .select()
     .single()
   if (error) throw error
   return data as Sale
 }
 
-export async function deleteSale(id: string) {
-  const { error } = await supabase
-    .from('sales').delete().eq('id', id).eq('store_id', STORE_ID)
+export async function deleteSale(storeId: string, id: string) {
+  const { error } = await db()
+    .from('sales').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }
 
-// ─── banners ──────────────────────────────────────────────────────────────
+// ─── banners ──────────────────────────────────────────────────────
 
-export async function getBanners(): Promise<Banner[]> {
-  const { data, error } = await supabase
+export async function getBanners(storeId: string): Promise<Banner[]> {
+  const { data, error } = await db()
     .from('banners')
     .select('*')
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .order('order', { ascending: true })
   if (error) throw error
   return (data ?? []) as Banner[]
 }
 
-export async function upsertBanner(banner: Partial<Banner> & { id?: string }) {
-  const { data, error } = await supabase
+export async function upsertBanner(storeId: string, banner: Partial<Banner> & { id?: string }) {
+  const { data, error } = await db()
     .from('banners')
-    .upsert({ ...banner, store_id: STORE_ID })
+    .upsert({ ...banner, store_id: storeId })
     .select()
     .single()
   if (error) throw error
   return data as Banner
 }
 
-export async function deleteBanner(id: string) {
-  const { error } = await supabase
-    .from('banners').delete().eq('id', id).eq('store_id', STORE_ID)
+export async function deleteBanner(storeId: string, id: string) {
+  const { error } = await db()
+    .from('banners').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }
 
-// ─── storage (upload de imagens) ────────────────────────────────────────────
+// ─── storage (upload de imagens) ──────────────────────────────────
 
 const STORAGE_BUCKET = 'store-assets'
 
-/** Lê um File como data URL (base64) — fallback quando o Storage não está disponível. */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -241,51 +276,44 @@ function fileToBase64(file: File): Promise<string> {
   })
 }
 
-/**
- * Faz upload de uma imagem para o bucket `store-assets` e retorna a URL pública.
- * Se o bucket não existir / Storage não estiver configurado, faz fallback para
- * base64 (data URL) — assim o cadastro nunca quebra.
- * `folder` ex.: 'products', 'banners'.
- */
-export async function uploadImage(file: File, folder: string): Promise<string> {
+export async function uploadImage(file: File, folder: string, storeId: string): Promise<string> {
   try {
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const path = `${STORE_ID}/${folder}/${crypto.randomUUID()}.${ext}`
-    const { error } = await supabase.storage
+    const path = `${storeId}/${folder}/${crypto.randomUUID()}.${ext}`
+    const { error } = await db().storage
       .from(STORAGE_BUCKET)
       .upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type })
     if (error) throw error
-    return supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl
+    return db().storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl
   } catch {
-    // Bucket ausente ou sem credenciais → guarda a imagem inline (base64)
     return fileToBase64(file)
   }
 }
 
-// ─── quotes ───────────────────────────────────────────────────────────────────
+// ─── quotes ───────────────────────────────────────────────────────
 
-export async function getQuotes(): Promise<Quote[]> {
-  const { data, error } = await supabase
+export async function getQuotes(storeId: string): Promise<Quote[]> {
+  const { data, error } = await db()
     .from('quotes')
     .select('*')
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as Quote[]
 }
 
-export async function upsertQuote(quote: Partial<Quote> & { id?: string }) {
-  const { data, error } = await supabase
+export async function upsertQuote(storeId: string, quote: Partial<Quote> & { id?: string }) {
+  const { data, error } = await db()
     .from('quotes')
-    .upsert({ ...quote, store_id: STORE_ID })
+    .upsert({ ...quote, store_id: storeId })
     .select()
     .single()
   if (error) throw error
   return data as Quote
 }
 
-export async function deleteQuote(id: string) {
-  const { error } = await supabase
-    .from('quotes').delete().eq('id', id).eq('store_id', STORE_ID)
+export async function deleteQuote(storeId: string, id: string) {
+  const { error } = await db()
+    .from('quotes').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }

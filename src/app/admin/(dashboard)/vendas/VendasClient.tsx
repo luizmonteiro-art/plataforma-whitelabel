@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { Plus, TrendingUp, X, ChevronDown, Target, Trash2, CheckCircle, XCircle, Search, ArrowLeft, Edit2, Package, Percent, Tag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, paymentMethodLabel, cn } from '@/lib/utils'
-import { useSales, useProducts } from '@/contexts/AdminStore'
+import { useSales, useProducts, useAdminStore } from '@/contexts/AdminStore'
 import { insertSale, upsertSale, deleteSale, upsertProduct } from '@/lib/db'
 import type { Sale, PaymentMethod } from '@/types'
 
@@ -24,6 +24,7 @@ type DateFilter = 'todos' | 'hoje' | 'semana' | 'mes'
 
 export function VendasClient({ initialSales: _ }: Props) {
   const router = useRouter()
+  const { storeId } = useAdminStore()
   const [rawSales, setSalesRaw] = useSales()
   const [storeProducts, setProducts] = useProducts()
   const [sales, setSalesLocal] = useState<SaleWithStatus[]>(() =>
@@ -114,7 +115,7 @@ export function VendasClient({ initialSales: _ }: Props) {
       customer_name: editCustomer || undefined,
       payment_method: editPayment,
     }
-    await upsertSale(changes).catch(console.error)
+    await upsertSale(storeId, changes).catch(console.error)
     setSales(prev => prev.map(s => s.id === editSale.id ? {
       ...s,
       ...changes,
@@ -161,11 +162,11 @@ export function VendasClient({ initialSales: _ }: Props) {
       payment_method: formPayment,
       customer_name: formCustomer || undefined,
     }
-    const saved = await insertSale(payload).catch(() => null)
+    const saved = await insertSale(storeId, payload).catch(() => null)
 
     // Decrementa o estoque do produto vendido (persiste + atualiza UI)
     const newStock = Math.max(0, product.stock_qty - qty)
-    upsertProduct({ id: product.id, stock_qty: newStock }).catch(console.error)
+    upsertProduct(storeId, { id: product.id, stock_qty: newStock }).catch(console.error)
     setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock_qty: newStock } : p))
 
     const newSale: SaleWithStatus = {
@@ -184,7 +185,7 @@ export function VendasClient({ initialSales: _ }: Props) {
 
   const removeSale = async (id: string) => {
     if (!confirm('Remover esta venda?')) return
-    await deleteSale(id).catch(console.error)
+    await deleteSale(storeId, id).catch(console.error)
     setSales(prev => prev.filter(s => s.id !== id))
   }
 

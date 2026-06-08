@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Monitor, Battery, Plug, HardDrive, Cpu, Sparkles, Camera, Wrench, ArrowRight, Clock, Shield, Star, MessageCircle } from 'lucide-react'
 import { getServices, getStoreConfig } from '@/lib/db'
+import { getStoreIdFromHeaders } from '@/lib/store-headers'
 
 const iconMap: Record<string, React.ElementType> = {
   Monitor, Battery, Plug, HardDrive, Cpu, Sparkles, Camera, Wrench,
@@ -17,9 +18,10 @@ const steps = [
 export const revalidate = 60
 
 export default async function ServicosPage() {
+  const storeId = await getStoreIdFromHeaders()
   const [allServices, config] = await Promise.all([
-    getServices().catch(() => []),
-    getStoreConfig().catch(() => null),
+    getServices(storeId).catch(() => []),
+    getStoreConfig(storeId).catch(() => null),
   ])
   const services = allServices.filter(s => s.is_active)
   const wa = config?.whatsapp ? `55${config.whatsapp.replace(/\D/g, '')}` : '5519981499229'

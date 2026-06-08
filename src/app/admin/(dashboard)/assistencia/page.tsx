@@ -8,7 +8,7 @@ import {
   ToggleLeft, ToggleRight, Eye, EyeOff,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useServices } from '@/contexts/AdminStore'
+import { useServices, useAdminStore } from '@/contexts/AdminStore'
 import { upsertService, deleteService } from '@/lib/db'
 import { formatCurrency, cn } from '@/lib/utils'
 import type { Service } from '@/types'
@@ -49,6 +49,7 @@ const emptyForm: Omit<Service, 'id'> = {
 
 export default function AssistenciaPage() {
   const router = useRouter()
+  const { storeId } = useAdminStore()
   const [services, setServicesRaw] = useServices()
   const setServices = (fn: (prev: Service[]) => Service[]) => setServicesRaw(fn)
 
@@ -95,10 +96,10 @@ export default function AssistenciaPage() {
     }
     if (editService) {
       const updated = { ...editService, ...data }
-      await upsertService(updated).catch(console.error)
+      await upsertService(storeId, updated).catch(console.error)
       setServices(prev => prev.map(s => s.id === editService.id ? updated : s))
     } else {
-      const saved = await upsertService(data).catch(() => null)
+      const saved = await upsertService(storeId, data).catch(() => null)
       const newService: Service = saved ?? { id: String(Date.now()), ...data }
       setServices(prev => [...prev, newService])
     }
@@ -109,13 +110,13 @@ export default function AssistenciaPage() {
     const service = services.find(s => s.id === id)
     if (!service) return
     const is_active = !service.is_active
-    await upsertService({ id, is_active }).catch(console.error)
+    await upsertService(storeId, { id, is_active }).catch(console.error)
     setServices(prev => prev.map(s => s.id === id ? { ...s, is_active } : s))
   }
 
   const handleDelete = async (id: string) => {
     if (confirm('Remover este serviço do catálogo?')) {
-      await deleteService(id).catch(console.error)
+      await deleteService(storeId, id).catch(console.error)
       setServices(prev => prev.filter(s => s.id !== id))
     }
   }

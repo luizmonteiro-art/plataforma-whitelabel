@@ -2,19 +2,25 @@
 
 /**
  * AdminStore — Fonte única de verdade para todos os dados do admin.
- * Conectado ao Supabase: carrega na montagem, persiste em tempo real.
+ * storeId e planId vêm do Server Component pai (layout.tsx),
+ * que os lê dos headers injetados pelo middleware.
  */
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { Product, Service, Appointment, ServiceOrder, Sale, Banner } from '@/types'
 import {
   getProducts, getServices, getAppointments,
-  getServiceOrders, getSales, getBanners,
+  getServiceOrders, getSales, getBanners, getStoreConfig,
+  type StoreConfig,
 } from '@/lib/db'
+import { getPlan, planHasModule, type ModuleFlag, type PlanDef } from '@/lib/plans'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 interface AdminStoreState {
+  storeId: string
+  planId: string
+  storeConfig: StoreConfig | null
   products: Product[]
   services: Service[]
   appointments: Appointment[]
@@ -43,8 +49,17 @@ const Ctx = createContext<AdminStore | null>(null)
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-export function AdminStoreProvider({ children }: { children: ReactNode }) {
+interface ProviderProps {
+  storeId: string
+  planId: string
+  children: ReactNode
+}
+
+export function AdminStoreProvider({ storeId, planId, children }: ProviderProps) {
   const [state, setState] = useState<AdminStoreState>({
+    storeId,
+    planId,
+    storeConfig: null,
     products: [],
     services: [],
     appointments: [],
@@ -57,17 +72,19 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
 
   const load = async () => {
     try {
-      const [products, services, appointments, serviceOrders, sales, banners] =
+      const [storeConfig, products, services, appointments, serviceOrders, sales, banners] =
         await Promise.all([
-          getProducts(),
-          getServices(),
-          getAppointments(),
-          getServiceOrders(),
-          getSales(),
-          getBanners(),
+          getStoreConfig(storeId),
+          getProducts(storeId),
+          getServices(storeId),
+          getAppointments(storeId),
+          getServiceOrders(storeId),
+          getSales(storeId),
+          getBanners(storeId),
         ])
       setState(s => ({
         ...s,
+        storeConfig,
         products,
         services,
         appointments,
@@ -88,9 +105,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { load() }, [])
 
-  // Setters locais (o componente chama db.ts diretamente para persistir,
-  // depois chama o setter para atualizar a UI sem re-fetch completo)
-  const make = <K extends keyof Omit<AdminStoreState, '_loaded' | '_error'>>(key: K) =>
+  const make = <K extends keyof Omit<AdminStoreState, '_loaded' | '_error' | 'storeId' | 'planId'>>(key: K) =>
     (fn: (prev: AdminStoreState[K]) => AdminStoreState[K]) => {
       setState(prev => ({ ...prev, [key]: fn(prev[key]) }))
     }
@@ -109,7 +124,7 @@ export function AdminStoreProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// ── Hooks ─────────────────────────────────────────────────────────────────────
 
 export function useAdminStore() {
   const ctx = useContext(Ctx)
@@ -117,9 +132,32 @@ export function useAdminStore() {
   return ctx
 }
 
-export const useProducts     = () => { const s = useAdminStore(); return [s.products,      s.setProducts]      as const }
-export const useServices     = () => { const s = useAdminStore(); return [s.services,      s.setServices]      as const }
-export const useAppointments = () => { const s = useAdminStore(); return [s.appointments,  s.setAppointments]  as const }
-export const useServiceOrders= () => { const s = useAdminStore(); return [s.serviceOrders, s.setServiceOrders] as const }
-export const useSales        = () => { const s = useAdminStore(); return [s.sales,         s.setSales]         as const }
-export const useBanners      = () => { const s = useAdminStore(); return [s.banners,       s.setBanners]       as const }
+/**
+ * usePlan — feature flags da loja atual, derivadas do planId (header → context).
+ * Camada de UX: esconder links, bloquear telas, fazer upsell.
+ */
+export function usePlan(): {
+  planId: string
+  plan: PlanDef
+  hasModule: (flag: ModuleFlag) => boolean
+  productLimit: number
+} {
+  const { planId } = useAdminStore()
+  const plan = getPlan(planId)
+  return {
+    planId,
+    plan,
+    hasModule: (flag: ModuleFlag) => planHasModule(planId, flag),
+    productLimit: plan.productLimit,
+  }
+}
+
+/** Config da loja atual (nome, cor, whatsapp...) para branding do admin. */
+export const useStoreConfig = () => useAdminStore().storeConfig
+
+export const useProducts      = () => { const s = useAdminStore(); return [s.products,      s.setProducts]      as const }
+export const useServices      = () => { const s = useAdminStore(); return [s.services,      s.setServices]      as const }
+export const useAppointments  = () => { const s = useAdminStore(); return [s.appointments,  s.setAppointments]  as const }
+export const useServiceOrders = () => { const s = useAdminStore(); return [s.serviceOrders, s.setServiceOrders] as const }
+export const useSales         = () => { const s = useAdminStore(); return [s.sales,         s.setSales]         as const }
+export const useBanners       = () => { const s = useAdminStore(); return [s.banners,       s.setBanners]       as const }

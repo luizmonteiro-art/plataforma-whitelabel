@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Calendar, CheckCircle, X, Clock, MessageCircle, Star, ArrowLeft, AlertTriangle, Edit2, ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatDateTime, appointmentStatusLabel, cn } from '@/lib/utils'
-import { useAppointments } from '@/contexts/AdminStore'
+import { useAppointments, useAdminStore } from '@/contexts/AdminStore'
 import { upsertAppointment } from '@/lib/db'
 import type { Appointment, AppointmentStatus } from '@/types'
 
@@ -21,6 +21,7 @@ const timeSlots = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:3
 
 export function AgendamentosClient({ initialAppointments: _ }: Props) {
   const router = useRouter()
+  const { storeId } = useAdminStore()
   const [appointments, setAppointmentsRaw] = useAppointments()
   const setAppointments = (fn: (prev: Appointment[]) => Appointment[]) => setAppointmentsRaw(fn)
   const [prioritized, setPrioritized] = useState<string[]>([])
@@ -28,7 +29,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
   const [filter, setFilter] = useState<AppointmentStatus | 'todos'>('todos')
 
   const updateStatus = async (id: string, status: AppointmentStatus) => {
-    await upsertAppointment({ id, status }).catch(console.error)
+    await upsertAppointment(storeId, { id, status }).catch(console.error)
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
   }
 
@@ -38,7 +39,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
 
   const saveEdit = async () => {
     if (!editAppt) return
-    await upsertAppointment(editAppt).catch(console.error)
+    await upsertAppointment(storeId, editAppt).catch(console.error)
     setAppointments(prev => prev.map(a => a.id === editAppt.id ? editAppt : a))
     setEditAppt(null)
   }

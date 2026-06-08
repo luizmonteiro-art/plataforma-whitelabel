@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Plus, Search, Edit2, Trash2, X, Package, ChevronDown, ArrowLeft, ImagePlus, Upload } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, X, Package, ChevronDown, ArrowLeft, ImagePlus, Upload, Sparkles, ArrowUpRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, categoryLabel, conditionLabel, conditionColor, cn } from '@/lib/utils'
-import { useProducts } from '@/contexts/AdminStore'
+import { useProducts, useAdminStore, usePlan } from '@/contexts/AdminStore'
 import { upsertProduct, deleteProduct, uploadImage } from '@/lib/db'
+import { nextPlanWithMoreProducts } from '@/lib/plans'
 import type { Product, ProductCategory, ProductCondition } from '@/types'
 
 interface Props { initialProducts: Product[] }
@@ -18,22 +19,32 @@ const emptyForm = {
 
 export function EstoqueClient({ initialProducts: _ }: Props) {
   const router = useRouter()
+  const { storeId } = useAdminStore()
+  const { planId, productLimit } = usePlan()
   const [products, setProductsRaw] = useProducts()
   const setProducts = (fn: (prev: Product[]) => Product[]) => setProductsRaw(fn)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [showLimitModal, setShowLimitModal] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const atLimit = products.length >= productLimit
+  const nearLimit = products.length >= productLimit * 0.8
+  const upgradePlan = nextPlanWithMoreProducts(planId)
+
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.brand.toLowerCase().includes(search.toLowerCase())
   )
 
-  const openNew = () => { setForm(emptyForm); setEditProduct(null); setShowForm(true) }
+  const openNew = () => {
+    if (atLimit) { setShowLimitModal(true); return }
+    setForm(emptyForm); setEditProduct(null); setShowForm(true)
+  }
 
   const openEdit = (p: Product) => {
     setForm({
@@ -54,7 +65,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
     if (imageFiles.length === 0) return
     setUploading(true)
     try {
-      const urls = await Promise.all(imageFiles.map(f => uploadImage(f, 'products')))
+      const urls = await Promise.all(imageFiles.map(f => uploadImage(f, 'products', storeId)))
       setForm(f => ({ ...f, images: [...f.images, ...urls] }))
     } finally {
       setUploading(false)
@@ -87,9 +98,11 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         stock_qty: Number(form.stock_qty),
         images: form.images,
       }
-      const saved = await upsertProduct(updated).catch(() => null)
+      const saved = await upsertProduct(storeId, updated).catch(() => null)
       setProducts(prev => prev.map(p => p.id === editProduct.id ? (saved ?? updated) : p))
     } else {
+      // Defesa extra: bloqueia criação acima do limite do plano
+      if (atLimit) { setShowForm(false); setShowLimitModal(true); return }
       const payload = {
         slug: form.name.toLowerCase().replace(/\s+/g, '-'),
         is_featured: false as const, is_active: true as const,
@@ -100,7 +113,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
         stock_qty: Number(form.stock_qty),
       }
-      const saved = await upsertProduct(payload).catch(() => null)
+      const saved = await upsertProduct(storeId, payload).catch(() => null)
       const newProduct: Product = saved ?? {
         id: String(Date.now()),
         created_at: new Date().toISOString(),
@@ -113,7 +126,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
 
   const handleDelete = async (id: string) => {
     if (confirm('Remover este produto?')) {
-      await deleteProduct(id).catch(console.error)
+      await deleteProduct(storeId, id).catch(console.error)
       setProducts(prev => prev.filter(p => p.id !== id))
     }
   }
@@ -127,12 +140,50 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
             <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" /> Voltar
           </button>
           <h1 className="text-2xl font-bold text-white">Estoque</h1>
-          <p className="text-sm text-zinc-500">{products.length} produto{products.length !== 1 ? 's' : ''} · {filtered.length} exibido{filtered.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-zinc-500">
+            <span className={cn(
+              'font-medium',
+              atLimit ? 'text-red-400' : nearLimit ? 'text-orange-400' : 'text-zinc-400'
+            )}>
+              {products.length}/{productLimit}
+            </span>{' '}
+            produtos · {filtered.length} exibido{filtered.length !== 1 ? 's' : ''}
+          </p>
         </div>
-        <button onClick={openNew} className="flex items-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-xl transition-all text-sm hover:shadow-lg hover:shadow-green-500/25 active:scale-95">
+        <button
+          onClick={openNew}
+          title={atLimit ? 'Limite de produtos do plano atingido' : undefined}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2.5 font-semibold rounded-xl transition-all text-sm active:scale-95',
+            atLimit
+              ? 'bg-white/[0.06] text-zinc-500 hover:bg-white/[0.08]'
+              : 'bg-green-500 hover:bg-green-400 text-black hover:shadow-lg hover:shadow-green-500/25'
+          )}
+        >
           <Plus size={16} /> Novo produto
         </button>
       </div>
+
+      {/* Aviso de limite atingido */}
+      {atLimit && (
+        <div className="flex items-center gap-3 rounded-2xl border border-orange-500/20 bg-orange-500/[0.06] px-4 py-3">
+          <Sparkles size={16} className="shrink-0 text-orange-400" />
+          <p className="flex-1 text-sm text-zinc-300">
+            Você atingiu o limite de <span className="font-semibold text-white">{productLimit} produtos</span> do plano.
+            {upgradePlan && (
+              <> Faça upgrade para o plano <span className="font-semibold text-orange-300">{upgradePlan.name}</span> e cadastre até {upgradePlan.productLimit}.</>
+            )}
+          </p>
+          {upgradePlan && (
+            <button
+              onClick={() => setShowLimitModal(true)}
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-orange-500/90 px-4 py-2 text-xs font-semibold text-black transition-all hover:bg-orange-400 active:scale-95"
+            >
+              Fazer upgrade <ArrowUpRight size={14} />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative max-w-sm">
@@ -382,6 +433,50 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
               <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] transition-all">Cancelar</button>
               <button onClick={handleSave} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-xl text-sm transition-all active:scale-95">Salvar</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de limite de produtos / upsell */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowLimitModal(false)}>
+          <div
+            onClick={e => e.stopPropagation()}
+            className="relative w-full max-w-md rounded-3xl border border-white/[0.08] bg-[#0d100d] p-8 text-center shadow-2xl"
+          >
+            <div className="absolute inset-0 -z-10 blur-3xl opacity-40 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.25),transparent_60%)]" />
+            <button onClick={() => setShowLimitModal(false)} className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-all"><X size={16} /></button>
+
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-green-500/20 bg-green-500/10">
+              <Package size={22} className="text-green-400" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Limite de produtos atingido</h2>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+              Seu plano permite até <span className="font-semibold text-white">{productLimit} produtos</span>.
+              {upgradePlan
+                ? <> Faça upgrade para cadastrar mais e crescer sua loja.</>
+                : <> Você já está no plano com maior capacidade.</>}
+            </p>
+
+            {upgradePlan && (
+              <>
+                <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-green-500/20 bg-green-500/[0.06] px-4 py-3">
+                  <Sparkles size={15} className="text-green-400" />
+                  <span className="text-sm text-zinc-300">
+                    Plano <span className="font-bold text-green-400">{upgradePlan.name}</span>: até {upgradePlan.productLimit} produtos
+                    {' '}— R$ {upgradePlan.priceBrl.toFixed(2).replace('.', ',')}/mês
+                  </span>
+                </div>
+                <a
+                  href={`https://wa.me/5519981499229?text=${encodeURIComponent(`Quero fazer upgrade para o plano ${upgradePlan.name}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-green-500 px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-green-400 active:scale-95"
+                >
+                  Fazer upgrade <ArrowUpRight size={16} />
+                </a>
+              </>
+            )}
           </div>
         </div>
       )}

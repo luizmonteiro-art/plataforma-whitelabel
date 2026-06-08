@@ -5,7 +5,7 @@ import { Plus, Trash2, MessageCircle, X, FileText, Copy, CheckCircle, ArrowLeft,
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
 import { getServices, getQuotes, upsertQuote, deleteQuote, getStoreConfig, upsertServiceOrder } from '@/lib/db'
-import { useServiceOrders } from '@/contexts/AdminStore'
+import { useServiceOrders, useAdminStore } from '@/contexts/AdminStore'
 import type { Service, Quote, QuoteItem, QuoteStatus, ServiceOrder } from '@/types'
 
 type OrcStatus = QuoteStatus
@@ -50,6 +50,7 @@ function formatWhatsApp(orc: Orcamento, storeName: string, storePhone: string): 
 
 export default function OrcamentosPage() {
   const router = useRouter()
+  const { storeId } = useAdminStore()
   const [, setServiceOrders] = useServiceOrders()
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -63,15 +64,16 @@ export default function OrcamentosPage() {
   const [storePhone, setStorePhone] = useState('(19) 98149-9229')
 
   useEffect(() => {
-    getServices().then(setServices).catch(console.error)
-    getQuotes().then(setOrcamentos).catch(console.error)
-    getStoreConfig().then(cfg => {
+    if (!storeId) return
+    getServices(storeId).then(setServices).catch(console.error)
+    getQuotes(storeId).then(setOrcamentos).catch(console.error)
+    getStoreConfig(storeId).then(cfg => {
       if (!cfg) return
       if (cfg.whatsapp) setStoreWA(`55${cfg.whatsapp.replace(/\D/g, '')}`)
       if (cfg.store_name) setStoreName(cfg.store_name)
       if (cfg.phone) setStorePhone(cfg.phone)
     }).catch(console.error)
-  }, [])
+  }, [storeId])
 
   // Form state
   const [name, setName] = useState('')
@@ -107,7 +109,7 @@ export default function OrcamentosPage() {
       status: 'pendente',
       created_at: new Date().toISOString(),
     }
-    const saved = await upsertQuote(orc).catch(() => orc)
+    const saved = await upsertQuote(storeId, orc).catch(() => orc)
     setOrcamentos(prev => [saved, ...prev])
     setShowForm(false)
     resetForm()
@@ -115,14 +117,14 @@ export default function OrcamentosPage() {
   }
 
   const updateStatus = (id: string, status: OrcStatus) => {
-    upsertQuote({ id, status }).catch(console.error)
+    upsertQuote(storeId, { id, status }).catch(console.error)
     setOrcamentos(prev => prev.map(o => o.id === id ? { ...o, status } : o))
     if (viewing?.id === id) setViewing(prev => prev ? { ...prev, status } : null)
   }
 
   const removeOrcamento = async (id: string) => {
     if (!confirm('Excluir este orçamento?')) return
-    await deleteQuote(id).catch(console.error)
+    await deleteQuote(storeId, id).catch(console.error)
     setOrcamentos(prev => prev.filter(o => o.id !== id))
     setViewing(null)
   }
@@ -144,7 +146,7 @@ export default function OrcamentosPage() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
-    const saved = await upsertServiceOrder(order).catch(() => order)
+    const saved = await upsertServiceOrder(storeId, order).catch(() => order)
     setServiceOrders(prev => [saved, ...prev])
     // Marca o orçamento como aprovado ao virar O.S.
     updateStatus(orc.id, 'aprovado')
