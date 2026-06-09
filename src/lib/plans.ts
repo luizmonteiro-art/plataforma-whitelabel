@@ -52,7 +52,8 @@ export const PLANS: Record<string, PlanDef> = {
     name: 'Vitrine',
     priceBrl: 99.9,
     productLimit: 30,
-    modules: ['VITRINE_PUBLICA', 'ESTOQUE', 'CONFIGURACOES'],
+    // PROMOCOES (banner da home + feed) é padrão para TODAS as lojas.
+    modules: ['VITRINE_PUBLICA', 'ESTOQUE', 'CONFIGURACOES', 'PROMOCOES'],
   },
   loja: {
     id: 'loja',
@@ -60,7 +61,7 @@ export const PLANS: Record<string, PlanDef> = {
     priceBrl: 179.9,
     productLimit: 150,
     modules: [
-      'VITRINE_PUBLICA', 'ESTOQUE', 'CONFIGURACOES',
+      'VITRINE_PUBLICA', 'ESTOQUE', 'CONFIGURACOES', 'PROMOCOES',
       'DASHBOARD', 'VENDAS', 'ORDENS_SERVICO', 'ORCAMENTOS', 'AGENDAMENTOS',
     ],
   },

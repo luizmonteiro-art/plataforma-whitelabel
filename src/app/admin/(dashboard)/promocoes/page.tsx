@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Plus, Tag, Percent, X, Package, Upload, Image as ImageIcon, ArrowUp, ArrowDown, Eye, EyeOff, ArrowLeft, Newspaper, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, cn } from '@/lib/utils'
-import { getBanners, upsertBanner, deleteBanner as deleteBannerDb, getProducts } from '@/lib/db'
+import { getBanners, upsertBanner, deleteBanner as deleteBannerDb, getProducts, uploadImage } from '@/lib/db'
 import { useAdminStore } from '@/contexts/AdminStore'
 import type { Banner, Product } from '@/types'
 
@@ -79,26 +79,31 @@ export default function PromocoesAdminPage() {
     })
   }
 
-  const handleBannerImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => setBannerForm(f => ({ ...f, image_url: ev.target?.result as string }))
-    reader.readAsDataURL(file)
     e.target.value = ''
+    try {
+      const url = await uploadImage(file, 'banners', storeId)
+      setBannerForm(f => ({ ...f, image_url: url }))
+    } catch (err) {
+      console.error(err)
+      alert('Não foi possível enviar a imagem do banner. Verifique a conexão e tente de novo.')
+    }
   }
 
-  const handleBannerImageFileDrop = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerImageFileDrop = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const image_url = ev.target?.result as string
-      setBanners(prev => prev.map(b => b.id === id ? { ...b, image_url } : b))
-      upsertBanner(storeId, { id, image_url }).catch(console.error)
-    }
-    reader.readAsDataURL(file)
     e.target.value = ''
+    try {
+      const image_url = await uploadImage(file, 'banners', storeId)
+      setBanners(prev => prev.map(b => b.id === id ? { ...b, image_url } : b))
+      await upsertBanner(storeId, { id, image_url }).catch(console.error)
+    } catch (err) {
+      console.error(err)
+      alert('Não foi possível trocar a imagem do banner. Tente de novo.')
+    }
   }
 
   const createBanner = async () => {
