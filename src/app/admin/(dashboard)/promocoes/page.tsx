@@ -22,7 +22,7 @@ interface Post {
 }
 
 const TAG_OPTIONS = [
-  { label: 'Novo', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
+  { label: 'Novo', color: 'bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--accent)]/30' },
   { label: 'Promoção', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
   { label: 'Destaque', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
   { label: 'Seminovo', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
@@ -179,7 +179,7 @@ export default function PromocoesAdminPage() {
           { key: 'descontos', label: 'Descontos', icon: Percent },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}
-            className={cn('flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all', tab === key ? 'bg-green-500 text-black' : 'text-zinc-500 hover:text-white')}>
+            className={cn('flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all', tab === key ? 'bg-[var(--accent)] text-black' : 'text-zinc-500 hover:text-white')}>
             <Icon size={13} /> {label}
           </button>
         ))}
@@ -190,10 +190,10 @@ export default function PromocoesAdminPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-semibold text-white flex items-center gap-2"><Tag size={16} className="text-green-400" /> Banners do Hero</h2>
+              <h2 className="text-base font-semibold text-white flex items-center gap-2"><Tag size={16} className="text-[var(--accent)]" /> Banners do Hero</h2>
               <p className="text-xs text-zinc-600 mt-0.5">Arraste para reordenar. Clique na imagem para substituir.</p>
             </div>
-            <button onClick={() => setShowBannerForm(true)} className="flex items-center gap-2 px-3 py-2 bg-green-500/10 border border-green-500/25 text-green-400 hover:bg-green-500/20 rounded-xl text-xs font-medium transition-all active:scale-95">
+            <button onClick={() => setShowBannerForm(true)} className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 rounded-xl text-xs font-medium transition-all active:scale-95">
               <Plus size={14} /> Novo banner
             </button>
           </div>
@@ -217,7 +217,7 @@ export default function PromocoesAdminPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">{banner.title}</p>
                     <p className="text-xs text-zinc-500 truncate">{banner.subtitle}</p>
-                    {banner.badge && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 mt-1 inline-block">{banner.badge}</span>}
+                    {banner.badge && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/30 mt-1 inline-block">{banner.badge}</span>}
                   </div>
 
                   {/* Controles */}
@@ -226,7 +226,7 @@ export default function PromocoesAdminPage() {
                     <button onClick={() => moveBanner(banner.id, 'down')} disabled={idx === banners.length - 1} className="p-1.5 rounded-lg text-zinc-600 hover:text-white disabled:opacity-20 transition-all"><ArrowDown size={13} /></button>
                     <button onClick={() => toggleBanner(banner.id)}
                       className={cn('flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition-all shrink-0',
-                        banner.is_active ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20' : 'bg-zinc-500/10 border-zinc-500/25 text-zinc-500 hover:bg-zinc-500/20')}>
+                        banner.is_active ? 'bg-[var(--accent)]/10 border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20' : 'bg-zinc-500/10 border-zinc-500/25 text-zinc-500 hover:bg-zinc-500/20')}>
                       {banner.is_active ? <><Eye size={12} /> Ativo</> : <><EyeOff size={12} /> Inativo</>}
                     </button>
                     <button onClick={() => deleteBanner(banner.id)} className="p-1.5 rounded-lg text-zinc-700 hover:text-red-400 hover:bg-red-500/10 transition-all active:scale-90">
@@ -251,7 +251,7 @@ export default function PromocoesAdminPage() {
                   <div>
                     <label className="block text-xs font-medium text-zinc-400 mb-2">Imagem do banner</label>
                     <div className="flex gap-3">
-                      <label className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-white/[0.12] rounded-xl text-xs text-zinc-500 hover:border-green-500/40 hover:text-green-400 transition-all cursor-pointer">
+                      <label className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-white/[0.12] rounded-xl text-xs text-zinc-500 hover:border-[var(--accent)]/40 hover:text-[var(--accent)] transition-all cursor-pointer">
                         <Upload size={14} /> {bannerForm.image_url ? 'Trocar imagem' : 'Enviar foto'}
                         <input type="file" accept="image/*" className="hidden" onChange={handleBannerImageFile} ref={bannerFileRef} />
                       </label>
@@ -263,7 +263,7 @@ export default function PromocoesAdminPage() {
                     </div>
                     <p className="text-[10px] text-zinc-700 mt-1">Ou cole um link abaixo</p>
                     <input value={bannerForm.image_url} onChange={e => setBannerForm(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..."
-                      className="w-full mt-1 bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 font-mono text-xs" />
+                      className="w-full mt-1 bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 font-mono text-xs" />
                   </div>
 
                   {[
@@ -276,13 +276,13 @@ export default function PromocoesAdminPage() {
                     <div key={key}>
                       <label className="block text-xs font-medium text-zinc-400 mb-1.5">{label}</label>
                       <input value={(bannerForm as Record<string, string>)[key]} onChange={e => setBannerForm(f => ({ ...f, [key]: e.target.value }))} placeholder={placeholder}
-                        className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40" />
+                        className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40" />
                     </div>
                   ))}
                 </div>
                 <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
                   <button onClick={() => setShowBannerForm(false)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm">Cancelar</button>
-                  <button onClick={createBanner} disabled={!bannerForm.title} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm active:scale-95 transition-all">Criar</button>
+                  <button onClick={createBanner} disabled={!bannerForm.title} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50 text-black font-semibold rounded-xl text-sm active:scale-95 transition-all">Criar</button>
                 </div>
               </div>
             </div>
@@ -295,10 +295,10 @@ export default function PromocoesAdminPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-semibold text-white flex items-center gap-2"><Newspaper size={16} className="text-green-400" /> Feed de Novidades</h2>
+              <h2 className="text-base font-semibold text-white flex items-center gap-2"><Newspaper size={16} className="text-[var(--accent)]" /> Feed de Novidades</h2>
               <p className="text-xs text-zinc-600 mt-0.5">Posts aparecem na seção "Novidades" da home. Adicione fotos dos produtos, promoções e lançamentos.</p>
             </div>
-            <button onClick={() => setShowPostForm(true)} className="flex items-center gap-2 px-3 py-2 bg-green-500/10 border border-green-500/25 text-green-400 hover:bg-green-500/20 rounded-xl text-xs font-medium transition-all active:scale-95">
+            <button onClick={() => setShowPostForm(true)} className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 rounded-xl text-xs font-medium transition-all active:scale-95">
               <Plus size={14} /> Novo post
             </button>
           </div>
@@ -308,7 +308,7 @@ export default function PromocoesAdminPage() {
               <Newspaper size={36} className="text-zinc-700 mx-auto mb-3" />
               <p className="text-sm font-semibold text-white mb-1">Nenhum post ainda</p>
               <p className="text-xs text-zinc-500 mb-4">Adicione fotos de produtos, promoções e novidades da loja.</p>
-              <button onClick={() => setShowPostForm(true)} className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/25 text-green-400 hover:bg-green-500/20 rounded-xl text-sm font-medium transition-all mx-auto active:scale-95">
+              <button onClick={() => setShowPostForm(true)} className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 rounded-xl text-sm font-medium transition-all mx-auto active:scale-95">
                 <Plus size={14} /> Criar primeiro post
               </button>
             </div>
@@ -360,11 +360,11 @@ export default function PromocoesAdminPage() {
                   {/* Upload */}
                   <div>
                     <label className="block text-xs font-medium text-zinc-400 mb-2">Foto *</label>
-                    <label className="flex flex-col items-center justify-center gap-2 py-8 border-2 border-dashed border-white/[0.12] rounded-xl cursor-pointer hover:border-green-500/40 transition-all group/upload">
+                    <label className="flex flex-col items-center justify-center gap-2 py-8 border-2 border-dashed border-white/[0.12] rounded-xl cursor-pointer hover:border-[var(--accent)]/40 transition-all group/upload">
                       {postForm.image
                         ? <img src={postForm.image} alt="" className="max-h-32 rounded-lg object-contain" />
                         : <>
-                            <Upload size={24} className="text-zinc-600 group-hover/upload:text-green-400 transition-colors" />
+                            <Upload size={24} className="text-zinc-600 group-hover/upload:text-[var(--accent)] transition-colors" />
                             <span className="text-xs text-zinc-500">Clique para enviar foto</span>
                             <span className="text-[10px] text-zinc-700">JPG, PNG, WEBP</span>
                           </>
@@ -373,14 +373,14 @@ export default function PromocoesAdminPage() {
                     </label>
                     <p className="text-[10px] text-zinc-700 mt-1">Ou cole um link:</p>
                     <input value={postForm.image} onChange={e => setPostForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..."
-                      className="w-full mt-1 bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 font-mono text-xs" />
+                      className="w-full mt-1 bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 font-mono text-xs" />
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-zinc-400 mb-1.5">Legenda / descrição</label>
                     <textarea value={postForm.caption} onChange={e => setPostForm(f => ({ ...f, caption: e.target.value }))} rows={2}
                       placeholder="iPhone 15 Pro chegou! 🔥 Pronta entrega, garantia de 1 ano..."
-                      className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 resize-none" />
+                      className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 resize-none" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -399,13 +399,13 @@ export default function PromocoesAdminPage() {
                     <div>
                       <label className="block text-xs font-medium text-zinc-400 mb-1.5">Link ao clicar</label>
                       <input value={postForm.link} onChange={e => setPostForm(f => ({ ...f, link: e.target.value }))} placeholder="/loja"
-                        className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40" />
+                        className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40" />
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
                   <button onClick={() => setShowPostForm(false)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm">Cancelar</button>
-                  <button onClick={createPost} disabled={!postForm.image && !postForm.caption} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm active:scale-95 transition-all">Publicar</button>
+                  <button onClick={createPost} disabled={!postForm.image && !postForm.caption} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50 text-black font-semibold rounded-xl text-sm active:scale-95 transition-all">Publicar</button>
                 </div>
               </div>
             </div>
@@ -417,7 +417,7 @@ export default function PromocoesAdminPage() {
       {tab === 'descontos' && (
         <div className="space-y-4">
           <h2 className="text-base font-semibold text-white flex items-center gap-2">
-            <Percent size={16} className="text-green-400" /> Descontos rápidos em produtos
+            <Percent size={16} className="text-[var(--accent)]" /> Descontos rápidos em produtos
           </h2>
           <p className="text-xs text-zinc-600">Ative ou desative promoção de 10% por produto. Em produção, você pode definir o percentual exato.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -430,13 +430,13 @@ export default function PromocoesAdminPage() {
                   <p className="text-sm font-medium text-white truncate">{p.name}</p>
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-zinc-400">{formatCurrency(p.price)}</p>
-                    {p.promo_price && <span className="text-xs text-green-400">→ {formatCurrency(p.promo_price)}</span>}
+                    {p.promo_price && <span className="text-xs text-[var(--accent)]">→ {formatCurrency(p.promo_price)}</span>}
                   </div>
                 </div>
                 <button onClick={() => togglePromo(p.id)}
                   className={cn('px-3 py-1.5 rounded-xl text-xs font-medium border transition-all shrink-0 active:scale-95', p.promo_price
                     ? 'bg-red-500/10 border-red-500/25 text-red-400 hover:bg-red-500/20'
-                    : 'bg-green-500/10 border-green-500/25 text-green-400 hover:bg-green-500/20')}>
+                    : 'bg-[var(--accent)]/10 border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20')}>
                   {p.promo_price ? 'Remover' : 'Ativar -10%'}
                 </button>
               </div>

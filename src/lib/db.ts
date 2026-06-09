@@ -267,27 +267,20 @@ export async function deleteBanner(storeId: string, id: string) {
 
 const STORAGE_BUCKET = 'store-assets'
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
+/**
+ * Faz upload da imagem para o Storage e retorna a URL pública.
+ * Lança o erro em caso de falha — o chamador deve avisar o usuário.
+ * (Antes havia fallback silencioso para base64, que gravava data URLs
+ * gigantes no banco e mascarava problemas de upload/RLS.)
+ */
 export async function uploadImage(file: File, folder: string, storeId: string): Promise<string> {
-  try {
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-    const path = `${storeId}/${folder}/${crypto.randomUUID()}.${ext}`
-    const { error } = await db().storage
-      .from(STORAGE_BUCKET)
-      .upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type })
-    if (error) throw error
-    return db().storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl
-  } catch {
-    return fileToBase64(file)
-  }
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const path = `${storeId}/${folder}/${crypto.randomUUID()}.${ext}`
+  const { error } = await db().storage
+    .from(STORAGE_BUCKET)
+    .upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type })
+  if (error) throw error
+  return db().storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl
 }
 
 // ─── quotes ───────────────────────────────────────────────────────

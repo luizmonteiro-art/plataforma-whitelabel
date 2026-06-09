@@ -98,7 +98,7 @@ export function AdminSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }:
               'flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150',
               collapsed ? 'justify-center' : 'gap-3',
               isActive(href, exact)
-                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20'
                 : 'text-zinc-500 hover:text-white hover:bg-white/[0.05]'
             )}
           >

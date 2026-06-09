@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1120" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mint" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#86efac"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#22c55e"/>
+    </marker>
+    <marker id="arrowMuted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5f7a5f"/>
+    </marker>
+  </defs>
+
+  <!-- fundo -->
+  <rect width="1440" height="1120" fill="#0a0d0a"/>
+  <rect width="1440" height="560" fill="url(#glow)"/>
+
+  <!-- título -->
+  <text x="64" y="58" font-size="30" font-weight="800" fill="#eef5ee">Plataforma White-Label — <tspan fill="url(#mint)">MODUS</tspan></text>
+  <text x="64" y="86" font-size="15" fill="#8fa68f">Arquitetura multi-tenant · 1 deploy → N lojas resolvidas por subdomínio · Next.js 16 + Supabase</text>
+
+  <!-- ===== ENTRADAS ===== -->
+  <!-- Visitante / Lojista -->
+  <g>
+    <rect x="120" y="120" width="470" height="70" rx="14" fill="#0f140f" stroke="#2a352a"/>
+    <text x="355" y="150" text-anchor="middle" font-size="16" font-weight="700" fill="#eef5ee">Visitante / Lojista</text>
+    <text x="355" y="172" text-anchor="middle" font-size="12.5" fill="#8fa68f">mcell.plataforma.com  ·  dev: ?store=mcell</text>
+  </g>
+  <!-- Luiz / Superadmin -->
+  <g>
+    <rect x="980" y="120" width="340" height="70" rx="14" fill="#0f140f" stroke="#2a352a"/>
+    <text x="1150" y="150" text-anchor="middle" font-size="16" font-weight="700" fill="#eef5ee">Luiz (Superadmin)</text>
+    <text x="1150" y="172" text-anchor="middle" font-size="12.5" fill="#8fa68f">/superadmin · SUPERADMIN_EMAIL</text>
+  </g>
+
+  <!-- seta entrada1 -> proxy -->
+  <line x1="355" y1="190" x2="355" y2="232" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- seta entrada2 -> proxy-super -->
+  <line x1="1150" y1="190" x2="1150" y2="232" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ===== PROXY (middleware) ===== -->
+  <g>
+    <rect x="90" y="234" width="800" height="156" rx="16" fill="#0d160d" stroke="#22c55e" stroke-opacity="0.45"/>
+    <text x="112" y="264" font-size="17" font-weight="800" fill="#86efac">src/proxy.ts — middleware (função `proxy`, Next 16)</text>
+    <!-- pills -->
+    <g font-size="12.5" fill="#cfe6cf">
+      <rect x="112" y="282" width="360" height="32" rx="9" fill="#16241a" stroke="#2f4a33"/>
+      <text x="126" y="303">/superadmin → auth do Luiz</text>
+      <rect x="484" y="282" width="384" height="32" rx="9" fill="#16241a" stroke="#2f4a33"/>
+      <text x="498" y="303">/captacao · /loja-inativa · /api → passa direto</text>
+      <rect x="112" y="324" width="756" height="32" rx="9" fill="#16241a" stroke="#2f4a33"/>
+      <text x="126" y="345">resolve slug (subdomínio ou ?store=) → injeta x-store-id + x-store-plan nos headers</text>
+    </g>
+    <text x="112" y="378" font-size="11.5" fill="#8fa68f">sem slug + "/" → rewrite /captacao   ·   sem slug + outra rota → redirect "/"</text>
+  </g>
+
+  <!-- proxy-super (auth) -->
+  <g>
+    <rect x="980" y="234" width="340" height="156" rx="16" fill="#0d160d" stroke="#2a352a"/>
+    <text x="1150" y="264" text-anchor="middle" font-size="14.5" font-weight="700" fill="#eef5ee">handleSuperadminAuth</text>
+    <text x="1150" y="288" text-anchor="middle" font-size="12" fill="#8fa68f">valida sessão + e-mail</text>
+    <text x="1150" y="330" text-anchor="middle" font-size="12" fill="#8fa68f">acesso só do superadmin</text>
+    <text x="1150" y="352" text-anchor="middle" font-size="12" fill="#8fa68f">(ignora resolução de loja)</text>
+  </g>
+
+  <!-- seta proxy -> resolve_store -->
+  <line x1="490" y1="390" x2="490" y2="432" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- resolve_store -->
+  <g>
+    <rect x="210" y="434" width="560" height="92" rx="14" fill="#0f140f" stroke="#2a352a"/>
+    <text x="490" y="464" text-anchor="middle" font-size="15.5" font-weight="700" fill="#86efac">RPC resolve_store(slug)</text>
+    <text x="490" y="486" text-anchor="middle" font-size="12" fill="#8fa68f">SECURITY DEFINER · resolve a loja sem expor admin_email</text>
+    <text x="490" y="508" text-anchor="middle" font-size="12" fill="#8fa68f">inativa / trial expirado → /loja-inativa</text>
+  </g>
+
+  <!-- setas resolve -> lane1 / lane2 -->
+  <path d="M380,526 C340,560 300,575 270,592" fill="none" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M600,526 C650,560 700,575 730,592" fill="none" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- seta proxy-super -> lane3 -->
+  <line x1="1150" y1="390" x2="1150" y2="592" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ===== LANE 1 — VITRINE ===== -->
+  <g>
+    <rect x="70" y="594" width="400" height="232" rx="16" fill="#0f140f" stroke="#2a352a"/>
+    <text x="90" y="624" font-size="16" font-weight="800" fill="#eef5ee">Vitrine pública</text>
+    <text x="90" y="646" font-size="12" fill="#8fa68f">Server Components · (public)/*</text>
+    <line x1="90" y1="660" x2="450" y2="660" stroke="#22352a" stroke-width="1"/>
+    <g font-size="12.5" fill="#cfe6cf">
+      <text x="90" y="686">getStoreIdFromHeaders()  (store-headers.ts)</text>
+      <text x="90" y="712">layout: brandFromConfig → Header/Footer</text>
+      <text x="90" y="738">db.ts → cliente <tspan font-weight="700" fill="#86efac">ANON</tspan> (sem sessão)</text>
+      <text x="90" y="764">getProducts / getServices / getBanners</text>
+    </g>
+    <rect x="90" y="780" width="360" height="30" rx="8" fill="#13201a" stroke="#2f4a33"/>
+    <text x="270" y="800" text-anchor="middle" font-size="11.5" fill="#86efac">RLS: leitura pública (is_active)</text>
+  </g>
+
+  <!-- ===== LANE 2 — ADMIN ===== -->
+  <g>
+    <rect x="520" y="594" width="400" height="232" rx="16" fill="#0f140f" stroke="#2a352a"/>
+    <text x="540" y="624" font-size="16" font-weight="800" fill="#eef5ee">Admin da loja</text>
+    <text x="540" y="646" font-size="12" fill="#8fa68f">/admin/* · sessão Supabase</text>
+    <line x1="540" y1="660" x2="900" y2="660" stroke="#22352a" stroke-width="1"/>
+    <g font-size="12.5" fill="#cfe6cf">
+      <text x="540" y="686">(dashboard)/layout (server) lê headers</text>
+      <text x="540" y="712">AdminStoreProvider (storeId, planId)</text>
+      <text x="540" y="738">usePlan() · ModuleGuard · limite produtos</text>
+      <text x="540" y="764">db.ts → cliente <tspan font-weight="700" fill="#86efac">COM SESSÃO</tspan> (browser)</text>
+    </g>
+    <rect x="540" y="780" width="360" height="30" rx="8" fill="#13201a" stroke="#2f4a33"/>
+    <text x="720" y="800" text-anchor="middle" font-size="11.5" fill="#86efac">RLS: owns_store(store_id) = só o dono</text>
+  </g>
+
+  <!-- ===== LANE 3 — SUPERADMIN ===== -->
+  <g>
+    <rect x="970" y="594" width="400" height="232" rx="16" fill="#0f140f" stroke="#2a352a"/>
+    <text x="990" y="624" font-size="16" font-weight="800" fill="#eef5ee">Provisionamento</text>
+    <text x="990" y="646" font-size="12" fill="#8fa68f">/superadmin · server actions</text>
+    <line x1="990" y1="660" x2="1350" y2="660" stroke="#22352a" stroke-width="1"/>
+    <g font-size="12.5" fill="#cfe6cf">
+      <text x="990" y="686">supabase-admin.ts</text>
+      <text x="990" y="712">cliente <tspan font-weight="700" fill="#f0b34a">SERVICE ROLE</tspan> (ignora RLS)</text>
+      <text x="990" y="738">createStore · setStoreActive</text>
+      <text x="990" y="764">listRequests · updateRequestStatus</text>
+    </g>
+    <rect x="990" y="780" width="360" height="30" rx="8" fill="#211a13" stroke="#4a3a2f"/>
+    <text x="1170" y="800" text-anchor="middle" font-size="11.5" fill="#f0b34a">cria loja + config + usuário (senha temp)</text>
+  </g>
+
+  <!-- setas lanes -> supabase -->
+  <line x1="270" y1="826" x2="430" y2="888" stroke="#5f7a5f" stroke-width="2" marker-end="url(#arrowMuted)"/>
+  <line x1="720" y1="826" x2="720" y2="888" stroke="#5f7a5f" stroke-width="2" marker-end="url(#arrowMuted)"/>
+  <line x1="1170" y1="826" x2="1010" y2="888" stroke="#5f7a5f" stroke-width="2" marker-end="url(#arrowMuted)"/>
+
+  <!-- ===== SUPABASE ===== -->
+  <g>
+    <rect x="250" y="890" width="940" height="180" rx="16" fill="#0d130d" stroke="#22c55e" stroke-opacity="0.35"/>
+    <text x="276" y="922" font-size="17" font-weight="800" fill="#86efac">Supabase — Postgres + RLS  ·  Storage (store-assets)</text>
+    <g font-size="12.5" fill="#cfe6cf">
+      <text x="276" y="952">Tabelas por loja (store_id UUID → stores.id):</text>
+      <text x="276" y="976" fill="#9fb89f">plans · stores · store_config · products · services · appointments · service_orders · sales · banners · quotes · store_requests</text>
+    </g>
+    <g font-size="12" fill="#8fa68f">
+      <text x="276" y="1010">RLS helpers: <tspan fill="#cfe6cf">owns_store(store_id)</tspan> = (auth.email == stores.admin_email) ·  <tspan fill="#cfe6cf">resolve_store(slug)</tspan> SECURITY DEFINER</text>
+      <text x="276" y="1034">Vitrine = leitura pública  ·  Privado (sales/OS/quotes/appointments) = só dono  ·  appointments & store_requests = INSERT público</text>
+      <text x="276" y="1056" fill="#f0b34a">Service role (superadmin) ignora a RLS para provisionar lojas.</text>
+    </g>
+  </g>
+
+  <!-- legenda -->
+  <g font-size="11.5" fill="#8fa68f">
+    <rect x="64" y="1086" width="14" height="14" rx="3" fill="#0d160d" stroke="#22c55e" stroke-opacity="0.5"/>
+    <text x="86" y="1097">middleware / RPC</text>
+    <rect x="234" y="1086" width="14" height="14" rx="3" fill="#13201a" stroke="#2f4a33"/>
+    <text x="256" y="1097">políticas RLS</text>
+    <rect x="372" y="1086" width="14" height="14" rx="3" fill="#211a13" stroke="#4a3a2f"/>
+    <text x="394" y="1097">service role (acesso total)</text>
+    <text x="1180" y="1097" text-anchor="end" fill="#5f7a5f">docs/arquitetura.svg · gerado 2026-06-08</text>
+  </g>
+</svg>

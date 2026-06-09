@@ -33,6 +33,15 @@ function resolveSlug(request: NextRequest): string | null {
     return host.replace(`.${PLATFORM_HOST}`, '').split('.')[0] || null
   }
 
+  // Dev local (localhost): os links internos perdem o ?store=, então mantemos a
+  // loja "fixada" por cookie até trocar com outro ?store=. Restrito a localhost
+  // para não afetar produção, onde o subdomínio é quem resolve a loja.
+  const isLocal = host.startsWith('localhost') || host.startsWith('127.0.0.1')
+  if (isLocal) {
+    const fromCookie = request.cookies.get('dev_store')?.value
+    if (fromCookie) return fromCookie
+  }
+
   return null
 }
 
@@ -104,6 +113,9 @@ export async function proxy(request: NextRequest) {
   const response = NextResponse.next()
   response.headers.set('x-store-id', store.id)
   response.headers.set('x-store-plan', store.plan_id)
+  // Dev: fixa a loja para as próximas navegações (os links perdem o ?store=).
+  const querySlug = request.nextUrl.searchParams.get('store')
+  if (querySlug) response.cookies.set('dev_store', querySlug, { path: '/', sameSite: 'lax' })
   return response
 }
 
@@ -140,8 +152,20 @@ async function handleAdminAuth(request: NextRequest, storeId: string, planId: st
     return NextResponse.redirect(loginUrl)
   }
 
+  // Defense-in-depth: o usuário está logado, mas é o DONO desta loja?
+  // (A RLS já protege os dados; isto evita exibir o shell do admin de outra loja.)
+  const { data: owns } = await supabase.rpc('owns_store', { p_store_id: storeId })
+  if (!owns) {
+    const loginUrl = new URL('/admin/login', request.url)
+    loginUrl.searchParams.set('next', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
   response.headers.set('x-store-id', storeId)
   response.headers.set('x-store-plan', planId)
+  // Dev: mantém a loja fixada nas próximas navegações do painel.
+  const querySlug = request.nextUrl.searchParams.get('store')
+  if (querySlug) response.cookies.set('dev_store', querySlug, { path: '/', sameSite: 'lax' })
   return response
 }
 

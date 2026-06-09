@@ -14,7 +14,7 @@ type Orcamento = Quote
 
 const statusColors: Record<OrcStatus, string> = {
   pendente: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  aprovado: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  aprovado: 'bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--accent)]/30',
   recusado: 'bg-red-500/20 text-red-400 border-red-500/30',
   expirado: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
 }
@@ -59,9 +59,9 @@ export default function OrcamentosPage() {
   const [services, setServices] = useState<Service[]>([])
 
   // Config da loja (multi-tenant) — carregada do Supabase
-  const [storeWA, setStoreWA] = useState('5519981499229')
-  const [storeName, setStoreName] = useState('M CELL')
-  const [storePhone, setStorePhone] = useState('(19) 98149-9229')
+  const [storeWA, setStoreWA] = useState('')
+  const [storeName, setStoreName] = useState('Minha Loja')
+  const [storePhone, setStorePhone] = useState('')
 
   useEffect(() => {
     if (!storeId) return
@@ -172,7 +172,7 @@ export default function OrcamentosPage() {
             <h1 className="text-2xl font-bold text-white">Orçamentos</h1>
             <p className="text-sm text-zinc-500 mt-0.5">{orcamentos.length} orçamento{orcamentos.length !== 1 ? 's' : ''} · Gere, compartilhe e converta em O.S.</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 text-black font-semibold rounded-xl transition-all text-sm">
+          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl transition-all text-sm">
             <Plus size={16} /> Novo orçamento
           </button>
         </div>
@@ -184,7 +184,7 @@ export default function OrcamentosPage() {
           <FileText size={48} className="text-zinc-700 mb-4" />
           <p className="text-lg font-semibold text-white mb-1">Nenhum orçamento ainda</p>
           <p className="text-sm text-zinc-500 mb-6 max-w-sm">Crie orçamentos profissionais e compartilhe com seus clientes pelo WhatsApp.</p>
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-5 py-2.5 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-xl transition-all text-sm">
+          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-black font-semibold rounded-xl transition-all text-sm">
             <Plus size={15} /> Criar primeiro orçamento
           </button>
         </div>
@@ -197,8 +197,8 @@ export default function OrcamentosPage() {
             const t = orc.items.reduce((s, i) => s + i.qty * i.unitario, 0) - orc.desconto
             return (
               <div key={orc.id} className="flex items-center gap-4 p-4 rounded-2xl bg-[#141414] border border-white/[0.06] hover:border-white/[0.12] transition-all cursor-pointer" onClick={() => setViewing(orc)}>
-                <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center shrink-0">
-                  <FileText size={16} className="text-green-400" />
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center shrink-0">
+                  <FileText size={16} className="text-[var(--accent)]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -211,7 +211,7 @@ export default function OrcamentosPage() {
                   <p className="text-xs text-zinc-500 mt-0.5">{orc.device} · {orc.items.length} item{orc.items.length !== 1 ? 's' : ''}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-sm font-bold text-green-400">{formatCurrency(t)}</p>
+                  <p className="text-sm font-bold text-[var(--accent)]">{formatCurrency(t)}</p>
                   <p className="text-[10px] text-zinc-600 mt-0.5">{formatDateTime(orc.created_at)}</p>
                 </div>
               </div>
@@ -235,17 +235,17 @@ export default function OrcamentosPage() {
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Nome do cliente *</label>
                   <input value={name} onChange={e => setName(e.target.value)} placeholder="João Silva"
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">WhatsApp / Telefone</label>
                   <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="(19) 98149-9229"
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40" />
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Aparelho *</label>
                   <input value={device} onChange={e => setDevice(e.target.value)} placeholder="iPhone 14 Pro, Samsung S23..."
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40" />
                 </div>
               </div>
 
@@ -255,7 +255,7 @@ export default function OrcamentosPage() {
                 <div className="flex flex-wrap gap-1.5">
                   {services.filter(s => s.is_active).map(s => (
                     <button key={s.id} onClick={() => addServiceItem(s.name, s.price_from)}
-                      className="px-2.5 py-1.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-xs text-zinc-400 hover:text-green-400 hover:border-green-500/25 transition-all active:scale-95 flex items-center gap-1.5">
+                      className="px-2.5 py-1.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-xs text-zinc-400 hover:text-[var(--accent)] hover:border-[var(--accent)]/25 transition-all active:scale-95 flex items-center gap-1.5">
                       <Wrench size={10} /> {s.name} — {formatCurrency(s.price_from)}
                     </button>
                   ))}
@@ -266,7 +266,7 @@ export default function OrcamentosPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-medium text-zinc-400">Itens do orçamento *</label>
-                  <button onClick={addItem} className="flex items-center gap-1 text-xs text-green-400 hover:text-green-300 transition-colors">
+                  <button onClick={addItem} className="flex items-center gap-1 text-xs text-[var(--accent)] hover:text-[var(--accent)] transition-colors">
                     <Plus size={12} /> Adicionar linha
                   </button>
                 </div>
@@ -281,11 +281,11 @@ export default function OrcamentosPage() {
                   {items.map(item => (
                     <div key={item.id} className="grid grid-cols-[1fr_60px_100px_32px] gap-2 items-center">
                       <input value={item.descricao} onChange={e => updateItem(item.id, 'descricao', e.target.value)} placeholder="Troca de tela, bateria..."
-                        className="bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40" />
+                        className="bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40" />
                       <input type="number" min="1" value={item.qty} onChange={e => updateItem(item.id, 'qty', Number(e.target.value))}
-                        className="bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white text-center focus:outline-none focus:border-green-500/40" />
+                        className="bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white text-center focus:outline-none focus:border-[var(--accent)]/40" />
                       <input type="number" min="0" step="0.01" value={item.unitario} onChange={e => updateItem(item.id, 'unitario', Number(e.target.value))} placeholder="0"
-                        className="bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white text-right focus:outline-none focus:border-green-500/40" />
+                        className="bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white text-right focus:outline-none focus:border-[var(--accent)]/40" />
                       <button onClick={() => removeItem(item.id)} disabled={items.length === 1}
                         className="p-1.5 rounded-lg text-zinc-700 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-30 transition-all active:scale-90">
                         <X size={13} />
@@ -304,11 +304,11 @@ export default function OrcamentosPage() {
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-zinc-500">Desconto (R$)</span>
                   <input type="number" min="0" value={desconto} onChange={e => setDesconto(Number(e.target.value))}
-                    className="w-28 bg-[#1a1a1a] border border-white/[0.08] rounded-lg px-3 py-1.5 text-sm text-white text-right focus:outline-none focus:border-green-500/40" />
+                    className="w-28 bg-[#1a1a1a] border border-white/[0.08] rounded-lg px-3 py-1.5 text-sm text-white text-right focus:outline-none focus:border-[var(--accent)]/40" />
                 </div>
                 <div className="flex justify-between text-base pt-1 border-t border-white/[0.06]">
                   <span className="font-semibold text-white">Total</span>
-                  <span className="font-black text-green-400">{formatCurrency(total)}</span>
+                  <span className="font-black text-[var(--accent)]">{formatCurrency(total)}</span>
                 </div>
               </div>
 
@@ -317,19 +317,19 @@ export default function OrcamentosPage() {
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Observações</label>
                   <textarea value={obs} onChange={e => setObs(e.target.value)} rows={2} placeholder="Garantia, condições, tempo estimado..."
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 resize-none" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 resize-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Validade do orçamento</label>
                   <input type="date" value={validade} onChange={e => setValidade(e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40" />
                 </div>
               </div>
             </div>
 
             <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
               <button onClick={() => { setShowForm(false); resetForm() }} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] active:scale-95 transition-all">Cancelar</button>
-              <button onClick={createOrcamento} disabled={!name || !device} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 disabled:opacity-50 active:scale-95 text-black font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+              <button onClick={createOrcamento} disabled={!name || !device} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50 active:scale-95 text-black font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
                 <FileText size={14} /> Gerar orçamento
               </button>
             </div>
@@ -355,7 +355,7 @@ export default function OrcamentosPage() {
               {/* Preview do orçamento */}
               <div className="rounded-xl bg-[#111] border border-white/[0.06] p-5 font-mono text-xs space-y-1">
                 <p className="font-bold text-white text-sm">ORÇAMENTO #{displayId(viewing.id)}</p>
-                <p className="text-green-400 font-bold">{storeName} — Celulares & Assistência</p>
+                <p className="text-[var(--accent)] font-bold">{storeName} — Celulares & Assistência</p>
                 <div className="border-t border-white/[0.06] my-2" />
                 <p className="text-zinc-400">Cliente: <span className="text-white">{viewing.customer_name}</span></p>
                 <p className="text-zinc-400">Aparelho: <span className="text-white">{viewing.device}</span></p>
@@ -375,7 +375,7 @@ export default function OrcamentosPage() {
                 <div className="border-t border-white/[0.06] my-2" />
                 <div className="flex justify-between font-bold text-sm">
                   <span className="text-white">TOTAL</span>
-                  <span className="text-green-400">{formatCurrency(viewing.items.reduce((s, i) => s + i.qty * i.unitario, 0) - viewing.desconto)}</span>
+                  <span className="text-[var(--accent)]">{formatCurrency(viewing.items.reduce((s, i) => s + i.qty * i.unitario, 0) - viewing.desconto)}</span>
                 </div>
                 {viewing.observacoes && <p className="text-zinc-500 pt-1">Obs: {viewing.observacoes}</p>}
                 <p className="text-zinc-600 pt-1">Validade: {new Date(viewing.validade + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
@@ -400,12 +400,12 @@ export default function OrcamentosPage() {
                 <a
                   href={`https://wa.me/${storeWA}?text=${encodeURIComponent(formatWhatsApp(viewing, storeName, storePhone))}`}
                   target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-semibold rounded-xl text-sm transition-all">
+                  className="flex items-center justify-center gap-2 py-3 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-white font-semibold rounded-xl text-sm transition-all">
                   <MessageCircle size={15} /> Enviar pelo WhatsApp
                 </a>
                 <button onClick={() => copyText(formatWhatsApp(viewing, storeName, storePhone))}
                   className={cn('flex items-center justify-center gap-2 py-3 border rounded-xl text-sm font-medium transition-all active:scale-95',
-                    copied ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white')}>
+                    copied ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]' : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white')}>
                   {copied ? <><CheckCircle size={15} /> Copiado!</> : <><Copy size={15} /> Copiar texto</>}
                 </button>
                 <button onClick={() => convertToOS(viewing)}

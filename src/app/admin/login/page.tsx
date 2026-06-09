@@ -1,7 +1,6 @@
 'use client'
 
 import { Suspense, useState } from 'react'
-import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Shield, Lock, AlertCircle } from 'lucide-react'
 import { getSupabaseBrowser, supabaseConfigured } from '@/lib/supabase-browser'
@@ -22,8 +21,14 @@ function LoginForm() {
     const supabase = getSupabaseBrowser()
 
     if (!supabase || !supabaseConfigured) {
-      // Modo sem Supabase — aceita qualquer login para facilitar desenvolvimento local
-      window.location.href = searchParams.get('next') ?? '/admin/dashboard'
+      // Sem Supabase: só libera atalho de login em DEV. Em produção, recusa
+      // (evita acesso ao admin caso o deploy suba sem as variáveis de ambiente).
+      if (process.env.NODE_ENV !== 'production') {
+        window.location.href = searchParams.get('next') ?? '/admin/dashboard'
+      } else {
+        setError('Login indisponível: configuração do servidor ausente. Contate o suporte.')
+        setLoading(false)
+      }
       return
     }
 
@@ -43,29 +48,22 @@ function LoginForm() {
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/[0.04] rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-500/[0.03] rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--accent)]/[0.04] rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[var(--accent)]/[0.03] rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Image
-              src="/mcelllogo.jpeg"
-              alt="M CELL"
-              height={90}
-              width={90}
-              className="object-contain rounded-2xl drop-shadow-[0_0_28px_rgba(34,197,94,0.4)]"
-              priority
-            />
+            <span className="flex h-[90px] w-[90px] items-center justify-center rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 drop-shadow-[0_0_28px_color-mix(in_srgb,var(--accent)_30%,transparent)]">
+              <Shield size={40} className="text-[var(--accent)]" />
+            </span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight mb-1">
-            M <span className="text-green-400">CELL</span>
-          </h1>
+          <h1 className="text-2xl font-black text-white tracking-tight mb-1">Painel da Loja</h1>
           <p className="text-sm text-zinc-500 flex items-center justify-center gap-1.5">
-            <Shield size={12} className="text-green-500/60" />
-            Painel Administrativo
+            <Shield size={12} className="text-[var(--accent)]/60" />
+            Acesso administrativo
           </p>
         </div>
 
@@ -85,8 +83,8 @@ function LoginForm() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                placeholder="admin@mcell.com"
-                className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 focus:bg-[#202020] transition-all"
+                placeholder="seu@email.com"
+                className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 focus:bg-[#202020] transition-all"
               />
             </div>
             <div>
@@ -99,7 +97,7 @@ function LoginForm() {
                   onChange={e => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl pl-10 pr-12 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 focus:bg-[#202020] transition-all"
+                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl pl-10 pr-12 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 focus:bg-[#202020] transition-all"
                 />
                 <button
                   type="button"
@@ -114,7 +112,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-green-500/25 text-sm flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-60 text-black font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-[var(--accent)]/25 text-sm flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
                 <><div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Entrando...</>

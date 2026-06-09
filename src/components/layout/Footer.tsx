@@ -16,8 +16,8 @@ export function Footer({ brand }: { brand: Brand }) {
               {brand.logoUrl ? (
                 <Image src={brand.logoUrl} alt={brand.name} height={40} width={40} className="object-contain rounded-lg" />
               ) : (
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10 border border-green-500/20">
-                  <Store size={18} className="text-green-400" />
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/20">
+                  <Store size={18} className="text-[var(--accent)]" />
                 </span>
               )}
               <div className="flex flex-col leading-none">
@@ -33,7 +33,7 @@ export function Footer({ brand }: { brand: Brand }) {
                 <a
                   href={brand.instagramUrl}
                   target="_blank" rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-green-400 hover:border-green-500/30 hover:bg-green-500/10 transition-all active:scale-90"
+                  className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/10 transition-all active:scale-90"
                 >
                   <AtSign size={16} />
                 </a>
@@ -42,7 +42,7 @@ export function Footer({ brand }: { brand: Brand }) {
                 <a
                   href={waLink(brand)}
                   target="_blank" rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/10 transition-all active:scale-90"
+                  className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-500 hover:text-[var(--accent)] hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/10 transition-all active:scale-90"
                 >
                   <MessageCircle size={16} />
                 </a>
@@ -63,7 +63,7 @@ export function Footer({ brand }: { brand: Brand }) {
                 { href: '/agendar', label: 'Agendamento' },
               ].map(({ href, label }) => (
                 <li key={href}>
-                  <Link href={href} className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
+                  <Link href={href} className="text-sm text-zinc-500 hover:text-[var(--accent)] transition-colors">
                     {label}
                   </Link>
                 </li>
@@ -77,7 +77,7 @@ export function Footer({ brand }: { brand: Brand }) {
             <ul className="space-y-2">
               {['Troca de Tela', 'Troca de Bateria', 'Reparo de Conector', 'Desbloqueio', 'Recuperação de Dados', 'Reparo de Placa'].map((s) => (
                 <li key={s}>
-                  <Link href="/servicos" className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
+                  <Link href="/servicos" className="text-sm text-zinc-500 hover:text-[var(--accent)] transition-colors">
                     {s}
                   </Link>
                 </li>
@@ -91,21 +91,21 @@ export function Footer({ brand }: { brand: Brand }) {
             <ul className="space-y-3">
               {brand.address && (
                 <li className="flex items-start gap-3">
-                  <MapPin size={16} className="text-green-500 mt-0.5 shrink-0" />
+                  <MapPin size={16} className="text-[var(--accent)] mt-0.5 shrink-0" />
                   <span className="text-sm text-zinc-500">{brand.address}</span>
                 </li>
               )}
               {brand.phone && (
                 <li className="flex items-center gap-3">
-                  <Phone size={16} className="text-green-500 shrink-0" />
-                  <a href={`tel:${brand.phone.replace(/[^\d+]/g, '')}`} className="text-sm text-zinc-500 hover:text-green-400 transition-colors">
+                  <Phone size={16} className="text-[var(--accent)] shrink-0" />
+                  <a href={`tel:${brand.phone.replace(/[^\d+]/g, '')}`} className="text-sm text-zinc-500 hover:text-[var(--accent)] transition-colors">
                     {brand.phone}
                   </a>
                 </li>
               )}
               {(brand.hoursWeekday || brand.hoursSaturday) && (
                 <li className="flex items-start gap-3">
-                  <Clock size={16} className="text-green-500 mt-0.5 shrink-0" />
+                  <Clock size={16} className="text-[var(--accent)] mt-0.5 shrink-0" />
                   <span className="text-sm text-zinc-500">
                     {brand.hoursWeekday && <>Seg – Sex: {brand.hoursWeekday}<br /></>}
                     {brand.hoursSaturday && <>Sábado: {brand.hoursSaturday}<br /></>}
@@ -118,7 +118,7 @@ export function Footer({ brand }: { brand: Brand }) {
                   <a
                     href={waLink(brand, `Olá! Vim pelo site da ${brand.name}.`)}
                     target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-medium transition-all active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 rounded-xl text-xs font-medium transition-all active:scale-95"
                   >
                     <MessageCircle size={13} /> Falar no WhatsApp
                   </a>

@@ -21,18 +21,30 @@
   box-sizing: border-box;
 }
 
-html, body {
+html {
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: hidden;                  /* clipa horizontal + impede arrasto lateral */
+  overscroll-behavior: none;           /* sem efeito "elástico"/pull-to-refresh */
+  -webkit-text-size-adjust: 100%;      /* iOS não infla o texto sozinho */
+  text-size-adjust: 100%;
+  touch-action: manipulation;          /* sem zoom de duplo-toque; rolagem normal mantida */
+  scroll-behavior: smooth;
+}
+body {
+  /* IMPORTANTE: NÃO colocar overflow-x aqui. Com overflow-x:hidden o body vira
+     um 2º container de scroll (overflow-y computa p/ auto) e a RODA DO MOUSE
+     para de rolar a página (só a barra funciona). A clipagem horizontal já é
+     feita pelo html acima. */
+  max-width: 100vw;
+  overscroll-behavior: none;
   background: var(--background);
   color: var(--foreground);
-  scroll-behavior: smooth;
 }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0a0a0a; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #22c55e; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 .glass {
   background: rgba(255, 255, 255, 0.03);
@@ -47,7 +59,7 @@ html, body {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #22c55e, #4ade80, #bbf7d0);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 65%, #fff), color-mix(in srgb, var(--accent) 30%, #fff));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -59,7 +71,7 @@ html, body {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(34,197,94,0.1) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent) 10%, transparent) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
@@ -87,8 +99,8 @@ a, button, [role="button"] {
 
 /* Logo pulse suave */
 @keyframes pulse-glow {
-  0%, 100% { text-shadow: 0 0 10px rgba(34,197,94,0.7), 0 2px 4px rgba(0,0,0,0.9); }
-  50% { text-shadow: 0 0 20px rgba(34,197,94,1), 0 0 35px rgba(34,197,94,0.5), 0 2px 4px rgba(0,0,0,0.9); }
+  0%, 100% { text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent), 0 2px 4px rgba(0,0,0,0.9); }
+  50% { text-shadow: 0 0 20px var(--accent), 0 0 35px color-mix(in srgb, var(--accent) 50%, transparent), 0 2px 4px rgba(0,0,0,0.9); }
 }
 .animate-pulse-slow {
   animation: pulse-glow 3s ease-in-out infinite;

@@ -15,12 +15,12 @@ export default async function SobrePage() {
   const storeId = await getStoreIdFromHeaders()
   const config = await getStoreConfig(storeId).catch(() => null)
 
-  const storeName  = config?.store_name    ?? 'M CELL'
+  const storeName  = config?.store_name    ?? 'Minha Loja'
   const about      = config?.about         ?? 'Somos uma loja especializada em iPhones e smartphones, oferecendo aparelhos seminovos e lacrados com procedência garantida, além de assistência técnica especializada.'
-  const address    = config?.address       ?? 'Rua das Flores, 123 — Centro, São Paulo/SP'
-  const phone      = config?.phone         ?? '(19) 98149-9229'
-  const instagram  = config?.instagram     ?? '@mcell'
-  const whatsapp   = config?.whatsapp      ? `55${config.whatsapp.replace(/\D/g, '')}` : '5519981499229'
+  const address    = config?.address       ?? ''
+  const phone      = config?.phone         ?? ''
+  const instagram  = config?.instagram     ?? ''
+  const whatsapp   = config?.whatsapp      ? `55${config.whatsapp.replace(/\D/g, '')}` : ''
   const weekday    = config?.hours_weekday ?? '08h – 18h'
   const saturday   = config?.hours_saturday ?? '08h – 13h'
 
@@ -41,7 +41,7 @@ export default async function SobrePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
         {/* About */}
         <div>
-          <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-1">Sobre nós</p>
+          <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-widest mb-1">Sobre nós</p>
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-5">{storeName}</h1>
           <div className="space-y-4 text-sm text-zinc-400 leading-relaxed">
             <p>{about}</p>
@@ -52,7 +52,7 @@ export default async function SobrePage() {
           <div className="grid grid-cols-2 gap-4 mt-8">
             {stats.map(({ icon: Icon, value, label }) => (
               <div key={label} className="p-4 rounded-2xl bg-[#141414] border border-white/[0.06]">
-                <Icon size={18} className="text-green-400 mb-2" />
+                <Icon size={18} className="text-[var(--accent)] mb-2" />
                 <p className="text-xl font-bold text-white">{value}</p>
                 <p className="text-xs text-zinc-500">{label}</p>
               </div>
@@ -64,7 +64,7 @@ export default async function SobrePage() {
               href={`${WA}?text=${encodeURIComponent(`Olá! Preciso de informações sobre a ${storeName}.`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 text-sm"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-white font-bold rounded-xl transition-all shadow-lg shadow-[var(--accent)]/20 text-sm"
             >
               <MessageCircle size={16} />
               Falar no WhatsApp
@@ -81,8 +81,8 @@ export default async function SobrePage() {
             <div className="p-5 space-y-4">
               {address && (
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                    <MapPin size={14} className="text-green-400" />
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                    <MapPin size={14} className="text-[var(--accent)]" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-white">Endereço</p>
@@ -92,22 +92,22 @@ export default async function SobrePage() {
               )}
               {phone && (
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                    <Phone size={14} className="text-green-400" />
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                    <Phone size={14} className="text-[var(--accent)]" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-white">Telefone</p>
-                    <a href={`tel:${phone.replace(/\D/g, '')}`} className="text-xs text-zinc-500 hover:text-green-400 transition-colors">{phone}</a>
+                    <a href={`tel:${phone.replace(/\D/g, '')}`} className="text-xs text-zinc-500 hover:text-[var(--accent)] transition-colors">{phone}</a>
                   </div>
                 </div>
               )}
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                  <MessageCircle size={14} className="text-emerald-400" />
+                <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
+                  <MessageCircle size={14} className="text-[var(--accent)]" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">WhatsApp</p>
-                  <a href={WA} target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-500 hover:text-emerald-400 transition-colors">
+                  <a href={WA} target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-500 hover:text-[var(--accent)] transition-colors">
                     {phone || whatsapp} — Clique para conversar
                   </a>
                 </div>
@@ -135,7 +135,7 @@ export default async function SobrePage() {
 
           <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
             <div className="px-5 py-3.5 border-b border-white/[0.04] flex items-center gap-2">
-              <Clock size={14} className="text-green-400" />
+              <Clock size={14} className="text-[var(--accent)]" />
               <h3 className="text-sm font-semibold text-white">Horário de funcionamento</h3>
             </div>
             <div className="divide-y divide-white/[0.04]">

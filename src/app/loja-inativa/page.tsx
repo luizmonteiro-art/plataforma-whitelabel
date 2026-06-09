@@ -26,7 +26,7 @@ export default function LojaInativaPage() {
         </p>
 
         <a
-          href="https://wa.me/5519981499229"
+          href="https://wa.me/5519933005099"
           target="_blank" rel="noopener noreferrer"
           className="mt-7 inline-flex items-center gap-2 rounded-full bg-green-500 px-6 py-3 text-sm font-bold text-black transition-all hover:bg-green-400 active:scale-95"
         >

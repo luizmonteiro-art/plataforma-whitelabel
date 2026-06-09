@@ -62,7 +62,7 @@ interface Props {
   waNumber?: string
 }
 
-export function AgendarClient({ storeId, services, waNumber = '5519981499229' }: Props) {
+export function AgendarClient({ storeId, services, waNumber = '' }: Props) {
   const [submitted, setSubmitted] = useState<FormData | null>(null)
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -105,21 +105,21 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
 
     return (
       <div className="max-w-lg mx-auto text-center py-20">
-        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-          <CheckCircle size={32} className="text-emerald-400" />
+        <div className="w-16 h-16 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center mx-auto mb-6">
+          <CheckCircle size={32} className="text-[var(--accent)]" />
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">Agendamento recebido!</h2>
         <p className="text-zinc-500 text-sm mb-2">
           {submitted.name}, seu agendamento para <strong className="text-white">{service?.name}</strong> foi registrado para{' '}
-          <strong className="text-green-400">{new Date(submitted.date + 'T12:00:00').toLocaleDateString('pt-BR')}</strong> às{' '}
-          <strong className="text-green-400">{submitted.time}</strong>.
+          <strong className="text-[var(--accent)]">{new Date(submitted.date + 'T12:00:00').toLocaleDateString('pt-BR')}</strong> às{' '}
+          <strong className="text-[var(--accent)]">{submitted.time}</strong>.
         </p>
         <p className="text-zinc-600 text-xs mb-8">Nossa equipe entrará em contato para confirmar. Aguarde!</p>
         <a
           href={`https://wa.me/${waNumber}?text=${msg}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-emerald-500/25 text-sm"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)] text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-[var(--accent)]/25 text-sm"
         >
           <MessageCircle size={16} />
           Confirmar pelo WhatsApp
@@ -143,7 +143,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
               placeholder="João Silva"
               className={cn(
                 'w-full bg-[#1a1a1a] border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:bg-[#202020] transition-all',
-                errors.name ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-green-500/40'
+                errors.name ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-[var(--accent)]/40'
               )}
             />
             {errors.name && <p className="text-xs text-red-400 mt-1">{errors.name.message}</p>}
@@ -155,7 +155,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
               placeholder="(11) 99999-9999"
               className={cn(
                 'w-full bg-[#1a1a1a] border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:bg-[#202020] transition-all',
-                errors.phone ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-green-500/40'
+                errors.phone ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/[0.08] focus:border-[var(--accent)]/40'
               )}
             />
             {errors.phone && <p className="text-xs text-red-400 mt-1">{errors.phone.message}</p>}
@@ -178,7 +178,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
                 placeholder="Ex: iPhone 13, Samsung Galaxy S23..."
                 className={cn(
                   'w-full bg-[#1a1a1a] border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:bg-[#202020] transition-all',
-                  errors.device ? 'border-red-500/50' : 'border-white/[0.08] focus:border-green-500/40'
+                  errors.device ? 'border-red-500/50' : 'border-white/[0.08] focus:border-[var(--accent)]/40'
                 )}
               />
             </div>
@@ -192,7 +192,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
                 {...register('service_id')}
                 className={cn(
                   'w-full bg-[#1a1a1a] border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:bg-[#202020] transition-all appearance-none',
-                  errors.service_id ? 'border-red-500/50' : 'border-white/[0.08] focus:border-green-500/40'
+                  errors.service_id ? 'border-red-500/50' : 'border-white/[0.08] focus:border-[var(--accent)]/40'
                 )}
               >
                 <option value="">Selecione um serviço...</option>
@@ -206,7 +206,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
             </div>
             {errors.service_id && <p className="text-xs text-red-400 mt-1">{errors.service_id.message}</p>}
             {selectedService && (
-              <p className="text-xs text-green-500/70 mt-1 flex items-center gap-1">
+              <p className="text-xs text-[var(--accent)]/70 mt-1 flex items-center gap-1">
                 <Clock size={10} /> Tempo estimado: ~{selectedService.duration_minutes} minutos
               </p>
             )}
@@ -220,7 +220,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
               placeholder="Ex: A tela trincou e tem uma mancha escura no canto..."
               className={cn(
                 'w-full bg-[#1a1a1a] border rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:bg-[#202020] transition-all resize-none',
-                errors.problem ? 'border-red-500/50' : 'border-white/[0.08] focus:border-green-500/40'
+                errors.problem ? 'border-red-500/50' : 'border-white/[0.08] focus:border-[var(--accent)]/40'
               )}
             />
             {errors.problem && <p className="text-xs text-red-400 mt-1">{errors.problem.message}</p>}
@@ -246,7 +246,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
                 max={getMaxDate()}
                 className={cn(
                   'w-full bg-[#1a1a1a] border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white focus:outline-none focus:bg-[#202020] transition-all',
-                  errors.date ? 'border-red-500/50' : 'border-white/[0.08] focus:border-green-500/40'
+                  errors.date ? 'border-red-500/50' : 'border-white/[0.08] focus:border-[var(--accent)]/40'
                 )}
               />
             </div>
@@ -262,7 +262,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
                   <label key={slot} className={cn(
                     'flex items-center justify-center py-2 rounded-lg border text-xs font-medium cursor-pointer transition-all',
                     isSelected
-                      ? 'bg-green-500 border-green-500 text-black'
+                      ? 'bg-[var(--accent)] border-[var(--accent)] text-black'
                       : 'bg-[#1a1a1a] border-white/[0.08] text-zinc-400 hover:text-white hover:border-white/20'
                   )}>
                     <input type="radio" value={slot} {...register('time')} className="sr-only" />
@@ -278,8 +278,8 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
 
       {/* Resumo */}
       {selectedDate && selectedTime && selectedService && selectedName && (
-        <div className="rounded-2xl bg-green-500/5 border border-green-500/20 p-4 text-sm">
-          <p className="font-semibold text-green-400 mb-2">Resumo do agendamento</p>
+        <div className="rounded-2xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 p-4 text-sm">
+          <p className="font-semibold text-[var(--accent)] mb-2">Resumo do agendamento</p>
           <div className="space-y-1 text-zinc-400 text-xs">
             <p>Serviço: <span className="text-white font-medium">{selectedService.name}</span></p>
             {selectedDevice && <p>Aparelho: <span className="text-white font-medium">{selectedDevice}</span></p>}
@@ -292,7 +292,7 @@ export function AgendarClient({ storeId, services, waNumber = '5519981499229' }:
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-4 bg-green-500 hover:bg-green-400 disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold rounded-xl transition-all hover:shadow-xl hover:shadow-green-500/25 text-sm flex items-center justify-center gap-2"
+        className="w-full py-4 bg-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold rounded-xl transition-all hover:shadow-xl hover:shadow-[var(--accent)]/25 text-sm flex items-center justify-center gap-2"
       >
         {isSubmitting ? (
           <>

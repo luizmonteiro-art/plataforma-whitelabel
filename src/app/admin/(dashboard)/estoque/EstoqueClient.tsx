@@ -17,6 +17,15 @@ const emptyForm = {
   stock_qty: '', description: '', images: [] as string[],
 }
 
+// Slug robusto: remove acentos e caracteres especiais (evita slug quebrado/colisão).
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
 export function EstoqueClient({ initialProducts: _ }: Props) {
   const router = useRouter()
   const { storeId } = useAdminStore()
@@ -67,6 +76,9 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
     try {
       const urls = await Promise.all(imageFiles.map(f => uploadImage(f, 'products', storeId)))
       setForm(f => ({ ...f, images: [...f.images, ...urls] }))
+    } catch (e) {
+      console.error(e)
+      alert('Não foi possível enviar as imagens. Verifique sua conexão e tente novamente.')
     } finally {
       setUploading(false)
     }
@@ -98,13 +110,17 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         stock_qty: Number(form.stock_qty),
         images: form.images,
       }
-      const saved = await upsertProduct(storeId, updated).catch(() => null)
-      setProducts(prev => prev.map(p => p.id === editProduct.id ? (saved ?? updated) : p))
+      const saved = await upsertProduct(storeId, updated).catch(e => { console.error(e); return null })
+      if (!saved) {
+        alert('Não foi possível salvar as alterações. Verifique sua conexão e tente novamente.')
+        return // mantém o modal aberto para nova tentativa; não falsifica sucesso
+      }
+      setProducts(prev => prev.map(p => p.id === editProduct.id ? saved : p))
     } else {
       // Defesa extra: bloqueia criação acima do limite do plano
       if (atLimit) { setShowForm(false); setShowLimitModal(true); return }
       const payload = {
-        slug: form.name.toLowerCase().replace(/\s+/g, '-'),
+        slug: slugify(form.name),
         is_featured: false as const, is_active: true as const,
         name: form.name, brand: form.brand, category: form.category,
         condition: form.condition, description: form.description,
@@ -113,13 +129,12 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
         stock_qty: Number(form.stock_qty),
       }
-      const saved = await upsertProduct(storeId, payload).catch(() => null)
-      const newProduct: Product = saved ?? {
-        id: String(Date.now()),
-        created_at: new Date().toISOString(),
-        ...payload,
+      const saved = await upsertProduct(storeId, payload).catch(e => { console.error(e); return null })
+      if (!saved) {
+        alert('Não foi possível salvar o produto. Pode ser falha de conexão ou um produto com nome/slug já existente. Tente novamente.')
+        return // não insere produto "fantasma" que sumiria ao recarregar
       }
-      setProducts(prev => [newProduct, ...prev])
+      setProducts(prev => [saved, ...prev])
     }
     setShowForm(false)
   }
@@ -157,7 +172,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
             'flex items-center gap-2 px-4 py-2.5 font-semibold rounded-xl transition-all text-sm active:scale-95',
             atLimit
               ? 'bg-white/[0.06] text-zinc-500 hover:bg-white/[0.08]'
-              : 'bg-green-500 hover:bg-green-400 text-black hover:shadow-lg hover:shadow-green-500/25'
+              : 'bg-[var(--accent)] hover:bg-[var(--accent)] text-black hover:shadow-lg hover:shadow-[var(--accent)]/25'
           )}
         >
           <Plus size={16} /> Novo produto
@@ -189,7 +204,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
       <div className="relative max-w-sm">
         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar produto ou marca..."
-          className="w-full bg-[#141414] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 transition-all" />
+          className="w-full bg-[#141414] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
       </div>
 
       {/* Cards — efeito "puxar pasta do arquivo" */}
@@ -203,7 +218,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
             className={cn(
               'group relative flex items-center gap-4 p-4 rounded-2xl bg-[#141414] border border-white/[0.06]',
               'transition-all duration-200 cursor-default',
-              'hover:-translate-y-1 hover:bg-[#1d1d1d] hover:border-green-500/20',
+              'hover:-translate-y-1 hover:bg-[#1d1d1d] hover:border-[var(--accent)]/20',
               'hover:shadow-xl hover:shadow-black/50 hover:z-10',
               p.stock_qty === 0 ? 'opacity-50' : ''
             )}
@@ -213,7 +228,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
               'absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-all duration-200',
               p.stock_qty === 0 ? 'bg-red-500/40' :
               p.stock_qty <= 2 ? 'bg-orange-500/60 group-hover:w-1.5' :
-              'bg-green-500/30 group-hover:w-1.5'
+              'bg-[var(--accent)]/30 group-hover:w-1.5'
             )} />
 
             {/* Imagem com zoom no hover */}
@@ -226,7 +241,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-white group-hover:text-green-400 transition-colors truncate max-w-[220px]">{p.name}</p>
+                <p className="text-sm font-semibold text-white group-hover:text-[var(--accent)] transition-colors truncate max-w-[220px]">{p.name}</p>
                 <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', conditionColor[p.condition])}>
                   {conditionLabel[p.condition]}
                 </span>
@@ -250,7 +265,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
 
             {/* Ações — aparecem no hover */}
             <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0">
-              <button onClick={() => openEdit(p)} className="p-2 rounded-xl text-zinc-500 hover:text-green-400 hover:bg-green-500/10 transition-all active:scale-90">
+              <button onClick={() => openEdit(p)} className="p-2 rounded-xl text-zinc-500 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all active:scale-90">
                 <Edit2 size={15} />
               </button>
               <button onClick={() => handleDelete(p.id)} className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all active:scale-90">
@@ -277,14 +292,14 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Nome *</label>
                   <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="iPhone 15 Pro..."
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
                 </div>
 
                 {/* Marca */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Marca *</label>
                   <input value={form.brand} onChange={e => setForm(f => ({ ...f, brand: e.target.value }))} placeholder="Apple"
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
                 </div>
 
                 {/* Categoria */}
@@ -292,7 +307,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Categoria</label>
                   <div className="relative">
                     <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value as ProductCategory }))}
-                      className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 appearance-none">
+                      className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 appearance-none">
                       {Object.entries(categoryLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                     </select>
                     <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
@@ -304,7 +319,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Condição</label>
                   <div className="relative">
                     <select value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value as ProductCondition }))}
-                      className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 appearance-none">
+                      className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 appearance-none">
                       <option value="lacrado">Lacrado</option>
                       <option value="novo">Novo</option>
                       <option value="seminovo">Seminovo</option>
@@ -317,21 +332,21 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Preço (R$) *</label>
                   <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="4299"
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
                 </div>
 
                 {/* Preço promo */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Preço promo (R$)</label>
                   <input type="number" value={form.promo_price} onChange={e => setForm(f => ({ ...f, promo_price: e.target.value }))} placeholder="3899 (opcional)"
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
                 </div>
 
                 {/* Qtd */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Qtd. em estoque *</label>
                   <input type="number" value={form.stock_qty} onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))} placeholder="5"
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
                 </div>
 
                 {/* Upload de fotos */}
@@ -350,16 +365,16 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                     className={cn(
                       'relative flex flex-col items-center justify-center gap-2 py-6 rounded-xl border-2 border-dashed cursor-pointer transition-all',
                       isDragging
-                        ? 'border-green-500/60 bg-green-500/5'
-                        : 'border-white/[0.10] bg-[#1a1a1a] hover:border-green-500/40 hover:bg-green-500/[0.03]'
+                        ? 'border-[var(--accent)]/60 bg-[var(--accent)]/5'
+                        : 'border-white/[0.10] bg-[#1a1a1a] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/[0.03]'
                     )}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center">
                       {uploading
-                        ? <Upload size={18} className="text-green-400 animate-pulse" />
+                        ? <Upload size={18} className="text-[var(--accent)] animate-pulse" />
                         : isDragging
-                          ? <Upload size={18} className="text-green-400" />
-                          : <ImagePlus size={18} className="text-green-400" />
+                          ? <Upload size={18} className="text-[var(--accent)]" />
+                          : <ImagePlus size={18} className="text-[var(--accent)]" />
                       }
                     </div>
                     <div className="text-center">
@@ -390,7 +405,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                           <img src={src} alt="" className="w-full h-full object-cover" />
                           {/* Badge principal */}
                           {i === 0 && (
-                            <span className="absolute top-1 left-1 text-[8px] font-bold bg-green-500 text-black px-1.5 py-0.5 rounded-full">
+                            <span className="absolute top-1 left-1 text-[8px] font-bold bg-[var(--accent)] text-black px-1.5 py-0.5 rounded-full">
                               CAPA
                             </span>
                           )}
@@ -408,7 +423,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                       {form.images.length < 8 && (
                         <button
                           onClick={() => fileInputRef.current?.click()}
-                          className="aspect-square rounded-xl border-2 border-dashed border-white/[0.10] bg-[#1a1a1a] flex flex-col items-center justify-center gap-1 hover:border-green-500/40 hover:bg-green-500/[0.03] transition-all"
+                          className="aspect-square rounded-xl border-2 border-dashed border-white/[0.10] bg-[#1a1a1a] flex flex-col items-center justify-center gap-1 hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/[0.03] transition-all"
                         >
                           <Plus size={16} className="text-zinc-600" />
                           <span className="text-[9px] text-zinc-700">Mais</span>
@@ -423,7 +438,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Descrição</label>
                   <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2}
                     placeholder="Descrição do produto..."
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 resize-none transition-all" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 resize-none transition-all" />
                 </div>
 
               </div>
@@ -431,7 +446,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
 
             <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
               <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] transition-all">Cancelar</button>
-              <button onClick={handleSave} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-xl text-sm transition-all active:scale-95">Salvar</button>
+              <button onClick={handleSave} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-black font-semibold rounded-xl text-sm transition-all active:scale-95">Salvar</button>
             </div>
           </div>
         </div>
@@ -444,11 +459,11 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
             onClick={e => e.stopPropagation()}
             className="relative w-full max-w-md rounded-3xl border border-white/[0.08] bg-[#0d100d] p-8 text-center shadow-2xl"
           >
-            <div className="absolute inset-0 -z-10 blur-3xl opacity-40 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.25),transparent_60%)]" />
+            <div className="absolute inset-0 -z-10 blur-3xl opacity-40 bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--accent)_25%,transparent),transparent_60%)]" />
             <button onClick={() => setShowLimitModal(false)} className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.06] transition-all"><X size={16} /></button>
 
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-green-500/20 bg-green-500/10">
-              <Package size={22} className="text-green-400" />
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--accent)]/20 bg-[var(--accent)]/10">
+              <Package size={22} className="text-[var(--accent)]" />
             </div>
             <h2 className="text-xl font-bold text-white">Limite de produtos atingido</h2>
             <p className="mt-2 text-sm leading-relaxed text-zinc-400">
@@ -460,18 +475,18 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
 
             {upgradePlan && (
               <>
-                <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-green-500/20 bg-green-500/[0.06] px-4 py-3">
-                  <Sparkles size={15} className="text-green-400" />
+                <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-[var(--accent)]/20 bg-[var(--accent)]/[0.06] px-4 py-3">
+                  <Sparkles size={15} className="text-[var(--accent)]" />
                   <span className="text-sm text-zinc-300">
-                    Plano <span className="font-bold text-green-400">{upgradePlan.name}</span>: até {upgradePlan.productLimit} produtos
+                    Plano <span className="font-bold text-[var(--accent)]">{upgradePlan.name}</span>: até {upgradePlan.productLimit} produtos
                     {' '}— R$ {upgradePlan.priceBrl.toFixed(2).replace('.', ',')}/mês
                   </span>
                 </div>
                 <a
-                  href={`https://wa.me/5519981499229?text=${encodeURIComponent(`Quero fazer upgrade para o plano ${upgradePlan.name}`)}`}
+                  href={`https://wa.me/5519933005099?text=${encodeURIComponent(`Quero fazer upgrade para o plano ${upgradePlan.name}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-green-500 px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-green-400 active:scale-95"
+                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-[var(--accent)] active:scale-95"
                 >
                   Fazer upgrade <ArrowUpRight size={16} />
                 </a>

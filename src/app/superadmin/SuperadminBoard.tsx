@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Hexagon, Plus, Store, Inbox, X, Check, Power, ExternalLink, Copy,
-  LogOut, AlertTriangle, Clock, CheckCircle2, Loader2, KeyRound,
+  LogOut, AlertTriangle, Clock, CheckCircle2, Loader2, KeyRound, MessageCircle,
 } from 'lucide-react'
 import { PLANS } from '@/lib/plans'
 import {
@@ -13,6 +13,28 @@ import {
 } from './actions'
 
 const PLATFORM_HOST = process.env.NEXT_PUBLIC_PLATFORM_HOST ?? 'plataforma.com'
+
+/**
+ * Link seguro para abrir a vitrine da loja.
+ * Usa ?store=<slug> na MESMA origem (relativo) — funciona em dev (localhost) e
+ * em produção (o proxy honra ?store= antes do subdomínio). Evita apontar para
+ * {slug}.plataforma.com, que é domínio de terceiros (risco de página maliciosa).
+ * É um <a> normal (não window.open) para não ser barrado pelo bloqueador de pop-up.
+ */
+function storeHref(slug: string): string {
+  return `/?store=${encodeURIComponent(slug)}`
+}
+
+/** URL de login do painel do lojista (mesma lógica segura do storeHref). */
+function adminLoginUrl(slug: string): string {
+  if (typeof window === 'undefined') return `/admin/login?store=${slug}`
+  const host = window.location.hostname
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')
+  const hostConfigured = !!PLATFORM_HOST && PLATFORM_HOST !== 'plataforma.com'
+  return isLocal || !hostConfigured
+    ? `${window.location.origin}/admin/login?store=${encodeURIComponent(slug)}`
+    : `https://${slug}.${PLATFORM_HOST}/admin/login`
+}
 
 const REQUEST_STATUS: Record<string, { label: string; cls: string }> = {
   pendente:     { label: 'Pendente',     cls: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30' },
@@ -37,7 +59,7 @@ export function SuperadminBoard({ stores, requests, configured }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<CreateStoreInput>(emptyForm)
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
-  const [tempPass, setTempPass] = useState<{ email: string; pass: string } | null>(null)
+  const [tempPass, setTempPass] = useState<{ email: string; pass: string; slug: string; whatsapp: string } | null>(null)
 
   const fmtDate = (s: string | null) =>
     s ? new Date(s).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'
@@ -58,7 +80,12 @@ export function SuperadminBoard({ stores, requests, configured }: Props) {
       const res = await createStore(form)
       if (res.ok) {
         setToast({ kind: 'ok', text: res.message })
-        if (res.tempPassword) setTempPass({ email: form.admin_email, pass: res.tempPassword })
+        if (res.tempPassword) setTempPass({
+          email: form.admin_email,
+          pass: res.tempPassword,
+          slug: res.slug ?? form.slug,
+          whatsapp: form.whatsapp,
+        })
         setShowForm(false)
         setForm(emptyForm)
         router.refresh()
@@ -239,7 +266,7 @@ export function SuperadminBoard({ stores, requests, configured }: Props) {
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <a
-                        href={`https://${s.slug}.${PLATFORM_HOST}`}
+                        href={storeHref(s.slug)}
                         target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-1 rounded-lg border border-white/[0.08] px-2.5 py-1.5 text-[11px] text-zinc-300 hover:bg-white/[0.05] transition-all"
                       >
@@ -275,7 +302,7 @@ export function SuperadminBoard({ stores, requests, configured }: Props) {
             </div>
             <div className="p-6 space-y-4">
               <Field label="Nome da loja">
-                <input value={form.store_name} onChange={e => setForm(f => ({ ...f, store_name: e.target.value, slug: f.slug || e.target.value }))} placeholder="M CELL" className={inputCls} />
+                <input value={form.store_name} onChange={e => setForm(f => ({ ...f, store_name: e.target.value, slug: f.slug || e.target.value }))} placeholder="Ex: TechCell" className={inputCls} />
               </Field>
               <Field label="Slug (subdomínio)" hint={`${form.slug || 'loja'}.${PLATFORM_HOST}`}>
                 <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} placeholder="mcell" className={inputCls} />
@@ -312,22 +339,49 @@ export function SuperadminBoard({ stores, requests, configured }: Props) {
       )}
 
       {/* ── Modal: senha temporária ── */}
-      {tempPass && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm" onClick={() => setTempPass(null)}>
-          <div onClick={e => e.stopPropagation()} className="w-full max-w-sm rounded-3xl border border-green-500/20 bg-[#0f120f] p-6 text-center shadow-2xl">
+      {tempPass && (() => {
+        const loginUrl = adminLoginUrl(tempPass.slug)
+        const msg =
+          `Olá! O sistema da sua loja já está pronto 🎉\n\n` +
+          `Acesse o painel:\n${loginUrl}\n\n` +
+          `Login: ${tempPass.email}\nSenha: ${tempPass.pass}\n\n` +
+          `Recomendo trocar a senha no primeiro acesso.`
+        const waDigits = tempPass.whatsapp.replace(/\D/g, '')
+        const waHref = waDigits ? `https://wa.me/55${waDigits}?text=${encodeURIComponent(msg)}` : null
+        return (
+        // NÃO fecha ao clicar fora: evita perder a senha por engano (ela não reaparece).
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl border border-green-500/20 bg-[#0f120f] p-6 shadow-2xl">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-green-500/20 bg-green-500/10">
               <KeyRound size={20} className="text-green-400" />
             </div>
-            <h3 className="text-base font-bold text-white">Credenciais do lojista</h3>
-            <p className="mt-1 text-xs text-zinc-500">Repasse via WhatsApp. A senha não será mostrada de novo.</p>
-            <div className="mt-4 space-y-2 text-left">
+            <h3 className="text-base font-bold text-white text-center">Credenciais do lojista</h3>
+            <p className="mt-1 text-xs text-zinc-500 text-center">
+              Envie agora pelo WhatsApp ou copie tudo — <span className="text-zinc-300">a senha não aparece de novo</span>.
+            </p>
+            <div className="mt-4 space-y-2">
+              <CopyRow label="Link de acesso" value={loginUrl} />
               <CopyRow label="E-mail" value={tempPass.email} />
               <CopyRow label="Senha temporária" value={tempPass.pass} />
             </div>
-            <button onClick={() => setTempPass(null)} className="mt-5 w-full rounded-full bg-green-500 py-2.5 text-sm font-semibold text-black hover:bg-green-400">Entendido</button>
+
+            <div className="mt-4 space-y-2">
+              {waHref && (
+                <a
+                  href={waHref} target="_blank" rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-green-500 py-2.5 text-sm font-semibold text-black hover:bg-green-400 transition-all"
+                >
+                  <MessageCircle size={15} /> Enviar no WhatsApp
+                </a>
+              )}
+              <CopyAllButton text={msg} />
+            </div>
+
+            <button onClick={() => setTempPass(null)} className="mt-3 w-full rounded-full border border-white/[0.08] py-2.5 text-sm text-zinc-400 hover:bg-white/[0.04]">Já anotei — fechar</button>
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* Toast */}
       {toast && (
@@ -368,6 +422,23 @@ function Stat({ label, value, icon: Icon, accent }: { label: string; value: numb
 
 function EmptyHint({ text }: { text: string }) {
   return <div className="rounded-2xl border border-dashed border-white/[0.08] py-10 text-center text-sm text-zinc-600">{text}</div>
+}
+
+function CopyAllButton({ text }: { text: string }) {
+  const [done, setDone] = useState(false)
+  const copy = () => {
+    navigator.clipboard?.writeText(text)
+    setDone(true)
+    setTimeout(() => setDone(false), 1800)
+  }
+  return (
+    <button
+      onClick={copy}
+      className="flex w-full items-center justify-center gap-2 rounded-full border border-green-500/30 bg-green-500/[0.06] py-2.5 text-sm font-semibold text-green-300 hover:bg-green-500/10 transition-all"
+    >
+      {done ? <><Check size={15} /> Copiado!</> : <><Copy size={15} /> Copiar tudo (link + login + senha)</>}
+    </button>
+  )
 }
 
 function CopyRow({ label, value }: { label: string; value: string }) {

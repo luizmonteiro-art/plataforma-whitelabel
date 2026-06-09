@@ -121,7 +121,7 @@ export default function AssistenciaPage() {
     }
   }
 
-  const inputCls = 'w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 transition-all'
+  const inputCls = 'w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 transition-all'
 
   const activeCount = services.filter(s => s.is_active).length
 
@@ -139,7 +139,7 @@ export default function AssistenciaPage() {
               {activeCount} ativo{activeCount !== 1 ? 's' : ''} · {services.length} total — aparecem no site para agendamento
             </p>
           </div>
-          <button onClick={openNew} className="flex items-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 text-black font-semibold rounded-xl transition-all text-sm hover:shadow-lg hover:shadow-green-500/25">
+          <button onClick={openNew} className="flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl transition-all text-sm hover:shadow-lg hover:shadow-[var(--accent)]/25">
             <Plus size={16} /> Novo serviço
           </button>
         </div>
@@ -151,8 +151,8 @@ export default function AssistenciaPage() {
           <p className="text-2xl font-black text-white">{services.length}</p>
           <p className="text-xs text-zinc-500 mt-0.5">Total de serviços</p>
         </div>
-        <div className="p-4 rounded-2xl bg-[#141414] border border-green-500/20 text-center">
-          <p className="text-2xl font-black text-green-400">{activeCount}</p>
+        <div className="p-4 rounded-2xl bg-[#141414] border border-[var(--accent)]/20 text-center">
+          <p className="text-2xl font-black text-[var(--accent)]">{activeCount}</p>
           <p className="text-xs text-zinc-500 mt-0.5">Ativos no site</p>
         </div>
         <div className="p-4 rounded-2xl bg-[#141414] border border-white/[0.06] text-center">
@@ -168,13 +168,13 @@ export default function AssistenciaPage() {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar serviço..."
-            className="w-full bg-[#141414] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 transition-all" />
+            className="w-full bg-[#141414] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
           {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-white"><X size={13} /></button>}
         </div>
         {(['todos', 'ativo', 'inativo'] as const).map(f => (
           <button key={f} onClick={() => setFilterActive(f)}
             className={cn('px-3 py-2 rounded-xl text-xs font-medium border transition-all active:scale-95',
-              filterActive === f ? 'bg-green-500 border-green-500 text-black' : 'bg-[#141414] border-white/[0.08] text-zinc-400 hover:text-white')}>
+              filterActive === f ? 'bg-[var(--accent)] border-[var(--accent)] text-black' : 'bg-[#141414] border-white/[0.08] text-zinc-400 hover:text-white')}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
@@ -192,7 +192,7 @@ export default function AssistenciaPage() {
               'group relative flex items-center gap-4 p-5 rounded-2xl border transition-all duration-200',
               'hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/40',
               service.is_active
-                ? 'bg-[#141414] border-white/[0.06] hover:border-green-500/20'
+                ? 'bg-[#141414] border-white/[0.06] hover:border-[var(--accent)]/20'
                 : 'bg-[#0f0f0f] border-white/[0.04] opacity-60'
             )}
           >
@@ -200,10 +200,10 @@ export default function AssistenciaPage() {
             <div className={cn(
               'w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 transition-all',
               service.is_active
-                ? 'bg-green-500/10 border-green-500/20 group-hover:bg-green-500/15'
+                ? 'bg-[var(--accent)]/10 border-[var(--accent)]/20 group-hover:bg-[var(--accent)]/15'
                 : 'bg-zinc-500/10 border-zinc-500/20'
             )}>
-              <ServiceIcon name={service.icon} size={20} className={service.is_active ? 'text-green-400' : 'text-zinc-500'} />
+              <ServiceIcon name={service.icon} size={20} className={service.is_active ? 'text-[var(--accent)]' : 'text-zinc-500'} />
             </div>
 
             {/* Info */}
@@ -217,8 +217,8 @@ export default function AssistenciaPage() {
               <p className="text-xs text-zinc-500 mt-0.5 line-clamp-1">{service.description}</p>
               <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center gap-1 text-xs text-zinc-400">
-                  <DollarSign size={11} className="text-green-400" />
-                  A partir de <span className="font-semibold text-green-400 ml-1">{formatCurrency(service.price_from)}</span>
+                  <DollarSign size={11} className="text-[var(--accent)]" />
+                  A partir de <span className="font-semibold text-[var(--accent)] ml-1">{formatCurrency(service.price_from)}</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs text-zinc-600">
                   <Clock size={11} />
@@ -239,8 +239,8 @@ export default function AssistenciaPage() {
                 className={cn(
                   'p-2 rounded-xl border transition-all active:scale-90',
                   service.is_active
-                    ? 'text-green-400 bg-green-500/10 border-green-500/25 hover:bg-green-500/20'
-                    : 'text-zinc-600 bg-white/[0.04] border-white/[0.08] hover:text-green-400'
+                    ? 'text-[var(--accent)] bg-[var(--accent)]/10 border-[var(--accent)]/25 hover:bg-[var(--accent)]/20'
+                    : 'text-zinc-600 bg-white/[0.04] border-white/[0.08] hover:text-[var(--accent)]'
                 )}
               >
                 {service.is_active ? <Eye size={15} /> : <EyeOff size={15} />}
@@ -259,10 +259,10 @@ export default function AssistenciaPage() {
       </div>
 
       {/* Info sobre visibilidade */}
-      <div className="flex items-center gap-3 p-4 rounded-xl bg-green-500/[0.04] border border-green-500/15">
-        <Eye size={14} className="text-green-400 shrink-0" />
+      <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--accent)]/[0.04] border border-[var(--accent)]/15">
+        <Eye size={14} className="text-[var(--accent)] shrink-0" />
         <p className="text-xs text-zinc-500">
-          Serviços <span className="text-green-400 font-medium">ativos</span> aparecem na página{' '}
+          Serviços <span className="text-[var(--accent)] font-medium">ativos</span> aparecem na página{' '}
           <span className="text-white font-medium">/servicos</span> e no formulário de agendamento do site.
           Desativar um serviço o esconde do cliente sem apagá-lo.
         </p>
@@ -313,7 +313,7 @@ export default function AssistenciaPage() {
                     Preço a partir de (R$) *
                   </label>
                   <div className="relative">
-                    <DollarSign size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-green-400" />
+                    <DollarSign size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
                     <input
                       type="number" min="0" step="1"
                       value={priceInput}
@@ -358,7 +358,7 @@ export default function AssistenciaPage() {
                       className={cn(
                         'flex flex-col items-center gap-1 p-2 rounded-xl border transition-all active:scale-90',
                         form.icon === key
-                          ? 'bg-green-500/15 border-green-500/40 text-green-400'
+                          ? 'bg-[var(--accent)]/15 border-[var(--accent)]/40 text-[var(--accent)]'
                           : 'bg-[#1a1a1a] border-white/[0.08] text-zinc-500 hover:text-white hover:border-white/20'
                       )}
                     >
@@ -380,7 +380,7 @@ export default function AssistenciaPage() {
                   className="transition-all active:scale-90"
                 >
                   {form.is_active
-                    ? <ToggleRight size={36} className="text-green-400" />
+                    ? <ToggleRight size={36} className="text-[var(--accent)]" />
                     : <ToggleLeft size={36} className="text-zinc-600" />
                   }
                 </button>
@@ -390,13 +390,13 @@ export default function AssistenciaPage() {
               <div className="rounded-xl bg-[#111] border border-white/[0.04] p-4">
                 <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-3">Preview no site</p>
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center shrink-0">
-                    <ServiceIcon name={form.icon} size={18} className="text-green-400" />
+                  <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center shrink-0">
+                    <ServiceIcon name={form.icon} size={18} className="text-[var(--accent)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white">{form.name || 'Nome do serviço'}</p>
                     <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{form.description || 'Descrição aparecerá aqui...'}</p>
-                    <p className="text-xs text-green-400 font-semibold mt-1.5">
+                    <p className="text-xs text-[var(--accent)] font-semibold mt-1.5">
                       A partir de {priceInput ? formatCurrency(Number(priceInput)) : 'R$ 0,00'}
                     </p>
                   </div>
@@ -413,7 +413,7 @@ export default function AssistenciaPage() {
               <button
                 onClick={handleSave}
                 disabled={!form.name.trim()}
-                className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all"
+                className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all"
               >
                 {editService ? 'Salvar alterações' : 'Criar serviço'}
               </button>

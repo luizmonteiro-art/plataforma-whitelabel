@@ -6,6 +6,7 @@
  * O acesso à rota /superadmin já é protegido pelo proxy.ts (SUPERADMIN_EMAIL).
  */
 
+import { randomBytes } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { PLANS } from '@/lib/plans'
@@ -47,7 +48,7 @@ export interface CreateStoreInput {
 }
 
 export type ActionResult =
-  | { ok: true; message: string; tempPassword?: string }
+  | { ok: true; message: string; tempPassword?: string; slug?: string }
   | { ok: false; error: string }
 
 function slugify(raw: string): string {
@@ -59,8 +60,8 @@ function slugify(raw: string): string {
 }
 
 function genPassword(): string {
-  // senha temporária legível para o Luiz repassar ao lojista
-  return 'mc-' + Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6)
+  // senha temporária legível para o Luiz repassar ao lojista (aleatoriedade segura)
+  return 'mc-' + randomBytes(6).toString('hex') // 12 chars hex
 }
 
 // ─── Leitura ────────────────────────────────────────────────────────
@@ -140,9 +141,13 @@ export async function createStore(input: CreateStoreInput): Promise<ActionResult
   })
   if (userErr) {
     if (/already|exist|registered/i.test(userErr.message)) {
+      // E-mail já tem conta: mantém a loja e o login existente desse usuário.
       warning = ' (usuário com este e-mail já existia — mantida a senha atual dele)'
     } else {
-      warning = ' (não foi possível criar o usuário: ' + userErr.message + ')'
+      // Falha real: desfaz a loja para não deixá-la criada SEM login de acesso.
+      await admin.from('store_config').delete().eq('store_id', store.id)
+      await admin.from('stores').delete().eq('id', store.id)
+      return { ok: false, error: 'Falha ao criar o usuário do lojista (loja desfeita): ' + userErr.message }
     }
   } else {
     tempPassword = password
@@ -158,6 +163,7 @@ export async function createStore(input: CreateStoreInput): Promise<ActionResult
     ok: true,
     message: `Loja "${slug}" criada em trial de ${TRIAL_DAYS} dias.` + warning,
     tempPassword,
+    slug,
   }
 }
 

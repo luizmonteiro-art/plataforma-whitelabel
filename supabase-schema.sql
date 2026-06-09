@@ -314,13 +314,51 @@ returns trigger as $$
 begin new.updated_at = now(); return new; end;
 $$ language plpgsql;
 
+drop trigger if exists trg_so_updated on service_orders;
 create trigger trg_so_updated
   before update on service_orders
   for each row execute function set_updated_at();
 
+drop trigger if exists trg_config_updated on store_config;
 create trigger trg_config_updated
   before update on store_config
   for each row execute function set_updated_at();
+
+-- ─── Enforce: limite de produtos por plano (server-side) ──────────
+-- Espelha o product_limit de `plans`. Impede exceder o limite mesmo via
+-- API direta (não só pela UI do estoque). SECURITY DEFINER para enxergar
+-- stores/plans independentemente da RLS de quem está inserindo.
+create or replace function enforce_product_limit()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+declare
+  v_limit int;
+  v_count int;
+begin
+  select p.product_limit into v_limit
+  from stores s join plans p on p.id = s.plan_id
+  where s.id = new.store_id;
+
+  -- Loja/plano não encontrados: a FK já protege; não bloqueia aqui.
+  if v_limit is null then
+    return new;
+  end if;
+
+  select count(*) into v_count from products where store_id = new.store_id;
+
+  if v_count >= v_limit then
+    raise exception 'Limite de % produtos do plano atingido para esta loja.', v_limit
+      using errcode = 'check_violation';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_product_limit on products;
+create trigger trg_product_limit
+  before insert on products
+  for each row execute function enforce_product_limit();
 
 -- ─── Storage: bucket de imagens ───────────────────────────────────
 insert into storage.buckets (id, name, public)

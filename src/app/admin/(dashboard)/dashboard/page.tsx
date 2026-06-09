@@ -20,11 +20,11 @@ function MiniChart({ data }: { data: number[] }) {
       {data.map((v, i) => (
         <div key={i} className="flex-1 flex flex-col items-center gap-1">
           <div
-            className={`w-full rounded-sm transition-colors min-h-[2px] ${i === 6 ? 'bg-green-500' : 'bg-green-500/50 hover:bg-green-500/80'}`}
+            className={`w-full rounded-sm transition-colors min-h-[2px] ${i === 6 ? 'bg-[var(--accent)]' : 'bg-[var(--accent)]/50 hover:bg-[var(--accent)]/80'}`}
             style={{ height: `${(v / max) * 100}%` }}
             title={`${labels[i]}: ${formatCurrency(v)}`}
           />
-          <span className={`text-[9px] ${i === 6 ? 'text-green-400' : 'text-zinc-600'}`}>{labels[i]}</span>
+          <span className={`text-[9px] ${i === 6 ? 'text-[var(--accent)]' : 'text-zinc-600'}`}>{labels[i]}</span>
         </div>
       ))}
     </div>
@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
 
   if (!_loaded) return (
     <div className="flex items-center justify-center h-48">
-      <div className="w-6 h-6 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin" />
+      <div className="w-6 h-6 border-2 border-[var(--accent)]/30 border-t-green-500 rounded-full animate-spin" />
     </div>
   )
 
@@ -61,9 +61,9 @@ export default function AdminDashboardPage() {
   })()
 
   const statCards = [
-    { label: 'Receita Total', value: formatCurrency(totalRevenue), sub: `${sales.length} vendas registradas`, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', href: '/admin/vendas' },
+    { label: 'Receita Total', value: formatCurrency(totalRevenue), sub: `${sales.length} vendas registradas`, icon: TrendingUp, color: 'text-[var(--accent)]', bg: 'bg-[var(--accent)]/10 border-[var(--accent)]/20', href: '/admin/vendas' },
     { label: 'Produtos no Estoque', value: products.filter(p => p.is_active).length.toString(), sub: `${lowStockProducts.length} com estoque baixo`, icon: Package, color: lowStockProducts.length > 0 ? 'text-orange-400' : 'text-blue-400', bg: lowStockProducts.length > 0 ? 'bg-orange-500/10 border-orange-500/20' : 'bg-blue-500/10 border-blue-500/20', href: '/admin/estoque' },
-    { label: 'Agendamentos', value: appointments.length.toString(), sub: `${pendingAppointments.length} pendente${pendingAppointments.length !== 1 ? 's' : ''}`, icon: Calendar, color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20', href: '/admin/agendamentos' },
+    { label: 'Agendamentos', value: appointments.length.toString(), sub: `${pendingAppointments.length} pendente${pendingAppointments.length !== 1 ? 's' : ''}`, icon: Calendar, color: 'text-[var(--accent)]', bg: 'bg-[var(--accent)]/10 border-[var(--accent)]/20', href: '/admin/agendamentos' },
     { label: 'Ordens de Serviço', value: serviceOrders.length.toString(), sub: `${activeOrders.length} em aberto`, icon: Wrench, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', href: '/admin/servicos' },
   ]
 
@@ -87,9 +87,9 @@ export default function AdminDashboardPage() {
     alerts.push({
       id: 'pending-appt',
       icon: Clock,
-      iconColor: 'text-green-400',
-      bg: 'bg-green-500/[0.06]',
-      border: 'border-green-500/20',
+      iconColor: 'text-[var(--accent)]',
+      bg: 'bg-[var(--accent)]/[0.06]',
+      border: 'border-[var(--accent)]/20',
       title: `${pendingAppointments.length} agendamento${pendingAppointments.length > 1 ? 's' : ''} pendente${pendingAppointments.length > 1 ? 's' : ''}`,
       sub: 'Aguardando confirmação',
       href: '/admin/agendamentos',
@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
               <h3 className="text-sm font-semibold text-white">Receita (últimos 7 dias)</h3>
               <p className="text-xs text-zinc-600">{sales.length > 0 ? 'Baseado nas vendas registradas' : 'Nenhuma venda registrada ainda'}</p>
             </div>
-            <span className="text-lg font-bold text-emerald-400">{formatCurrency(chartData.reduce((a, b) => a + b, 0))}</span>
+            <span className="text-lg font-bold text-[var(--accent)]">{formatCurrency(chartData.reduce((a, b) => a + b, 0))}</span>
           </div>
           <MiniChart data={chartData} />
         </div>
@@ -146,7 +146,7 @@ export default function AdminDashboardPage() {
           <div className="space-y-2.5">
             {visibleAlerts.length === 0 && (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
-                <CheckCircle2 size={24} className="text-green-400/40" />
+                <CheckCircle2 size={24} className="text-[var(--accent)]/40" />
                 <p className="text-xs text-zinc-600">Nenhum alerta no momento</p>
               </div>
             )}
@@ -182,7 +182,7 @@ export default function AdminDashboardPage() {
       <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
           <h3 className="text-sm font-semibold text-white">Últimas ordens de serviço</h3>
-          <Link href="/admin/servicos" className="text-xs text-green-400 hover:text-green-300 transition-colors">Ver todas</Link>
+          <Link href="/admin/servicos" className="text-xs text-[var(--accent)] hover:text-[var(--accent)] transition-colors">Ver todas</Link>
         </div>
         <div className="divide-y divide-white/[0.04]">
           {serviceOrders.slice(0, 4).map(order => (
@@ -191,11 +191,11 @@ export default function AdminDashboardPage() {
               href="/admin/servicos"
               className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.04] active:bg-white/[0.07] transition-colors cursor-pointer group/row"
             >
-              <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover/row:border-green-500/25 group-hover/row:bg-green-500/[0.06] transition-all">
-                <Wrench size={14} className="text-zinc-500 group-hover/row:text-green-400 transition-colors" />
+              <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover/row:border-[var(--accent)]/25 group-hover/row:bg-[var(--accent)]/[0.06] transition-all">
+                <Wrench size={14} className="text-zinc-500 group-hover/row:text-[var(--accent)] transition-colors" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate group-hover/row:text-green-400 transition-colors">{order.customer_name}</p>
+                <p className="text-sm font-medium text-white truncate group-hover/row:text-[var(--accent)] transition-colors">{order.customer_name}</p>
                 <p className="text-xs text-zinc-500 truncate">{order.device_brand} {order.device_model} — {order.problem}</p>
               </div>
               <div className="text-right shrink-0 flex flex-col items-end gap-1">
@@ -204,7 +204,7 @@ export default function AdminDashboardPage() {
                 </span>
                 <p className="text-[10px] text-zinc-700">{formatDateTime(order.created_at)}</p>
               </div>
-              <ArrowUpRight size={13} className="text-zinc-700 group-hover/row:text-green-400 transition-colors shrink-0" />
+              <ArrowUpRight size={13} className="text-zinc-700 group-hover/row:text-[var(--accent)] transition-colors shrink-0" />
             </Link>
           ))}
           {serviceOrders.length === 0 && (
@@ -217,7 +217,7 @@ export default function AdminDashboardPage() {
       <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
           <h3 className="text-sm font-semibold text-white">Próximos agendamentos</h3>
-          <Link href="/admin/agendamentos" className="text-xs text-green-400 hover:text-green-300 transition-colors">Ver todos</Link>
+          <Link href="/admin/agendamentos" className="text-xs text-[var(--accent)] hover:text-[var(--accent)] transition-colors">Ver todos</Link>
         </div>
         <div className="divide-y divide-white/[0.04]">
           {appointments.slice(0, 5).map(appt => (
@@ -226,16 +226,16 @@ export default function AdminDashboardPage() {
               href="/admin/agendamentos"
               className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.04] active:bg-white/[0.07] transition-colors cursor-pointer group/row"
             >
-              <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover/row:border-green-500/25 group-hover/row:bg-green-500/[0.06] transition-all">
-                <Calendar size={14} className="text-zinc-500 group-hover/row:text-green-400 transition-colors" />
+              <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover/row:border-[var(--accent)]/25 group-hover/row:bg-[var(--accent)]/[0.06] transition-all">
+                <Calendar size={14} className="text-zinc-500 group-hover/row:text-[var(--accent)] transition-colors" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white group-hover/row:text-green-400 transition-colors">{appt.customer_name}</p>
+                <p className="text-sm font-medium text-white group-hover/row:text-[var(--accent)] transition-colors">{appt.customer_name}</p>
                 <p className="text-xs text-zinc-500 truncate">{appt.service_name} — {appt.device_info}</p>
               </div>
               <div className="text-right shrink-0 flex flex-col items-end gap-1">
                 <span className={cn('text-[10px] font-medium px-2 py-1 rounded-full border',
-                  appt.status === 'confirmado' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                  appt.status === 'confirmado' ? 'bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--accent)]/30' :
                   appt.status === 'pendente' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
                   'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
                 )}>
@@ -243,7 +243,7 @@ export default function AdminDashboardPage() {
                 </span>
                 <p className="text-[10px] text-zinc-700">{formatDateTime(appt.scheduled_at)}</p>
               </div>
-              <ArrowUpRight size={13} className="text-zinc-700 group-hover/row:text-green-400 transition-colors shrink-0" />
+              <ArrowUpRight size={13} className="text-zinc-700 group-hover/row:text-[var(--accent)] transition-colors shrink-0" />
             </Link>
           ))}
           {appointments.length === 0 && (

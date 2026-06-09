@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Calendar, CheckCircle, X, Clock, MessageCircle, Star, ArrowLeft, AlertTriangle, Edit2, ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatDateTime, appointmentStatusLabel, cn } from '@/lib/utils'
-import { useAppointments, useAdminStore } from '@/contexts/AdminStore'
+import { useAppointments, useAdminStore, useStoreConfig } from '@/contexts/AdminStore'
 import { upsertAppointment } from '@/lib/db'
 import type { Appointment, AppointmentStatus } from '@/types'
 
@@ -12,7 +12,7 @@ interface Props { initialAppointments: Appointment[] }
 
 const statusColors: Record<AppointmentStatus, string> = {
   pendente: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  confirmado: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  confirmado: 'bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--accent)]/30',
   cancelado: 'bg-red-500/20 text-red-400 border-red-500/30',
   realizado: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
 }
@@ -22,6 +22,8 @@ const timeSlots = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:3
 export function AgendamentosClient({ initialAppointments: _ }: Props) {
   const router = useRouter()
   const { storeId } = useAdminStore()
+  const config = useStoreConfig()
+  const storeName = config?.store_name?.trim() || 'nossa loja'
   const [appointments, setAppointmentsRaw] = useAppointments()
   const setAppointments = (fn: (prev: Appointment[]) => Appointment[]) => setAppointmentsRaw(fn)
   const [prioritized, setPrioritized] = useState<string[]>([])
@@ -80,7 +82,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
               onClick={() => setFilter(prev => prev === status ? 'todos' : status)}
               className={cn(
                 'p-4 rounded-2xl bg-[#141414] border transition-all text-left',
-                filter === status ? 'border-green-500/40 bg-green-500/5' : 'border-white/[0.06] hover:border-white/[0.12]'
+                filter === status ? 'border-[var(--accent)]/40 bg-[var(--accent)]/5' : 'border-white/[0.06] hover:border-white/[0.12]'
               )}
             >
               <p className="text-2xl font-bold text-white">{count}</p>
@@ -151,8 +153,8 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
                       <span className="text-zinc-300">{appt.device_info}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Clock size={11} className="text-green-500/70" />
-                      <span className="text-green-400/80">{formatDateTime(appt.scheduled_at)}</span>
+                      <Clock size={11} className="text-[var(--accent)]/70" />
+                      <span className="text-[var(--accent)]/80">{formatDateTime(appt.scheduled_at)}</span>
                     </div>
                   </div>
                   <p className="mt-1.5 text-xs text-zinc-600 italic">&ldquo;{appt.problem}&rdquo;</p>
@@ -162,7 +164,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
                     {/* Aceitar/Confirmar */}
                     {(appt.status === 'pendente') && (
                       <button onClick={() => updateStatus(appt.id, 'confirmado')}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-medium transition-all active:scale-90">
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 rounded-xl text-xs font-medium transition-all active:scale-90">
                         <CheckCircle size={12} /> Aceitar
                       </button>
                     )}
@@ -206,9 +208,9 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
 
                     {/* Notificar WhatsApp */}
                     <a
-                      href={`https://wa.me/55${appt.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${appt.customer_name}! Seu agendamento para ${appt.service_name} foi *${appointmentStatusLabel[appt.status]}* para ${formatDateTime(appt.scheduled_at)}. M CELL.`)}`}
+                      href={`https://wa.me/55${appt.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${appt.customer_name}! Seu agendamento para ${appt.service_name} foi *${appointmentStatusLabel[appt.status]}* para ${formatDateTime(appt.scheduled_at)}. ${storeName}.`)}`}
                       target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-xs font-medium transition-all ml-auto active:scale-90">
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 rounded-xl text-xs font-medium transition-all ml-auto active:scale-90">
                       <MessageCircle size={12} /> Notificar
                     </a>
                   </div>
@@ -235,7 +237,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
                   type="date"
                   value={editAppt.scheduled_at.split('T')[0]}
                   onChange={e => setEditAppt(prev => prev ? { ...prev, scheduled_at: e.target.value + 'T' + editAppt.scheduled_at.split('T')[1] } : null)}
-                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40"
+                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40"
                 />
               </div>
               <div>
@@ -245,7 +247,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
                     <label key={slot} className={cn(
                       'flex items-center justify-center py-2 rounded-lg border text-xs font-medium cursor-pointer transition-all',
                       editAppt.scheduled_at.includes(slot)
-                        ? 'bg-green-500 border-green-500 text-black'
+                        ? 'bg-[var(--accent)] border-[var(--accent)] text-black'
                         : 'bg-[#1a1a1a] border-white/[0.08] text-zinc-400 hover:text-white hover:border-white/20'
                     )}>
                       <input type="radio" name="time" value={slot} className="sr-only"
@@ -261,7 +263,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
                   <select
                     value={editAppt.status}
                     onChange={e => setEditAppt(prev => prev ? { ...prev, status: e.target.value as AppointmentStatus } : null)}
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40 appearance-none"
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 appearance-none"
                   >
                     {groups.map(s => <option key={s} value={s}>{appointmentStatusLabel[s]}</option>)}
                   </select>
@@ -271,7 +273,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
             </div>
             <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
               <button onClick={() => setEditAppt(null)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] active:scale-95 transition-all">Cancelar</button>
-              <button onClick={saveEdit} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 text-black font-semibold rounded-xl text-sm transition-all">Salvar alterações</button>
+              <button onClick={saveEdit} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl text-sm transition-all">Salvar alterações</button>
             </div>
           </div>
         </div>

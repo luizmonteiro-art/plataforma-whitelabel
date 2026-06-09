@@ -190,18 +190,18 @@ export function VendasClient({ initialSales: _ }: Props) {
   }
 
   const statusColors = {
-    aprovado: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    aprovado: 'bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--accent)]/30',
     pendente: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
     cancelado: 'bg-red-500/20 text-red-400 border-red-500/30',
   }
   const paymentColors: Record<string, string> = {
-    pix: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    pix: 'bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--accent)]/30',
     dinheiro: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
     cartao_debito: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     cartao_credito: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   }
 
-  const inputCls = 'w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500/40 transition-all'
+  const inputCls = 'w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all'
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -215,7 +215,7 @@ export function VendasClient({ initialSales: _ }: Props) {
             <h1 className="text-2xl font-bold text-white">Vendas</h1>
             <p className="text-sm text-zinc-500 mt-0.5">{filtered.length} de {sales.length} registros</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 text-black font-semibold rounded-xl transition-all text-sm">
+          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl transition-all text-sm">
             <Plus size={16} /> Registrar venda
           </button>
         </div>
@@ -223,11 +223,11 @@ export function VendasClient({ initialSales: _ }: Props) {
 
       {/* KPI */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="col-span-2 p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20">
+        <div className="col-span-2 p-5 rounded-2xl bg-gradient-to-br from-[var(--accent)]/10 to-transparent border border-[var(--accent)]/20">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp size={16} className="text-emerald-400" />
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Receita aprovada</span>
+              <TrendingUp size={16} className="text-[var(--accent)]" />
+              <span className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">Receita aprovada</span>
             </div>
             <span className="text-xs text-zinc-600">{approved.length} vendas</span>
           </div>
@@ -237,23 +237,23 @@ export function VendasClient({ initialSales: _ }: Props) {
         <div className="p-5 rounded-2xl bg-[#141414] border border-white/[0.06]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Target size={14} className="text-green-400" />
+              <Target size={14} className="text-[var(--accent)]" />
               <span className="text-xs font-semibold text-zinc-400">Meta do mês</span>
             </div>
-            <button onClick={() => { setEditMeta(true); setMetaInput(String(meta)) }} className="text-[10px] text-zinc-600 hover:text-green-400 transition-colors">Editar</button>
+            <button onClick={() => { setEditMeta(true); setMetaInput(String(meta)) }} className="text-[10px] text-zinc-600 hover:text-[var(--accent)] transition-colors">Editar</button>
           </div>
           {editMeta ? (
             <div className="flex gap-2">
               <input type="number" value={metaInput} onChange={e => setMetaInput(e.target.value)}
-                className="flex-1 bg-[#1a1a1a] border border-white/[0.08] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-green-500/40" />
+                className="flex-1 bg-[#1a1a1a] border border-white/[0.08] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40" />
               <button onClick={() => { setMeta(Number(metaInput) || meta); setEditMeta(false) }}
-                className="px-3 py-1.5 bg-green-500 active:scale-90 text-black font-semibold rounded-lg text-xs">OK</button>
+                className="px-3 py-1.5 bg-[var(--accent)] active:scale-90 text-black font-semibold rounded-lg text-xs">OK</button>
             </div>
           ) : (
             <>
               <p className="text-xl font-bold text-white">{metaPercent}%</p>
               <div className="mt-2 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                <div className={cn('h-full rounded-full transition-all duration-500', metaPercent >= 100 ? 'bg-emerald-400' : metaPercent >= 70 ? 'bg-green-400' : 'bg-yellow-400')}
+                <div className={cn('h-full rounded-full transition-all duration-500', metaPercent >= 100 ? 'bg-[var(--accent)]' : metaPercent >= 70 ? 'bg-[var(--accent)]' : 'bg-yellow-400')}
                   style={{ width: `${metaPercent}%` }} />
               </div>
               <p className="text-[10px] text-zinc-600 mt-1">{formatCurrency(totalRevenue)} / {formatCurrency(meta)}</p>
@@ -273,7 +273,7 @@ export function VendasClient({ initialSales: _ }: Props) {
       <div className="relative max-w-sm">
         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cliente, produto ou ID..."
-          className="w-full bg-[#141414] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 transition-all" />
+          className="w-full bg-[#141414] border border-white/[0.08] rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
         {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-white"><X size={13} /></button>}
       </div>
 
@@ -283,7 +283,7 @@ export function VendasClient({ initialSales: _ }: Props) {
         {(['todos', 'aprovado', 'pendente', 'cancelado'] as const).map(s => (
           <button key={s} onClick={() => setFilterStatus(s)}
             className={cn('px-3 py-1.5 rounded-xl text-xs font-medium border transition-all active:scale-95',
-              filterStatus === s ? 'bg-green-500 border-green-500 text-black' : 'bg-[#141414] border-white/[0.08] text-zinc-400 hover:text-white')}>
+              filterStatus === s ? 'bg-[var(--accent)] border-[var(--accent)] text-black' : 'bg-[#141414] border-white/[0.08] text-zinc-400 hover:text-white')}>
             {s === 'todos' ? 'Todos' : s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
         ))}
@@ -340,7 +340,7 @@ export function VendasClient({ initialSales: _ }: Props) {
                       {sale.saleStatus}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm font-bold text-emerald-400">{formatCurrency(sale.total)}</td>
+                  <td className="px-4 py-3 text-sm font-bold text-[var(--accent)]">{formatCurrency(sale.total)}</td>
                   <td className="px-4 py-3 text-xs text-zinc-600 whitespace-nowrap">{formatDateTime(sale.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
@@ -351,7 +351,7 @@ export function VendasClient({ initialSales: _ }: Props) {
                       </button>
                       {sale.saleStatus === 'pendente' && (
                         <button onClick={() => changeStatus(sale.id, 'aprovado')} title="Aprovar"
-                          className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 active:scale-90 transition-all">
+                          className="p-1.5 rounded-lg text-zinc-500 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 active:scale-90 transition-all">
                           <CheckCircle size={13} />
                         </button>
                       )}
@@ -421,8 +421,8 @@ export function VendasClient({ initialSales: _ }: Props) {
               {formProduct && (() => {
                 const p = storeProducts.find(x => x.id === formProduct)
                 return p ? (
-                  <div className="p-3 rounded-xl bg-green-500/5 border border-green-500/20 text-sm">
-                    <p className="text-zinc-400">Total: <span className="text-green-400 font-bold">
+                  <div className="p-3 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 text-sm">
+                    <p className="text-zinc-400">Total: <span className="text-[var(--accent)] font-bold">
                       {formatCurrency((p.promo_price ?? p.price) * (Number(formQty) || 1))}
                     </span></p>
                   </div>
@@ -431,7 +431,7 @@ export function VendasClient({ initialSales: _ }: Props) {
             </div>
             <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
               <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] active:scale-95 transition-all">Cancelar</button>
-              <button onClick={handleRegister} disabled={!formProduct} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all">Registrar</button>
+              <button onClick={handleRegister} disabled={!formProduct} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all">Registrar</button>
             </div>
           </div>
         </div>
@@ -457,7 +457,7 @@ export function VendasClient({ initialSales: _ }: Props) {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                    <Package size={13} className="text-green-400" /> Itens da venda
+                    <Package size={13} className="text-[var(--accent)]" /> Itens da venda
                   </label>
                   <span className="text-[10px] text-zinc-600">{editItems.length} produto{editItems.length !== 1 ? 's' : ''}</span>
                 </div>
@@ -482,7 +482,7 @@ export function VendasClient({ initialSales: _ }: Props) {
                         type="number" min="0" step="0.01"
                         value={item.unit_price}
                         onChange={e => updateItem(idx, 'unit_price', e.target.value)}
-                        className="bg-transparent text-sm text-emerald-400 font-bold text-right focus:outline-none w-full"
+                        className="bg-transparent text-sm text-[var(--accent)] font-bold text-right focus:outline-none w-full"
                         title="Preço unitário"
                       />
                       <button onClick={() => removeItem(idx)}
@@ -506,7 +506,7 @@ export function VendasClient({ initialSales: _ }: Props) {
                 <div className="flex gap-2 mt-3">
                   <div className="relative flex-1">
                     <select value={addProductId} onChange={e => setAddProductId(e.target.value)}
-                      className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-zinc-400 focus:outline-none focus:border-green-500/40 appearance-none">
+                      className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-zinc-400 focus:outline-none focus:border-[var(--accent)]/40 appearance-none">
                       <option value="">+ Adicionar produto do estoque...</option>
                       {storeProducts.filter(p => p.is_active).map(p => (
                         <option key={p.id} value={p.id}>{p.name} — {formatCurrency(p.promo_price ?? p.price)}</option>
@@ -517,7 +517,7 @@ export function VendasClient({ initialSales: _ }: Props) {
                   <button
                     onClick={addItemFromProduct}
                     disabled={!addProductId}
-                    className="px-3 py-2 bg-green-500/10 border border-green-500/25 text-green-400 rounded-xl text-xs font-medium hover:bg-green-500/20 disabled:opacity-40 active:scale-90 transition-all"
+                    className="px-3 py-2 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] rounded-xl text-xs font-medium hover:bg-[var(--accent)]/20 disabled:opacity-40 active:scale-90 transition-all"
                   >
                     <Plus size={14} />
                   </button>
@@ -562,7 +562,7 @@ export function VendasClient({ initialSales: _ }: Props) {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-zinc-600">Total final</p>
-                    <p className="text-xl font-black text-emerald-400">{formatCurrency(editTotal)}</p>
+                    <p className="text-xl font-black text-[var(--accent)]">{formatCurrency(editTotal)}</p>
                   </div>
                 </div>
               </div>
@@ -615,7 +615,7 @@ export function VendasClient({ initialSales: _ }: Props) {
               <button
                 onClick={saveEdit}
                 disabled={editItems.length === 0}
-                className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all"
+                className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all"
               >
                 Salvar alterações
               </button>

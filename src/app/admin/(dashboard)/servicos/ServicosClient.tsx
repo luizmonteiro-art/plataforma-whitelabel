@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { Plus, Wrench, MessageCircle, X, ChevronDown, Edit2, Paperclip, CheckCircle, Archive, ArrowLeft, GripVertical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, serviceStatusLabel, serviceStatusColor, cn } from '@/lib/utils'
-import { useServiceOrders, useAdminStore } from '@/contexts/AdminStore'
+import { useServiceOrders, useAdminStore, useStoreConfig } from '@/contexts/AdminStore'
 import { upsertServiceOrder, deleteServiceOrder } from '@/lib/db'
 import type { ServiceOrder, ServiceStatus } from '@/types'
 
@@ -17,7 +17,7 @@ const KANBAN_COLS: { status: ServiceStatus; label: string; color: string; bg: st
   { status: 'em_analise',      label: 'Em análise',    color: 'border-blue-500/40',    bg: 'bg-blue-500/5',    accent: 'bg-blue-400' },
   { status: 'aguardando_peca', label: 'Ag. Peça',      color: 'border-orange-500/40',  bg: 'bg-orange-500/5',  accent: 'bg-orange-400' },
   { status: 'em_reparo',       label: 'Em Reparo',     color: 'border-yellow-500/40',  bg: 'bg-yellow-500/5',  accent: 'bg-yellow-400' },
-  { status: 'pronto',          label: 'Pronto ✓',      color: 'border-emerald-500/40', bg: 'bg-emerald-500/5', accent: 'bg-emerald-400' },
+  { status: 'pronto',          label: 'Pronto ✓',      color: 'border-[var(--accent)]/40', bg: 'bg-[var(--accent)]/5', accent: 'bg-[var(--accent)]' },
   { status: 'entregue',        label: 'Entregue',      color: 'border-purple-500/40',  bg: 'bg-purple-500/5',  accent: 'bg-purple-400' },
 ]
 
@@ -29,6 +29,10 @@ type OrderAttachments = Record<string, Attachment[]>
 export function ServicosClient({ initialOrders: _ }: Props) {
   const router = useRouter()
   const { storeId } = useAdminStore()
+  const config = useStoreConfig()
+  const storeName = config?.store_name?.trim() || 'nossa loja'
+  const waCustomer = (phone: string, text: string) =>
+    `https://wa.me/55${(phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(text)}`
   const [orders, setOrdersRaw] = useServiceOrders()
   const setOrders = (fn: (prev: ServiceOrder[]) => ServiceOrder[]) => setOrdersRaw(fn)
   const [archived, setArchived] = useState<ArchivedOrder[]>([])
@@ -43,8 +47,6 @@ export function ServicosClient({ initialOrders: _ }: Props) {
   const [editOrder, setEditOrder] = useState<ServiceOrder | null>(null)
   const [attachments, setAttachments] = useState<OrderAttachments>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const WA = 'https://wa.me/5519981499229'
 
   const handleCreate = async () => {
     if (!form.customer_name || !form.device_brand || !form.problem) return
@@ -135,10 +137,10 @@ export function ServicosClient({ initialOrders: _ }: Props) {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-[#141414] border border-white/[0.08] rounded-xl p-1">
-              <button onClick={() => setView('kanban')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', view === 'kanban' ? 'bg-green-500 text-black' : 'text-zinc-500 hover:text-white')}>Kanban</button>
-              <button onClick={() => setView('list')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', view === 'list' ? 'bg-green-500 text-black' : 'text-zinc-500 hover:text-white')}>Lista</button>
+              <button onClick={() => setView('kanban')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', view === 'kanban' ? 'bg-[var(--accent)] text-black' : 'text-zinc-500 hover:text-white')}>Kanban</button>
+              <button onClick={() => setView('list')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', view === 'list' ? 'bg-[var(--accent)] text-black' : 'text-zinc-500 hover:text-white')}>Lista</button>
             </div>
-            <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 text-black font-semibold rounded-xl transition-all text-sm">
+            <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl transition-all text-sm">
               <Plus size={16} /> Nova O.S.
             </button>
           </div>
@@ -157,7 +159,7 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                 className={cn(
                   'shrink-0 w-60 rounded-2xl border transition-all duration-200 p-3',
                   col.color, col.bg,
-                  isOver && 'ring-2 ring-green-500/50 scale-[1.01] shadow-xl shadow-green-500/10'
+                  isOver && 'ring-2 ring-[var(--accent)]/50 scale-[1.01] shadow-xl shadow-[var(--accent)]/10'
                 )}
                 onDragOver={e => onDragOver(e, col.status)}
                 onDrop={e => onDrop(e, col.status)}
@@ -181,7 +183,7 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                       onDragEnd={onDragEnd}
                       className={cn(
                         'group bg-[#1a1a1a] border border-white/[0.08] rounded-xl p-3 cursor-grab active:cursor-grabbing transition-all',
-                        'hover:border-green-500/25 hover:bg-[#212121] hover:shadow-lg hover:shadow-black/40',
+                        'hover:border-[var(--accent)]/25 hover:bg-[#212121] hover:shadow-lg hover:shadow-black/40',
                         dragging === order.id && 'opacity-40 scale-95 rotate-1'
                       )}
                     >
@@ -193,7 +195,7 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={e => { e.stopPropagation(); openCard(order) }}
-                            className="p-1 rounded-lg text-zinc-600 hover:text-green-400 hover:bg-green-500/10 transition-all active:scale-90">
+                            className="p-1 rounded-lg text-zinc-600 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all active:scale-90">
                             <Edit2 size={10} />
                           </button>
                           <button
@@ -207,10 +209,10 @@ export function ServicosClient({ initialOrders: _ }: Props) {
 
                       {/* Card content — clicável */}
                       <div onClick={() => openCard(order)} className="cursor-pointer space-y-1.5">
-                        <p className="text-xs font-semibold text-white leading-snug group-hover:text-green-400 transition-colors">{order.customer_name}</p>
+                        <p className="text-xs font-semibold text-white leading-snug group-hover:text-[var(--accent)] transition-colors">{order.customer_name}</p>
                         <p className="text-[11px] text-zinc-500">{order.device_brand} {order.device_model}</p>
                         <p className="text-[11px] text-zinc-600 line-clamp-2 italic">{order.problem}</p>
-                        {order.price && <p className="text-xs font-bold text-green-400">{formatCurrency(order.price)}</p>}
+                        {order.price && <p className="text-xs font-bold text-[var(--accent)]">{formatCurrency(order.price)}</p>}
                         {order.diagnosis && (
                           <p className="text-[10px] text-blue-400/70 line-clamp-1">📋 {order.diagnosis}</p>
                         )}
@@ -226,10 +228,10 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                         <span className="text-[9px] text-zinc-700">{formatDateTime(order.created_at)}</span>
                         <div className="ml-auto">
                           <a
-                            href={`${WA}?text=${encodeURIComponent(`Olá ${order.customer_name}! Seu ${order.device_brand} ${order.device_model}: *${serviceStatusLabel[order.status]}*. M CELL.`)}`}
+                            href={waCustomer(order.customer_phone, `Olá ${order.customer_name}! Seu ${order.device_brand} ${order.device_model}: *${serviceStatusLabel[order.status]}*. ${storeName}.`)}
                             target="_blank" rel="noopener noreferrer"
                             onClick={e => e.stopPropagation()}
-                            className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 active:scale-90 transition-all flex items-center"
+                            className="p-1.5 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 active:scale-90 transition-all flex items-center"
                           >
                             <MessageCircle size={10} />
                           </a>
@@ -239,7 +241,7 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                   ))}
 
                   {colOrders.length === 0 && (
-                    <div className={cn('border-2 border-dashed rounded-xl p-6 text-center text-[11px] transition-all', isOver ? 'border-green-500/40 text-green-500/60 bg-green-500/5' : 'border-white/[0.06] text-zinc-700')}>
+                    <div className={cn('border-2 border-dashed rounded-xl p-6 text-center text-[11px] transition-all', isOver ? 'border-[var(--accent)]/40 text-[var(--accent)]/60 bg-[var(--accent)]/5' : 'border-white/[0.06] text-zinc-700')}>
                       {isOver ? '↓ Soltar aqui' : 'Vazio'}
                     </div>
                   )}
@@ -278,15 +280,15 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                     <td className="px-4 py-3 text-xs text-zinc-600 whitespace-nowrap">{formatDateTime(order.created_at)}</td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => openCard(order)} className="p-1.5 rounded-lg text-zinc-500 hover:text-green-400 hover:bg-green-500/10 transition-all active:scale-90">
+                        <button onClick={() => openCard(order)} className="p-1.5 rounded-lg text-zinc-500 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all active:scale-90">
                           <Edit2 size={13} />
                         </button>
                         <button onClick={() => { if (confirm('Finalizar e arquivar?')) finalizeOrder(order.id) }} className="p-1.5 rounded-lg text-zinc-500 hover:text-purple-400 hover:bg-purple-500/10 transition-all active:scale-90">
                           <Archive size={13} />
                         </button>
-                        <a href={`${WA}?text=${encodeURIComponent(`Olá ${order.customer_name}! Status: *${serviceStatusLabel[order.status]}*. M CELL.`)}`}
+                        <a href={waCustomer(order.customer_phone, `Olá ${order.customer_name}! Status: *${serviceStatusLabel[order.status]}*. ${storeName}.`)}
                           target="_blank" rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all active:scale-90">
+                          className="p-1.5 rounded-lg text-zinc-500 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all active:scale-90">
                           <MessageCircle size={13} />
                         </a>
                       </div>
@@ -343,18 +345,18 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                 <div key={key}>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">{label}</label>
                   <input value={(form as Record<string, string>)[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder={placeholder}
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40" />
                 </div>
               ))}
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1.5">Problema relatado *</label>
                 <textarea value={form.problem} onChange={e => setForm(f => ({ ...f, problem: e.target.value }))} rows={3} placeholder="Descreva o defeito..."
-                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 resize-none" />
+                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 resize-none" />
               </div>
             </div>
             <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
               <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] active:scale-95 transition-all">Cancelar</button>
-              <button onClick={handleCreate} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 text-black font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+              <button onClick={handleCreate} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
                 <Wrench size={14} /> Criar O.S.
               </button>
             </div>
@@ -404,12 +406,12 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Cliente</label>
                   <input value={editOrder.customer_name} onChange={e => setEditOrder(p => p ? { ...p, customer_name: e.target.value } : null)}
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500/40" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Telefone</label>
                   <input value={editOrder.customer_phone} onChange={e => setEditOrder(p => p ? { ...p, customer_phone: e.target.value } : null)}
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500/40" />
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40" />
                 </div>
               </div>
 
@@ -418,7 +420,7 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                 <label className="block text-xs font-medium text-zinc-400 mb-1.5">Diagnóstico técnico</label>
                 <textarea value={editOrder.diagnosis ?? ''} onChange={e => setEditOrder(p => p ? { ...p, diagnosis: e.target.value } : null)}
                   rows={2} placeholder="Descreva o diagnóstico..."
-                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 resize-none" />
+                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 resize-none" />
               </div>
 
               {/* Valor */}
@@ -426,7 +428,7 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                 <label className="block text-xs font-medium text-zinc-400 mb-1.5">Valor do serviço (R$)</label>
                 <input type="number" value={editOrder.price ?? ''} onChange={e => setEditOrder(p => p ? { ...p, price: Number(e.target.value) || undefined } : null)}
                   placeholder="Ex: 349"
-                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-green-500/40" />
+                  className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40" />
               </div>
 
               {/* Anexos */}
@@ -454,11 +456,11 @@ export function ServicosClient({ initialOrders: _ }: Props) {
               </div>
 
               {/* WhatsApp */}
-              <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
-                <p className="text-xs font-medium text-emerald-400 mb-2">Notificar cliente</p>
-                <a href={`${WA}?text=${encodeURIComponent(`Olá ${editOrder.customer_name}! Atualização: *${serviceStatusLabel[editOrder.status]}*. ${editOrder.diagnosis ? `Diagnóstico: ${editOrder.diagnosis}. ` : ''}${editOrder.price ? `Valor: R$ ${editOrder.price}. ` : ''}M CELL.`)}`}
+              <div className="p-3 rounded-xl bg-[var(--accent)]/5 border border-[var(--accent)]/15">
+                <p className="text-xs font-medium text-[var(--accent)] mb-2">Notificar cliente</p>
+                <a href={waCustomer(editOrder.customer_phone, `Olá ${editOrder.customer_name}! Atualização: *${serviceStatusLabel[editOrder.status]}*. ${editOrder.diagnosis ? `Diagnóstico: ${editOrder.diagnosis}. ` : ''}${editOrder.price ? `Valor: R$ ${editOrder.price}. ` : ''}${storeName}.`)}
                   target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 active:scale-95 rounded-xl text-xs font-medium transition-all w-fit">
+                  className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 active:scale-95 rounded-xl text-xs font-medium transition-all w-fit">
                   <MessageCircle size={12} /> Enviar atualização pelo WhatsApp
                 </a>
               </div>
@@ -471,7 +473,7 @@ export function ServicosClient({ initialOrders: _ }: Props) {
                 <Archive size={14} /> Arquivar
               </button>
               <button onClick={() => setEditOrder(null)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] active:scale-95 transition-all">Cancelar</button>
-              <button onClick={saveEdit} className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 active:scale-95 text-black font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+              <button onClick={saveEdit} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
                 <CheckCircle size={14} /> Salvar
               </button>
             </div>

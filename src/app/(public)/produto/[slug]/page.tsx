@@ -110,8 +110,8 @@ export default async function ProductPage({ params }: Props) {
           <div className="flex items-center gap-2">
             {product.stock_qty > 0 ? (
               <>
-                <CheckCircle size={15} className="text-emerald-400" />
-                <span className="text-sm text-emerald-400 font-medium">
+                <CheckCircle size={15} className="text-[var(--accent)]" />
+                <span className="text-sm text-[var(--accent)] font-medium">
                   {product.stock_qty > 5 ? 'Em estoque' : `Apenas ${product.stock_qty} unidade${product.stock_qty > 1 ? 's' : ''}`}
                 </span>
               </>
@@ -129,7 +129,7 @@ export default async function ProductPage({ params }: Props) {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-emerald-500/25 text-sm"
+              className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-[var(--accent)] hover:bg-[var(--accent)] text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-[var(--accent)]/25 text-sm"
             >
               <MessageCircle size={18} />
               Comprar pelo WhatsApp

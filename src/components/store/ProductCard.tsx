@@ -55,8 +55,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
       href={`/produto/${product.slug}`}
       className={cn(
         'group relative flex flex-col rounded-2xl overflow-hidden bg-[#141414] border border-white/[0.06]',
-        'hover:border-green-500/30 hover:bg-[#181818] transition-all duration-300',
-        'hover:shadow-xl hover:shadow-green-500/[0.08] hover:-translate-y-1 active:scale-[0.98]',
+        'hover:border-[var(--accent)]/30 hover:bg-[#181818] transition-all duration-300',
+        'hover:shadow-xl hover:shadow-[var(--accent)]/[0.08] hover:-translate-y-1 active:scale-[0.98]',
         className
       )}
     >
@@ -96,7 +96,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
                     onClick={e => { e.preventDefault(); setImgIndex(i) }}
                     className={cn(
                       'rounded-full transition-all duration-300 active:scale-75',
-                      i === safeIndex ? 'w-4 h-1.5 bg-green-400' : 'w-1.5 h-1.5 bg-white/40'
+                      i === safeIndex ? 'w-4 h-1.5 bg-[var(--accent)]' : 'w-1.5 h-1.5 bg-white/40'
                     )}
                   />
                 ))}
@@ -149,7 +149,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {/* Hover overlay — ver detalhes */}
         {product.stock_qty > 0 && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-end justify-center pb-4 pointer-events-none">
-            <span className="flex items-center gap-1.5 px-4 py-1.5 bg-green-500 text-black text-xs font-bold rounded-full shadow-lg translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+            <span className="flex items-center gap-1.5 px-4 py-1.5 bg-[var(--accent)] text-black text-xs font-bold rounded-full shadow-lg translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
               Ver detalhes <ArrowRight size={11} />
             </span>
           </div>
@@ -167,7 +167,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
 
         {/* Nome do produto */}
-        <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2 group-hover:text-green-400 transition-colors">
+        <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2 group-hover:text-[var(--accent)] transition-colors">
           {product.name}
         </h3>
 
@@ -175,7 +175,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <div className="mt-auto pt-2 border-t border-white/[0.04]">
           {product.promo_price ? (
             <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-base font-black text-green-400">{formatCurrency(product.promo_price)}</span>
+              <span className="text-base font-black text-[var(--accent)]">{formatCurrency(product.promo_price)}</span>
               <span className="text-xs text-zinc-600 line-through">{formatCurrency(product.price)}</span>
             </div>
           ) : (

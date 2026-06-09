@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { Settings, Save, Smartphone, Clock, Phone, Palette, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
-import { getStoreConfig, updateStoreConfig, type StoreConfig } from '@/lib/db'
+import React, { useState, useEffect, useRef } from 'react'
+import { Settings, Save, Smartphone, Clock, Phone, Palette, Loader2, CheckCircle2, AlertCircle, ImagePlus, Upload, Trash2 } from 'lucide-react'
+import { getStoreConfig, updateStoreConfig, uploadImage, type StoreConfig } from '@/lib/db'
 import { useAdminStore } from '@/contexts/AdminStore'
 
 type FieldItem = { key: keyof StoreConfig; label: string; placeholder: string; multiline?: boolean }
@@ -21,9 +21,12 @@ export default function ConfiguracoesAdminPage() {
     hours_saturday: '08:00 - 13:00',
     accent_color: '#22c55e',
     about: '',
+    logo_url: '',
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('loading')
   const [errorMsg, setErrorMsg] = useState('')
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     getStoreConfig(storeId)
@@ -57,6 +60,23 @@ export default function ConfiguracoesAdminPage() {
   const set = (key: keyof StoreConfig, value: string) =>
     setConfig(c => ({ ...c, [key]: value }))
 
+  const handleLogoFile = async (files: FileList | null) => {
+    const file = files?.[0]
+    if (!file || !file.type.startsWith('image/')) return
+    setUploadingLogo(true)
+    try {
+      const url = await uploadImage(file, 'logos', storeId)
+      set('logo_url', url)
+    } catch (e) {
+      console.error(e)
+      setStatus('error')
+      setErrorMsg('Não foi possível enviar o logo. Verifique a conexão e tente novamente.')
+      setTimeout(() => setStatus('idle'), 3000)
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
   if (status === 'loading') {
     return (
       <div className="flex items-center gap-3 text-zinc-500 py-12">
@@ -68,7 +88,7 @@ export default function ConfiguracoesAdminPage() {
 
   const fields: { section: string; icon: React.ElementType; items: FieldItem[] }[] = [
     { section: 'Identidade da loja', icon: Smartphone, items: [
-      { key: 'store_name' as const, label: 'Nome da loja', placeholder: 'M CELL' },
+      { key: 'store_name' as const, label: 'Nome da loja', placeholder: 'Sua Loja' },
       { key: 'about' as const,      label: 'Descrição / Sobre', placeholder: 'Descreva sua loja...', multiline: true },
     ]},
     { section: 'Contato', icon: Phone, items: [
@@ -99,7 +119,7 @@ export default function ConfiguracoesAdminPage() {
       {fields.map(({ section, icon: Icon, items }) => (
         <div key={section} className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
           <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/[0.04]">
-            <Icon size={14} className="text-green-400" />
+            <Icon size={14} className="text-[var(--accent)]" />
             <h3 className="text-sm font-semibold text-white">{section}</h3>
           </div>
           <div className="p-5 space-y-4">
@@ -112,14 +132,14 @@ export default function ConfiguracoesAdminPage() {
                     onChange={e => set(key, e.target.value)}
                     placeholder={placeholder}
                     rows={3}
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 resize-none transition-all"
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 resize-none transition-all"
                   />
                 ) : (
                   <input
                     value={(config[key] as string) ?? ''}
                     onChange={e => set(key, e.target.value)}
                     placeholder={placeholder}
-                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 transition-all"
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 transition-all"
                   />
                 )}
               </div>
@@ -128,10 +148,59 @@ export default function ConfiguracoesAdminPage() {
         </div>
       ))}
 
+      {/* Logo da loja */}
+      <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/[0.04]">
+          <ImagePlus size={14} className="text-[var(--accent)]" />
+          <h3 className="text-sm font-semibold text-white">Logo da loja</h3>
+        </div>
+        <div className="p-5">
+          <p className="text-xs text-zinc-500 mb-4">
+            Aparece no <span className="text-zinc-300">canto superior esquerdo</span> da loja e no painel. PNG com fundo transparente fica melhor.
+          </p>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="h-16 w-16 rounded-xl bg-[#1a1a1a] border border-white/[0.08] flex items-center justify-center overflow-hidden shrink-0">
+              {config.logo_url
+                ? <img src={config.logo_url} alt="Logo" className="h-full w-full object-contain" />
+                : <ImagePlus size={20} className="text-zinc-600" />}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingLogo}
+                className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-black hover:bg-[var(--accent)] disabled:opacity-60 transition-all active:scale-95"
+              >
+                {uploadingLogo
+                  ? <><Loader2 size={15} className="animate-spin" /> Enviando…</>
+                  : <><Upload size={15} /> {config.logo_url ? 'Trocar logo' : 'Enviar logo'}</>}
+              </button>
+              {config.logo_url && (
+                <button
+                  onClick={() => set('logo_url', '')}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] px-3 py-2.5 text-sm text-zinc-400 hover:bg-white/[0.04] transition-all"
+                >
+                  <Trash2 size={14} /> Remover
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={e => handleLogoFile(e.target.files)}
+            />
+          </div>
+          <p className="text-[11px] text-zinc-600 mt-3">
+            Depois de enviar, clique em <span className="text-zinc-400">Salvar configurações</span> no fim da página.
+          </p>
+        </div>
+      </div>
+
       {/* Cor da marca */}
       <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/[0.04]">
-          <Palette size={14} className="text-green-400" />
+          <Palette size={14} className="text-[var(--accent)]" />
           <h3 className="text-sm font-semibold text-white">Cor da marca</h3>
         </div>
         <div className="p-5">

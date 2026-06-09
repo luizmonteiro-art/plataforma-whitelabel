@@ -4,12 +4,13 @@ import { useState, useTransition } from 'react'
 import {
   Hexagon, ArrowUpRight, ArrowRight, Check, Sparkles, Store, Calendar,
   Wrench, BarChart3, Palette, Zap, ShieldCheck, Clock, ChevronDown,
-  Loader2, CheckCircle2, MessageCircle, Smartphone,
+  Loader2, CheckCircle2, MessageCircle, Smartphone, AtSign,
 } from 'lucide-react'
 import { PLANS, MODULE_LABELS, type ModuleFlag } from '@/lib/plans'
 import { submitStoreRequest, type RequestInput } from './actions'
 
-const WA_LUIZ = '5519981499229'
+const WA_LUIZ = '5519933005099'
+const IG_MODUS = 'https://www.instagram.com/usemodus.ai/'
 const brl = (n: number) => 'R$ ' + n.toFixed(2).replace('.', ',')
 
 const NAV = [
@@ -333,9 +334,14 @@ export function CaptacaoClient() {
             <span className="font-black tracking-tight text-white">MODUS</span>
           </div>
           <p className="text-xs text-zinc-600">© {new Date().getFullYear()} MODUS · Sistemas digitais completos</p>
-          <a href={`https://wa.me/${WA_LUIZ}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-green-400 transition-colors">
-            <MessageCircle size={15} /> Fale com a gente
-          </a>
+          <div className="flex items-center gap-4">
+            <a href={`https://wa.me/${WA_LUIZ}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-green-400 transition-colors">
+              <MessageCircle size={15} /> WhatsApp
+            </a>
+            <a href={IG_MODUS} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-green-400 transition-colors">
+              <AtSign size={15} /> @usemodus.ai
+            </a>
+          </div>
         </div>
       </footer>
     </div>

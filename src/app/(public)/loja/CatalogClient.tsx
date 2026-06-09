@@ -58,7 +58,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
     <div className="py-10 sm:py-12 max-w-7xl mx-auto px-4 sm:px-6">
       {/* Page Header */}
       <div className="mb-8">
-        <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-1">Catálogo</p>
+        <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-widest mb-1">Catálogo</p>
         <h1 className="text-2xl sm:text-3xl font-bold text-white">Nossa Loja</h1>
         <p className="text-sm text-zinc-500 mt-1">{filtered.length} produto{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}</p>
       </div>
@@ -72,7 +72,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nome, marca..."
-            className="w-full bg-[#141414] border border-white/[0.08] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-500/40 focus:bg-[#1a1a1a] transition-all"
+            className="w-full bg-[#141414] border border-white/[0.08] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 focus:bg-[#1a1a1a] transition-all"
           />
           {search && (
             <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300">
@@ -85,13 +85,13 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all',
             showFilters || hasActiveFilters
-              ? 'bg-green-500/10 border-green-500/30 text-green-400'
+              ? 'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]'
               : 'bg-[#141414] border-white/[0.08] text-zinc-400 hover:text-white hover:border-white/20'
           )}
         >
           <SlidersHorizontal size={15} />
           <span className="hidden sm:inline">Filtros</span>
-          {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-green-400" />}
+          {hasActiveFilters && <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />}
         </button>
       </div>
 
@@ -105,7 +105,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
               <div className="flex flex-wrap gap-1.5">
                 <button
                   onClick={() => setCategory('todos')}
-                  className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', category === 'todos' ? 'bg-green-500 text-black' : 'bg-white/[0.06] text-zinc-400 hover:text-white')}
+                  className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', category === 'todos' ? 'bg-[var(--accent)] text-black' : 'bg-white/[0.06] text-zinc-400 hover:text-white')}
                 >
                   Todos
                 </button>
@@ -113,7 +113,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
                   <button
                     key={c}
                     onClick={() => setCategory(c)}
-                    className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', category === c ? 'bg-green-500 text-black' : 'bg-white/[0.06] text-zinc-400 hover:text-white')}
+                    className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', category === c ? 'bg-[var(--accent)] text-black' : 'bg-white/[0.06] text-zinc-400 hover:text-white')}
                   >
                     {categoryLabel[c]}
                   </button>
@@ -127,7 +127,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
               <div className="flex flex-wrap gap-1.5">
                 <button
                   onClick={() => setCondition('todos')}
-                  className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', condition === 'todos' ? 'bg-green-500 text-black' : 'bg-white/[0.06] text-zinc-400 hover:text-white')}
+                  className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', condition === 'todos' ? 'bg-[var(--accent)] text-black' : 'bg-white/[0.06] text-zinc-400 hover:text-white')}
                 >
                   Todas
                 </button>
@@ -135,7 +135,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
                   <button
                     key={c}
                     onClick={() => setCondition(c)}
-                    className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', condition === c ? 'bg-green-500 text-black' : 'bg-white/[0.06] text-zinc-400 hover:text-white')}
+                    className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all', condition === c ? 'bg-[var(--accent)] text-black' : 'bg-white/[0.06] text-zinc-400 hover:text-white')}
                   >
                     {conditionLabel[c]}
                   </button>
@@ -149,7 +149,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
               <select
                 value={sort}
                 onChange={e => setSort(e.target.value as typeof sort)}
-                className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-green-500/40"
+                className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-[var(--accent)]/40"
               >
                 <option value="relevance">Relevância</option>
                 <option value="price_asc">Menor preço</option>
@@ -171,7 +171,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
       <div className="hidden sm:flex items-center gap-2 mb-6 overflow-x-auto pb-1">
         <button
           onClick={() => setCategory('todos')}
-          className={cn('shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all', category === 'todos' ? 'bg-green-500 text-black' : 'bg-[#141414] text-zinc-400 border border-white/[0.06] hover:text-white')}
+          className={cn('shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all', category === 'todos' ? 'bg-[var(--accent)] text-black' : 'bg-[#141414] text-zinc-400 border border-white/[0.06] hover:text-white')}
         >
           Todos
         </button>
@@ -179,7 +179,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
           <button
             key={c}
             onClick={() => setCategory(c)}
-            className={cn('shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all', category === c ? 'bg-green-500 text-black' : 'bg-[#141414] text-zinc-400 border border-white/[0.06] hover:text-white')}
+            className={cn('shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all', category === c ? 'bg-[var(--accent)] text-black' : 'bg-[#141414] text-zinc-400 border border-white/[0.06] hover:text-white')}
           >
             {categoryLabel[c]}
           </button>
@@ -198,7 +198,7 @@ export function CatalogClient({ products, initialCategory }: CatalogClientProps)
           <p className="text-4xl mb-4">📭</p>
           <p className="text-lg font-semibold text-white mb-2">Nenhum produto encontrado</p>
           <p className="text-sm text-zinc-500 mb-6">Tente ajustar os filtros ou a busca.</p>
-          <button onClick={clearFilters} className="px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/25 rounded-xl text-sm hover:bg-green-500/20 transition-all">
+          <button onClick={clearFilters} className="px-4 py-2 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/25 rounded-xl text-sm hover:bg-[var(--accent)]/20 transition-all">
             Limpar filtros
           </button>
         </div>

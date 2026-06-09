@@ -24,14 +24,14 @@ export default async function ServicosPage() {
     getStoreConfig(storeId).catch(() => null),
   ])
   const services = allServices.filter(s => s.is_active)
-  const wa = config?.whatsapp ? `55${config.whatsapp.replace(/\D/g, '')}` : '5519981499229'
+  const wa = config?.whatsapp ? `55${config.whatsapp.replace(/\D/g, '')}` : ''
   const WA = `https://wa.me/${wa}`
 
   return (
     <div className="min-h-screen">
       <div className="bg-[#0d0d0d] border-b border-white/[0.04] py-14 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-xs font-semibold text-green-400 mb-4">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-xs font-semibold text-[var(--accent)] mb-4">
             <Wrench size={12} /> Assistência Técnica
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">Nossos serviços</h1>
@@ -39,15 +39,15 @@ export default async function ServicosPage() {
             Técnicos especializados, peças de qualidade e garantia em todos os serviços.
           </p>
           <div className="flex items-center justify-center gap-6 mt-6 text-sm text-zinc-500 flex-wrap">
-            <div className="flex items-center gap-1.5"><Shield size={14} className="text-green-400" /> 90 dias de garantia</div>
-            <div className="flex items-center gap-1.5"><Clock size={14} className="text-green-400" /> Mesmo dia</div>
-            <div className="flex items-center gap-1.5"><Star size={14} className="text-green-400" /> Peças originais</div>
+            <div className="flex items-center gap-1.5"><Shield size={14} className="text-[var(--accent)]" /> 90 dias de garantia</div>
+            <div className="flex items-center gap-1.5"><Clock size={14} className="text-[var(--accent)]" /> Mesmo dia</div>
+            <div className="flex items-center gap-1.5"><Star size={14} className="text-[var(--accent)]" /> Peças originais</div>
           </div>
           <div className="mt-6">
             <a
               href={`${WA}?text=${encodeURIComponent('Olá! Preciso de assistência técnica para meu celular.')}`}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-emerald-500/20"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-[var(--accent)]/20"
             >
               <MessageCircle size={15} /> Orçamento pelo WhatsApp
             </a>
@@ -61,20 +61,20 @@ export default async function ServicosPage() {
             const Icon = iconMap[service.icon] ?? Wrench
             const msg = encodeURIComponent(`Olá! Gostaria de um orçamento para: *${service.name}*.`)
             return (
-              <div key={service.id} className="group flex gap-5 p-6 rounded-2xl bg-[#141414] border border-white/[0.06] hover:border-green-500/25 hover:bg-[#1a1a1a] transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-all duration-300">
-                  <Icon size={22} className="text-green-400" />
+              <div key={service.id} className="group flex gap-5 p-6 rounded-2xl bg-[#141414] border border-white/[0.06] hover:border-[var(--accent)]/25 hover:bg-[#1a1a1a] transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-all duration-300">
+                  <Icon size={22} className="text-[var(--accent)]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="text-base font-semibold text-white group-hover:text-green-400 transition-colors">{service.name}</h3>
-                    <p className="text-sm font-bold text-green-400 shrink-0">R$ {service.price_from}+</p>
+                    <h3 className="text-base font-semibold text-white group-hover:text-[var(--accent)] transition-colors">{service.name}</h3>
+                    <p className="text-sm font-bold text-[var(--accent)] shrink-0">R$ {service.price_from}+</p>
                   </div>
                   <p className="text-sm text-zinc-500 leading-relaxed mb-3">{service.description}</p>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-zinc-600 flex items-center gap-1"><Clock size={11} /> ~{service.duration_minutes} min</span>
                     <a href={`${WA}?text=${msg}`} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 active:scale-95 rounded-xl text-xs font-medium transition-all">
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 active:scale-95 rounded-xl text-xs font-medium transition-all">
                       <MessageCircle size={12} /> Orçamento
                     </a>
                   </div>
@@ -86,17 +86,17 @@ export default async function ServicosPage() {
 
         <div className="mb-16">
           <div className="text-center mb-8">
-            <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-1">Processo</p>
+            <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-widest mb-1">Processo</p>
             <h2 className="text-2xl sm:text-3xl font-bold text-white">Como funciona</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
             {steps.map((step, i) => (
               <div key={step.num} className="relative flex flex-col items-center text-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-black font-bold text-sm shadow-lg shadow-green-500/30">
+                <div className="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center text-black font-bold text-sm shadow-lg shadow-[var(--accent)]/30">
                   {step.num}
                 </div>
                 {i < steps.length - 1 && (
-                  <div className="hidden sm:block absolute left-[calc(50%+20px)] top-5 w-[calc(100%-40px)] h-px bg-gradient-to-r from-green-500/30 to-transparent" />
+                  <div className="hidden sm:block absolute left-[calc(50%+20px)] top-5 w-[calc(100%-40px)] h-px bg-gradient-to-r from-[var(--accent)]/30 to-transparent" />
                 )}
                 <div>
                   <p className="text-sm font-semibold text-white">{step.title}</p>
@@ -107,16 +107,16 @@ export default async function ServicosPage() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-500/10 via-green-500/5 to-transparent border border-green-500/20 p-8 sm:p-10 text-center">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[var(--accent)]/10 via-[var(--accent)]/5 to-transparent border border-[var(--accent)]/20 p-8 sm:p-10 text-center">
           <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Pronto para agendar?</h3>
           <p className="text-sm text-zinc-500 mb-6">Seg–Sex das 08h às 18h. Sábados até 13h.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/agendar" className="inline-flex items-center gap-2 px-8 py-3 bg-green-500 hover:bg-green-400 active:scale-95 text-black font-bold rounded-xl transition-all hover:shadow-xl hover:shadow-green-500/25">
+            <Link href="/agendar" className="inline-flex items-center gap-2 px-8 py-3 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-bold rounded-xl transition-all hover:shadow-xl hover:shadow-[var(--accent)]/25">
               Agendar serviço <ArrowRight size={16} />
             </Link>
             <a href={`${WA}?text=${encodeURIComponent('Olá! Gostaria de agendar um serviço de assistência técnica.')}`}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 active:scale-95 font-bold rounded-xl transition-all text-sm">
+              className="inline-flex items-center gap-2 px-8 py-3 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 active:scale-95 font-bold rounded-xl transition-all text-sm">
               <MessageCircle size={16} /> WhatsApp
             </a>
           </div>
