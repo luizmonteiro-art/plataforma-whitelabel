@@ -4,7 +4,10 @@ import { useState, useRef, useEffect } from 'react'
 import { Plus, Tag, Percent, X, Package, Upload, Image as ImageIcon, ArrowUp, ArrowDown, Eye, EyeOff, ArrowLeft, Newspaper, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, cn } from '@/lib/utils'
-import { getBanners, upsertBanner, deleteBanner as deleteBannerDb, getProducts, uploadImage } from '@/lib/db'
+import {
+  getBanners, upsertBanner, deleteBanner as deleteBannerDb, getProducts, uploadImage,
+  getPosts, upsertPost, deletePost as deletePostDb, updateProductPromo,
+} from '@/lib/db'
 import { useAdminStore } from '@/contexts/AdminStore'
 import type { Banner, Product } from '@/types'
 
@@ -29,6 +32,24 @@ const TAG_OPTIONS = [
   { label: 'Exclusivo', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
 ]
 
+const colorForTag = (tag: string) => (TAG_OPTIONS.find(t => t.label === tag) ?? TAG_OPTIONS[0]).color
+
+// mapeia a linha do banco (image_url, sem tagColor) para o formato da UI
+function fromDbPost(row: {
+  id: string; image_url: string; caption: string; tag: string; link: string; is_active: boolean; created_at: string
+}): Post {
+  return {
+    id: row.id,
+    image: row.image_url ?? '',
+    caption: row.caption ?? '',
+    tag: row.tag ?? '',
+    tagColor: colorForTag(row.tag ?? ''),
+    link: row.link || '/loja',
+    is_active: row.is_active,
+    created_at: row.created_at,
+  }
+}
+
 export default function PromocoesAdminPage() {
   const router = useRouter()
   const { storeId } = useAdminStore()
@@ -41,6 +62,8 @@ export default function PromocoesAdminPage() {
     if (!storeId) return
     getBanners(storeId).then(setBanners).catch(console.error)
     getProducts(storeId).then(setPromoProducts).catch(console.error)
+    // silencioso: se a tabela posts ainda não existir (migração pendente), ignora
+    getPosts(storeId).then(rows => setPosts(rows.map(fromDbPost))).catch(() => {})
   }, [storeId])
 
   // Banner state
@@ -129,40 +152,61 @@ export default function PromocoesAdminPage() {
   }
 
   // Post functions
-  const handlePostImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePostImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => setPostForm(f => ({ ...f, image: ev.target?.result as string }))
-    reader.readAsDataURL(file)
     e.target.value = ''
+    try {
+      const url = await uploadImage(file, 'posts', storeId)
+      setPostForm(f => ({ ...f, image: url }))
+    } catch (err) {
+      console.error(err)
+      alert('Não foi possível enviar a foto. Verifique a conexão e tente de novo.')
+    }
   }
 
-  const createPost = () => {
+  const createPost = async () => {
     if (!postForm.image && !postForm.caption) return
-    const tagOpt = TAG_OPTIONS.find(t => t.label === postForm.tag) ?? TAG_OPTIONS[0]
-    setPosts(prev => [...prev, {
-      id: String(Date.now()),
-      image: postForm.image,
+    const saved = await upsertPost(storeId, {
+      image_url: postForm.image,
       caption: postForm.caption,
       tag: postForm.tag,
-      tagColor: tagOpt.color,
-      link: postForm.link,
+      link: postForm.link || '/loja',
       is_active: true,
-      created_at: new Date().toISOString(),
-    }])
+      order: posts.length + 1,
+    }).catch(() => null)
+    if (!saved) {
+      alert('Não foi possível publicar o post. Se for a primeira vez, rode a migração de posts no Supabase (scripts/migration-posts.sql). Depois tente de novo.')
+      return
+    }
+    setPosts(prev => [...prev, fromDbPost(saved)])
     setShowPostForm(false)
     setPostForm({ image: '', caption: '', tag: 'Novo', tagColor: TAG_OPTIONS[0].color, link: '/loja' })
   }
 
-  const togglePost = (id: string) => setPosts(prev => prev.map(p => p.id === id ? { ...p, is_active: !p.is_active } : p))
-  const deletePost = (id: string) => { if (confirm('Remover este post?')) setPosts(prev => prev.filter(p => p.id !== id)) }
+  const togglePost = (id: string) => {
+    setPosts(prev => {
+      const next = prev.map(p => p.id === id ? { ...p, is_active: !p.is_active } : p)
+      const u = next.find(p => p.id === id)
+      if (u) upsertPost(storeId, { id, is_active: u.is_active }).catch(console.error)
+      return next
+    })
+  }
+  const deletePost = (id: string) => {
+    if (!confirm('Remover este post?')) return
+    deletePostDb(storeId, id).catch(console.error)
+    setPosts(prev => prev.filter(p => p.id !== id))
+  }
 
   const togglePromo = (id: string) => {
-    setPromoProducts(prev => prev.map(p => p.id === id
-      ? { ...p, promo_price: p.promo_price ? undefined : Math.round(p.price * 0.9) }
-      : p
-    ))
+    setPromoProducts(prev => {
+      const next = prev.map(p => p.id === id
+        ? { ...p, promo_price: p.promo_price ? undefined : Math.round(p.price * 0.9) }
+        : p)
+      const u = next.find(p => p.id === id)
+      if (u) updateProductPromo(storeId, id, u.promo_price ?? null).catch(console.error)
+      return next
+    })
   }
 
   return (

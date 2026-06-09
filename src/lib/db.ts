@@ -98,6 +98,13 @@ export async function deleteProduct(storeId: string, id: string) {
   if (error) throw error
 }
 
+/** Liga/ajusta/remove a promoção de um produto. promoPrice = null remove a promo. */
+export async function updateProductPromo(storeId: string, id: string, promoPrice: number | null) {
+  const { error } = await db()
+    .from('products').update({ promo_price: promoPrice }).eq('id', id).eq('store_id', storeId)
+  if (error) throw error
+}
+
 // ─── services ─────────────────────────────────────────────────────
 
 export async function getServices(storeId: string): Promise<Service[]> {
@@ -308,5 +315,45 @@ export async function upsertQuote(storeId: string, quote: Partial<Quote> & { id?
 export async function deleteQuote(storeId: string, id: string) {
   const { error } = await db()
     .from('quotes').delete().eq('id', id).eq('store_id', storeId)
+  if (error) throw error
+}
+
+// ─── posts (Feed / Novidades) ──────────────────────────────────────
+
+export interface Post {
+  id: string
+  store_id: string
+  image_url: string
+  caption: string
+  tag: string
+  link: string
+  is_active: boolean
+  order: number
+  created_at: string
+}
+
+export async function getPosts(storeId: string): Promise<Post[]> {
+  const { data, error } = await db()
+    .from('posts')
+    .select('*')
+    .eq('store_id', storeId)
+    .order('order', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as Post[]
+}
+
+export async function upsertPost(storeId: string, post: Partial<Post> & { id?: string }) {
+  const { data, error } = await db()
+    .from('posts')
+    .upsert({ ...post, store_id: storeId })
+    .select()
+    .single()
+  if (error) throw error
+  return data as Post
+}
+
+export async function deletePost(storeId: string, id: string) {
+  const { error } = await db()
+    .from('posts').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }

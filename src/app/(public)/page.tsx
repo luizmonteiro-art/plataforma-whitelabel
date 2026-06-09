@@ -3,7 +3,7 @@ import { Battery, Monitor, Plug, HardDrive, Cpu, Sparkles, Camera, ArrowRight, S
 import { HeroBanner } from '@/components/store/HeroBanner'
 import { ProductCard } from '@/components/store/ProductCard'
 import { FadeIn, StaggerChildren, StaggerItem } from '@/components/ui/FadeIn'
-import { getProducts, getServices, getBanners, getStoreConfig } from '@/lib/db'
+import { getProducts, getServices, getBanners, getStoreConfig, getPosts } from '@/lib/db'
 import { getStoreIdFromHeaders } from '@/lib/store-headers'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -88,13 +88,15 @@ export const revalidate = 60
 
 export default async function HomePage() {
   const storeId = await getStoreIdFromHeaders()
-  const [products, services, banners, config] = await Promise.all([
+  const [products, services, banners, config, posts] = await Promise.all([
     getProducts(storeId).catch(() => []),
     getServices(storeId).catch(() => []),
     getBanners(storeId).catch(() => []),
     getStoreConfig(storeId).catch(() => null),
+    getPosts(storeId).catch(() => []),   // [] se a migração de posts ainda não rodou
   ])
   const storeName = config?.store_name?.trim() || 'Minha Loja'
+  const activePosts = posts.filter(p => p.is_active)
   const brand = brandFromConfig(config)
 
   const featuredProducts = products.filter(p => p.is_featured && p.is_active).slice(0, 4)
@@ -316,7 +318,29 @@ export default async function HomePage() {
           </FadeIn>
 
           <StaggerChildren className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from(new Map([
+            {activePosts.length > 0 ? activePosts.map(post => (
+              <StaggerItem key={post.id}>
+                <Link
+                  href={post.link || '/loja'}
+                  className="group block rounded-2xl overflow-hidden bg-[#141414] border border-white/[0.06] hover:border-[var(--accent)]/25 hover:shadow-xl hover:shadow-[var(--accent)]/[0.06] transition-all duration-300"
+                >
+                  <div className="relative aspect-square overflow-hidden bg-[#111]">
+                    {post.image_url && (
+                      <img src={post.image_url} alt={post.caption} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    {post.tag && (
+                      <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full border backdrop-blur-sm bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--accent)]/30 flex items-center gap-1">
+                        <Tag size={8} /> {post.tag}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-xs text-zinc-300 line-clamp-2 leading-snug">{post.caption || '—'}</p>
+                  </div>
+                </Link>
+              </StaggerItem>
+            )) : Array.from(new Map([
               ...products.filter(p => p.is_active && p.condition === 'lacrado').slice(0, 2),
               ...products.filter(p => p.is_active && p.promo_price).slice(0, 2),
               ...products.filter(p => p.is_active && p.condition === 'seminovo').slice(0, 2),
