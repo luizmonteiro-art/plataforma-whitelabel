@@ -28,19 +28,17 @@ function resolveSlug(request: NextRequest): string | null {
   if (fromQuery) return fromQuery
 
   const host = request.headers.get('host') ?? ''
-  // mcell.plataforma.com → "mcell"
+  // mcell.plataforma.com → "mcell" (quando houver domínio/subdomínio próprio)
   if (host.endsWith(`.${PLATFORM_HOST}`)) {
     return host.replace(`.${PLATFORM_HOST}`, '').split('.')[0] || null
   }
 
-  // Dev local (localhost): os links internos perdem o ?store=, então mantemos a
-  // loja "fixada" por cookie até trocar com outro ?store=. Restrito a localhost
-  // para não afetar produção, onde o subdomínio é quem resolve a loja.
-  const isLocal = host.startsWith('localhost') || host.startsWith('127.0.0.1')
-  if (isLocal) {
-    const fromCookie = request.cookies.get('dev_store')?.value
-    if (fromCookie) return fromCookie
-  }
+  // Sem subdomínio (acesso por ?store= no domínio base, ex.: *.vercel.app): os
+  // links internos perdem o ?store=, então mantemos a loja "fixada" por cookie.
+  // Vale TAMBÉM em produção — é o que permite navegar na loja e abrir o admin
+  // sem um subdomínio próprio. Troca-se de loja visitando outro ?store=slug.
+  const fromCookie = request.cookies.get('store_slug')?.value
+  if (fromCookie) return fromCookie
 
   return null
 }
@@ -115,7 +113,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set('x-store-plan', store.plan_id)
   // Dev: fixa a loja para as próximas navegações (os links perdem o ?store=).
   const querySlug = request.nextUrl.searchParams.get('store')
-  if (querySlug) response.cookies.set('dev_store', querySlug, { path: '/', sameSite: 'lax' })
+  if (querySlug) response.cookies.set('store_slug', querySlug, { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 30 })
   return response
 }
 
@@ -165,7 +163,7 @@ async function handleAdminAuth(request: NextRequest, storeId: string, planId: st
   response.headers.set('x-store-plan', planId)
   // Dev: mantém a loja fixada nas próximas navegações do painel.
   const querySlug = request.nextUrl.searchParams.get('store')
-  if (querySlug) response.cookies.set('dev_store', querySlug, { path: '/', sameSite: 'lax' })
+  if (querySlug) response.cookies.set('store_slug', querySlug, { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 30 })
   return response
 }
 

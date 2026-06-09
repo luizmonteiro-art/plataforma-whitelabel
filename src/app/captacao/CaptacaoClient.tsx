@@ -95,7 +95,7 @@ export function CaptacaoClient() {
             </a>
           ))}
         </nav>
-        <button onClick={goConfig} className="flex items-center gap-1.5 rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-semibold text-black transition-all hover:bg-white active:scale-95">
+        <button onClick={goConfig} className="flex items-center gap-1.5 rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-semibold text-black transition-all duration-200 ease-out will-change-transform hover:bg-white hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-white/10 active:scale-95">
           Testar grátis <ArrowUpRight size={15} />
         </button>
       </header>
@@ -116,10 +116,10 @@ export function CaptacaoClient() {
           pra usar em menos de um dia.
         </p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <button onClick={goConfig} className="flex w-full items-center justify-center gap-2 rounded-full bg-green-500 px-7 py-3.5 text-sm font-bold text-black transition-all hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/25 active:scale-95 sm:w-auto">
+          <button onClick={goConfig} className="flex w-full items-center justify-center gap-2 rounded-full bg-green-500 px-7 py-3.5 text-sm font-bold text-black transition-all duration-200 ease-out will-change-transform hover:bg-green-400 hover:-translate-y-0.5 hover:scale-[1.03] hover:shadow-xl hover:shadow-green-500/30 active:scale-95 sm:w-auto">
             Montar minha loja <ArrowRight size={16} />
           </button>
-          <a href="#precos" className="flex w-full items-center justify-center gap-2 rounded-full border border-white/[0.12] px-7 py-3.5 text-sm font-semibold text-zinc-200 transition-all hover:bg-white/[0.05] sm:w-auto">
+          <a href="#precos" className="flex w-full items-center justify-center gap-2 rounded-full border border-white/[0.12] px-7 py-3.5 text-sm font-semibold text-zinc-200 transition-all duration-200 ease-out will-change-transform hover:border-green-500/40 hover:bg-white/[0.05] hover:-translate-y-0.5 hover:scale-[1.03] active:scale-95 sm:w-auto">
             Ver planos
           </a>
         </div>
@@ -166,7 +166,7 @@ export function CaptacaoClient() {
             return (
               <div
                 key={p.id}
-                className={`relative rounded-3xl border p-6 ${popular ? 'border-green-500/40 bg-green-500/[0.04]' : 'border-white/[0.08] bg-[#0f120f]'}`}
+                className={`group relative rounded-3xl border p-6 transition-all duration-300 ease-out will-change-transform hover:-translate-y-2 ${popular ? 'border-green-500/40 bg-green-500/[0.04] lg:scale-[1.04] hover:shadow-2xl hover:shadow-green-500/20' : 'border-white/[0.08] bg-[#0f120f] hover:border-green-500/30 hover:shadow-2xl hover:shadow-green-500/10'}`}
               >
                 {popular && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-green-500 px-3 py-1 text-[11px] font-bold text-black">
@@ -189,8 +189,10 @@ export function CaptacaoClient() {
                 </ul>
                 <button
                   onClick={() => { set('plan_id', p.id); goConfig() }}
-                  className={`mt-6 w-full rounded-full py-3 text-sm font-semibold transition-all active:scale-95 ${
-                    popular ? 'bg-green-500 text-black hover:bg-green-400' : 'border border-white/[0.12] text-zinc-200 hover:bg-white/[0.05]'
+                  className={`mt-6 w-full rounded-full py-3 text-sm font-semibold transition-all duration-200 ease-out will-change-transform hover:-translate-y-0.5 hover:scale-[1.03] active:scale-95 ${
+                    popular
+                      ? 'bg-green-500 text-black hover:bg-green-400 hover:shadow-lg hover:shadow-green-500/30'
+                      : 'border border-white/[0.12] text-zinc-200 hover:border-green-500/40 hover:bg-white/[0.05]'
                   }`}
                 >
                   Começar com {p.name}
