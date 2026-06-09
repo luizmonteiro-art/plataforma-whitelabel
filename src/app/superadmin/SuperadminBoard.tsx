@@ -4,11 +4,11 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Hexagon, Plus, Store, Inbox, X, Check, Power, ExternalLink, Copy,
-  LogOut, AlertTriangle, Clock, CheckCircle2, Loader2, KeyRound, MessageCircle,
+  LogOut, AlertTriangle, Clock, CheckCircle2, Loader2, KeyRound, MessageCircle, Trash2,
 } from 'lucide-react'
 import { PLANS } from '@/lib/plans'
 import {
-  createStore, setStoreActive, updateRequestStatus,
+  createStore, setStoreActive, updateRequestStatus, deleteStore,
   type StoreRow, type RequestRow, type CreateStoreInput,
 } from './actions'
 
@@ -102,6 +102,21 @@ export function SuperadminBoard({ stores, requests, configured }: Props) {
       setToast(res.ok ? { kind: 'ok', text: res.message } : { kind: 'err', text: res.error })
       router.refresh()
       setTimeout(() => setToast(null), 4000)
+    })
+  }
+
+  const removeStore = (s: StoreRow) => {
+    const ok = confirm(
+      `EXCLUIR a loja "${s.slug}" e TODOS os dados dela ` +
+      `(produtos, serviços, vendas, ordens, agendamentos e o login do lojista)?\n\n` +
+      `Esta ação é PERMANENTE e não tem volta.`
+    )
+    if (!ok) return
+    startTransition(async () => {
+      const res = await deleteStore(s.id)
+      setToast(res.ok ? { kind: 'ok', text: res.message } : { kind: 'err', text: res.error })
+      router.refresh()
+      setTimeout(() => setToast(null), 5000)
     })
   }
 
@@ -282,6 +297,14 @@ export function SuperadminBoard({ stores, requests, configured }: Props) {
                         }`}
                       >
                         {s.is_active ? <><Power size={12} /> Desativar</> : <><Check size={12} /> Ativar</>}
+                      </button>
+                      <button
+                        onClick={() => removeStore(s)}
+                        disabled={pending}
+                        title="Excluir loja e todos os dados (permanente)"
+                        className="flex items-center gap-1 rounded-lg border border-red-500/30 px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:bg-red-500/10 hover:border-red-500/50 transition-all disabled:opacity-50"
+                      >
+                        <Trash2 size={12} /> Excluir
                       </button>
                     </div>
                   </div>

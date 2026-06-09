@@ -12,6 +12,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { PLANS } from '@/lib/plans'
 
 const TRIAL_DAYS = 7
+const SUPERADMIN_EMAIL = (process.env.SUPERADMIN_EMAIL ?? '').trim().toLowerCase()
 
 export interface StoreRow {
   id: string
@@ -183,4 +184,37 @@ export async function updateRequestStatus(id: string, status: string): Promise<A
   if (error) return { ok: false, error: error.message }
   revalidatePath('/superadmin')
   return { ok: true, message: 'Pedido atualizado.' }
+}
+
+/**
+ * Exclusão TOTAL de uma loja: apaga a loja (ON DELETE CASCADE remove config,
+ * produtos, serviços, vendas, ordens de serviço, agendamentos, orçamentos e
+ * banners) e remove o usuário (login) do lojista — exceto o superadmin e e-mails
+ * ainda usados por outra loja. Ação permanente.
+ */
+export async function deleteStore(id: string): Promise<ActionResult> {
+  const admin = getSupabaseAdmin()
+  if (!admin) return { ok: false, error: 'Service role não configurada no servidor.' }
+
+  const { data: store } = await admin
+    .from('stores').select('slug, admin_email').eq('id', id).maybeSingle()
+  if (!store) return { ok: false, error: 'Loja não encontrada (talvez já tenha sido excluída).' }
+
+  // 1) apaga a loja → cascata remove todos os dados ligados a ela
+  const { error } = await admin.from('stores').delete().eq('id', id)
+  if (error) return { ok: false, error: error.message }
+
+  // 2) remove o login do lojista (se não for o superadmin e ninguém mais usar)
+  const email = (store.admin_email ?? '').trim().toLowerCase()
+  if (email && email !== SUPERADMIN_EMAIL) {
+    const { data: others } = await admin.from('stores').select('id').eq('admin_email', email).limit(1)
+    if (!others || others.length === 0) {
+      const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
+      const user = list?.users?.find(u => (u.email ?? '').toLowerCase() === email)
+      if (user) await admin.auth.admin.deleteUser(user.id)
+    }
+  }
+
+  revalidatePath('/superadmin')
+  return { ok: true, message: `Loja "${store.slug}" excluída por completo.` }
 }
