@@ -25,15 +25,15 @@ function storeHref(slug: string): string {
   return `/?store=${encodeURIComponent(slug)}`
 }
 
-/** URL de login do painel do lojista (mesma lógica segura do storeHref). */
+/**
+ * URL de login do painel do lojista — link COMPLETO (origem atual) com ?store=.
+ * Subdomínio de loja só existe com domínio próprio + DNS wildcard; em *.vercel.app
+ * NÃO há subdomínios de loja, então montar `slug.host` gera um link que não abre.
+ * O `?store=` funciona em qualquer host (o proxy resolve e fixa por cookie).
+ */
 function adminLoginUrl(slug: string): string {
-  if (typeof window === 'undefined') return `/admin/login?store=${slug}`
-  const host = window.location.hostname
-  const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')
-  const hostConfigured = !!PLATFORM_HOST && PLATFORM_HOST !== 'plataforma.com'
-  return isLocal || !hostConfigured
-    ? `${window.location.origin}/admin/login?store=${encodeURIComponent(slug)}`
-    : `https://${slug}.${PLATFORM_HOST}/admin/login`
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  return `${origin}/admin/login?store=${encodeURIComponent(slug)}`
 }
 
 const REQUEST_STATUS: Record<string, { label: string; cls: string }> = {
