@@ -1,17 +1,25 @@
 'use client'
 
+import Link from 'next/link'
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Shield, Lock, AlertCircle } from 'lucide-react'
 import { getSupabaseBrowser, supabaseConfigured } from '@/lib/supabase-browser'
+
+function getSafeNextPath(rawNext: string | null) {
+  if (!rawNext) return '/admin/dashboard'
+  if (!rawNext.startsWith('/') || rawNext.startsWith('//')) return '/admin/dashboard'
+  return rawNext
+}
 
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
+  const nextPath = getSafeNextPath(searchParams.get('next'))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,12 +29,10 @@ function LoginForm() {
     const supabase = getSupabaseBrowser()
 
     if (!supabase || !supabaseConfigured) {
-      // Sem Supabase: só libera atalho de login em DEV. Em produção, recusa
-      // (evita acesso ao admin caso o deploy suba sem as variáveis de ambiente).
       if (process.env.NODE_ENV !== 'production') {
-        window.location.href = searchParams.get('next') ?? '/admin/dashboard'
+        window.location.href = nextPath
       } else {
-        setError('Login indisponível: configuração do servidor ausente. Contate o suporte.')
+        setError('Login indisponivel: configuracao do servidor ausente. Contate o suporte.')
         setLoading(false)
       }
       return
@@ -40,20 +46,17 @@ function LoginForm() {
       return
     }
 
-    // Redireciona para a página que o usuário tentou acessar (ou dashboard)
-    window.location.href = searchParams.get('next') ?? '/admin/dashboard'
+    window.location.href = nextPath
   }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
-      {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--accent)]/[0.04] rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[var(--accent)]/[0.03] rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <span className="flex h-[90px] w-[90px] items-center justify-center rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 drop-shadow-[0_0_28px_color-mix(in_srgb,var(--accent)_30%,transparent)]">
@@ -67,7 +70,6 @@ function LoginForm() {
           </p>
         </div>
 
-        {/* Card */}
         <div className="rounded-2xl bg-[#141414] border border-white/[0.08] p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -96,7 +98,7 @@ function LoginForm() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
-                  placeholder="••••••••"
+                  placeholder="********"
                   className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl pl-10 pr-12 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 focus:bg-[#202020] transition-all"
                 />
                 <button
@@ -124,7 +126,7 @@ function LoginForm() {
         </div>
 
         <p className="text-center text-xs text-zinc-700 mt-6">
-          <a href="/" className="hover:text-zinc-400 transition-colors">← Voltar à loja</a>
+          <Link href="/" className="hover:text-zinc-400 transition-colors">Voltar a loja</Link>
         </p>
       </div>
     </div>
