@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Settings, Save, Smartphone, Clock, Phone, Palette, Loader2, CheckCircle2, AlertCircle, ImagePlus, Upload, Trash2 } from 'lucide-react'
-import { getStoreConfig, updateStoreConfig, uploadImage, type StoreConfig } from '@/lib/db'
-import { useAdminStore } from '@/contexts/AdminStore'
+import { Settings, Save, Smartphone, Clock, Phone, Palette, Loader2, CheckCircle2, AlertCircle, ImagePlus, Upload, Trash2, Users, UserPlus } from 'lucide-react'
+import { getStoreConfig, updateStoreConfig, uploadImage, getStaff, deleteStaff, type StoreConfig, type StaffMember } from '@/lib/db'
+import { addStaff } from './staff-actions'
+import { useAdminStore, usePlan } from '@/contexts/AdminStore'
 
 type FieldItem = { key: keyof StoreConfig; label: string; placeholder: string; multiline?: boolean }
 
@@ -11,6 +12,7 @@ const PRESET_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#8b5cf6', '#ef4444', '#
 
 export default function ConfiguracoesAdminPage() {
   const { storeId } = useAdminStore()
+  const { plan } = usePlan()
   const [config, setConfig] = useState<Partial<StoreConfig>>({
     store_name: '',
     whatsapp: '',
@@ -29,6 +31,16 @@ export default function ConfiguracoesAdminPage() {
   const [logoUrlDraft, setLogoUrlDraft] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [staff, setStaff] = useState<StaffMember[]>([])
+  const [staffEmail, setStaffEmail] = useState('')
+  const [staffBusy, setStaffBusy] = useState(false)
+  const [staffMsg, setStaffMsg] = useState<{ type: 'ok' | 'error'; text: string } | null>(null)
+
+  const loadStaff = () => {
+    if (plan.staffLimit <= 0) return
+    getStaff(storeId).then(setStaff).catch(() => {})
+  }
+
   useEffect(() => {
     getStoreConfig(storeId)
       .then(data => {
@@ -42,7 +54,28 @@ export default function ConfiguracoesAdminPage() {
         setStatus('error')
         setErrorMsg('Erro ao carregar configurações. Verifique a conexão com o Supabase.')
       })
+    loadStaff()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId])
+
+  const handleAddStaff = async () => {
+    setStaffBusy(true)
+    setStaffMsg(null)
+    const result = await addStaff(storeId, staffEmail)
+    setStaffBusy(false)
+    if (!result.ok) {
+      setStaffMsg({ type: 'error', text: result.error ?? 'Erro ao adicionar.' })
+      return
+    }
+    setStaffMsg({ type: 'ok', text: result.message ?? 'Login criado.' })
+    setStaffEmail('')
+    loadStaff()
+  }
+
+  const handleRemoveStaff = async (id: string) => {
+    await deleteStaff(storeId, id)
+    loadStaff()
+  }
 
   const handleSave = async () => {
     setStatus('saving')
@@ -295,6 +328,65 @@ export default function ConfiguracoesAdminPage() {
           </span>
         </div>
       </div>
+
+      {/* Equipe (login extra — plano Master) */}
+      {plan.staffLimit > 0 && (
+        <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/[0.04]">
+            <Users size={14} className="text-[var(--accent)]" />
+            <h3 className="text-sm font-semibold text-white">Equipe</h3>
+            <span className="ml-auto text-xs text-zinc-600">{staff.length}/{plan.staffLimit} logins</span>
+          </div>
+          <div className="p-5 space-y-4">
+            <p className="text-xs text-zinc-500">
+              Adicione logins extras com o mesmo acesso operacional do dono (estoque, vendas, ordens de serviço, etc.).
+            </p>
+
+            {staff.length > 0 && (
+              <div className="space-y-2">
+                {staff.map(member => (
+                  <div key={member.id} className="flex items-center justify-between bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5">
+                    <span className="text-sm text-zinc-300">{member.email}</span>
+                    <button
+                      onClick={() => handleRemoveStaff(member.id)}
+                      className="text-zinc-600 hover:text-red-400 transition-colors"
+                      title="Remover"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {staffMsg && (
+              <div className={`text-sm rounded-xl px-4 py-2.5 border ${staffMsg.type === 'ok' ? 'bg-[var(--accent)]/10 border-[var(--accent)]/20 text-[var(--accent)]' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                {staffMsg.text}
+              </div>
+            )}
+
+            {staff.length < plan.staffLimit && (
+              <div className="flex gap-2">
+                <input
+                  value={staffEmail}
+                  onChange={e => setStaffEmail(e.target.value)}
+                  placeholder="email@equipe.com"
+                  type="email"
+                  className="flex-1 bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 transition-all"
+                />
+                <button
+                  onClick={handleAddStaff}
+                  disabled={staffBusy || !staffEmail.trim()}
+                  className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-60 transition-all active:scale-95"
+                >
+                  {staffBusy ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
+                  Adicionar
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Salvar */}
       <button

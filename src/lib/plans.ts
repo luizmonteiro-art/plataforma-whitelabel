@@ -20,6 +20,7 @@ export const MODULES = [
   'ORCAMENTOS',
   'AGENDAMENTOS',
   'PROMOCOES',
+  'RELATORIOS',
 ] as const
 
 export type ModuleFlag = (typeof MODULES)[number]
@@ -35,6 +36,7 @@ export const MODULE_LABELS: Record<ModuleFlag, string> = {
   ORCAMENTOS: 'Orçamentos',
   AGENDAMENTOS: 'Agendamentos',
   PROMOCOES: 'Promoções & Feed',
+  RELATORIOS: 'Relatórios avançados',
 }
 
 export interface PlanDef {
@@ -42,6 +44,8 @@ export interface PlanDef {
   name: string
   priceBrl: number
   productLimit: number
+  /** Logins de equipe além do dono (0 = só o dono pode entrar). */
+  staffLimit: number
   modules: ModuleFlag[]
 }
 
@@ -52,6 +56,7 @@ export const PLANS: Record<string, PlanDef> = {
     name: 'Vitrine',
     priceBrl: 99.9,
     productLimit: 30,
+    staffLimit: 0,
     // PROMOCOES (banner da home + feed) é padrão para TODAS as lojas.
     modules: ['VITRINE_PUBLICA', 'ESTOQUE', 'CONFIGURACOES', 'PROMOCOES'],
   },
@@ -60,6 +65,7 @@ export const PLANS: Record<string, PlanDef> = {
     name: 'Loja',
     priceBrl: 179.9,
     productLimit: 150,
+    staffLimit: 0,
     modules: [
       'VITRINE_PUBLICA', 'ESTOQUE', 'CONFIGURACOES', 'PROMOCOES',
       'DASHBOARD', 'VENDAS', 'ORDENS_SERVICO', 'ORCAMENTOS', 'AGENDAMENTOS',
@@ -70,10 +76,11 @@ export const PLANS: Record<string, PlanDef> = {
     name: 'Master',
     priceBrl: 299.0,
     productLimit: 300,
+    staffLimit: 2,
     modules: [
       'VITRINE_PUBLICA', 'ESTOQUE', 'CONFIGURACOES',
       'DASHBOARD', 'VENDAS', 'ORDENS_SERVICO', 'ORCAMENTOS', 'AGENDAMENTOS',
-      'PROMOCOES',
+      'PROMOCOES', 'RELATORIOS',
     ],
   },
 }

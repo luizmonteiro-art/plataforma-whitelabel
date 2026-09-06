@@ -352,3 +352,22 @@ export async function deletePost(storeId: string, id: string) {
     .from('posts').delete().eq('id', id).eq('store_id', storeId)
   if (error) throw error
 }
+
+// ─── store_staff (logins de equipe — plano Master) ──────────────────
+export interface StaffMember { id: string; email: string; created_at: string }
+
+export async function getStaff(storeId: string): Promise<StaffMember[]> {
+  const { data, error } = await db()
+    .from('store_staff')
+    .select('id, email, created_at')
+    .eq('store_id', storeId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as StaffMember[]
+}
+
+export async function deleteStaff(storeId: string, id: string) {
+  const { error } = await db()
+    .from('store_staff').delete().eq('id', id).eq('store_id', storeId)
+  if (error) throw error
+}

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { Plus, TrendingUp, X, ChevronDown, Target, CheckCircle, XCircle, Search, ArrowLeft, Edit2, Package, Percent, Tag } from 'lucide-react'
+import { Plus, TrendingUp, X, ChevronDown, Target, CheckCircle, XCircle, Search, ArrowLeft, Edit2, Package, Percent, Tag, Download, BarChart3 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, paymentMethodLabel, cn } from '@/lib/utils'
-import { useSales, useProducts, useAdminStore } from '@/contexts/AdminStore'
+import { useSales, useProducts, useAdminStore, usePlan } from '@/contexts/AdminStore'
 import { saveSaleAtomic } from '@/lib/db'
 import { pendingSaleJournal, type PendingSale } from '@/lib/pending-sale'
 import type { Sale, PaymentMethod } from '@/types'
@@ -25,6 +25,7 @@ type DateFilter = 'todos' | 'hoje' | 'semana' | 'mes'
 export function VendasClient() {
   const router = useRouter()
   const { storeId, reload, _error, _loaded } = useAdminStore()
+  const { hasModule } = usePlan()
   const [rawSales, setSalesRaw] = useSales()
   const [storeProducts] = useProducts()
   const sales: SaleWithStatus[] = rawSales.map(s => ({ ...s, saleStatus: s.stock_managed ? s.status ?? 'aprovado' : 'historico' }))
@@ -195,6 +196,47 @@ export function VendasClient() {
   const pendingRevenue = sales.filter(s => s.saleStatus === 'pendente').reduce((a, s) => a + s.total, 0)
   const metaPercent = Math.min(100, Math.round((totalRevenue / meta) * 100))
 
+  // ─── Relatórios avançados (plano Master) ───
+  const monthlyReport = (() => {
+    if (!hasModule('RELATORIOS')) return []
+    const months: { key: string; label: string; total: number; count: number }[] = []
+    const now = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }), total: 0, count: 0 })
+    }
+    for (const s of approved) {
+      const d = new Date(s.created_at)
+      const key = `${d.getFullYear()}-${d.getMonth()}`
+      const bucket = months.find(m => m.key === key)
+      if (bucket) { bucket.total += s.total; bucket.count += 1 }
+    }
+    return months
+  })()
+
+  const exportCsv = () => {
+    const header = ['ID', 'Data', 'Cliente', 'Produtos', 'Pagamento', 'Situação', 'Total']
+    const rows = filtered.map(s => [
+      s.id,
+      formatDateTime(s.created_at),
+      s.customer_name ?? '',
+      s.items.map(i => `${i.product_name} (${i.quantity}x)`).join('; '),
+      paymentMethodLabel[s.payment_method] ?? s.payment_method,
+      s.saleStatus,
+      s.total.toFixed(2).replace('.', ','),
+    ])
+    const csv = [header, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+      .join('\r\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `vendas-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const handleRegister = async () => {
     const product = storeProducts.find(p => p.id === formProduct)
     if (!product) return
@@ -280,11 +322,37 @@ export function VendasClient() {
             <h1 className="text-2xl font-bold text-white">Vendas</h1>
             <p className="text-sm text-zinc-500 mt-0.5">{filtered.length} de {sales.length} registros</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl transition-all text-sm">
-            <Plus size={16} /> Registrar venda
-          </button>
+          <div className="flex items-center gap-2">
+            {hasModule('RELATORIOS') && (
+              <button onClick={exportCsv} className="flex items-center gap-2 px-4 py-2.5 border border-white/[0.08] hover:bg-white/[0.04] active:scale-95 text-zinc-200 font-semibold rounded-xl transition-all text-sm">
+                <Download size={16} /> Exportar CSV
+              </button>
+            )}
+            <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 text-black font-semibold rounded-xl transition-all text-sm">
+              <Plus size={16} /> Registrar venda
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Relatório mensal (plano Master) */}
+      {hasModule('RELATORIOS') && (
+        <div className="p-5 rounded-2xl bg-[#141414] border border-white/[0.06]">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 size={14} className="text-[var(--accent)]" />
+            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Relatório mensal — últimos 6 meses</span>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            {monthlyReport.map(m => (
+              <div key={m.key} className="text-center">
+                <p className="text-[10px] uppercase text-zinc-600">{m.label}</p>
+                <p className="text-sm font-bold text-white mt-1">{formatCurrency(m.total)}</p>
+                <p className="text-[10px] text-zinc-600">{m.count} venda{m.count === 1 ? '' : 's'}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* KPI */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

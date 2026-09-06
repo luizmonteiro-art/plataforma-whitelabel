@@ -204,15 +204,38 @@ create index if not exists idx_stores_slug          on stores(slug);
 -- O "dono" é o usuário autenticado cujo e-mail == stores.admin_email.
 -- ═══════════════════════════════════════════════════════════════════
 
--- Helper: a loja informada pertence ao usuário autenticado?
+-- Helper: o e-mail autenticado é o DONO (admin_email) da loja informada?
+-- Distinto de owns_store: usado onde só o dono pode agir (gerenciar equipe).
 -- SECURITY DEFINER → ignora a RLS de `stores` na checagem (evita recursão).
-create or replace function owns_store(p_store_id uuid)
+create or replace function is_store_owner(p_store_id uuid)
 returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from stores
     where id = p_store_id
       and admin_email = (auth.jwt() ->> 'email')
+  )
+$$;
+grant execute on function is_store_owner(uuid) to anon, authenticated;
+
+-- store_staff: logins extras (plano Master) com acesso operacional igual ao dono.
+create table if not exists store_staff (
+  id          uuid primary key default uuid_generate_v4(),
+  store_id    uuid not null references stores(id) on delete cascade,
+  email       text not null,
+  created_at  timestamptz default now(),
+  unique (store_id, email)
+);
+
+-- Helper: a loja informada pertence ao usuário autenticado (dono OU equipe)?
+-- Usado por todas as políticas de dados operacionais da loja.
+create or replace function owns_store(p_store_id uuid)
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select is_store_owner(p_store_id) or exists (
+    select 1 from store_staff
+    where store_id = p_store_id
+      and email = (auth.jwt() ->> 'email')
   )
 $$;
 grant execute on function owns_store(uuid) to anon, authenticated;
@@ -240,6 +263,7 @@ alter table sales          enable row level security;
 alter table banners        enable row level security;
 alter table quotes         enable row level security;
 alter table store_requests enable row level security;
+alter table store_staff    enable row level security;
 
 -- ── plans: leitura pública (app + captação precisam dos planos) ──
 drop policy if exists plans_read on plans;
@@ -307,6 +331,11 @@ create policy appointments_public_insert on appointments for insert
 drop policy if exists requests_public_insert on store_requests;
 create policy requests_public_insert on store_requests for insert
   with check (true);
+
+-- ── store_staff: só o DONO gerencia (adicionar/remover equipe) ──
+drop policy if exists store_staff_owner_all on store_staff;
+create policy store_staff_owner_all on store_staff for all
+  using (is_store_owner(store_id)) with check (is_store_owner(store_id));
 
 -- ─── Trigger: updated_at automático ──────────────────────────────
 create or replace function set_updated_at()
