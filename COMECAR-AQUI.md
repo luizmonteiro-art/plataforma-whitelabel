@@ -1,5 +1,10 @@
 # 🚀 Começar aqui — próxima sessão
 
+> **Atualização de 6 de setembro de 2026:** o estado mais recente foi consolidado em
+> `C:\Users\luizf\OneDrive\Área de Trabalho\DEV\_HANDOFF-plataforma\LEIA-PRIMEIRO.md`.
+> Use também `PROMPT-PARA-CLAUDE.md` nessa pasta. O conteúdo antigo abaixo permanece
+> apenas como histórico e não deve substituir o checkout ou o handoff atual.
+
 **Arquivo principal de continuidade:** [`MANUAL.md`](MANUAL.md)
 **Diagrama da arquitetura:** [`docs/arquitetura.svg`](docs/arquitetura.svg)
 

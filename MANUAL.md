@@ -1,5 +1,8 @@
 # MANUAL — Plataforma White-Label (MODUS)
 
+> **Documento histórico.** Para o estado confirmado em 6 de setembro de 2026, leia
+> `C:\Users\luizf\OneDrive\Área de Trabalho\DEV\_HANDOFF-plataforma\LEIA-PRIMEIRO.md`.
+
 > Documento de continuidade. Lê isto antes de mexer no código.
 > **Regra de ouro: o que está funcionando NÃO deve ser alterado sem motivo.**
 > Última atualização: 2026-06-08. Build limpo, 22 rotas.

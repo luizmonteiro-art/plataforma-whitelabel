@@ -1,6 +1,9 @@
 # 📱 M CELL — Documento de Handoff Técnico
 > Gerado em: junho/2026 — Para continuação por outro desenvolvedor
 
+> **Documento histórico.** Para o estado confirmado em 6 de setembro de 2026, leia
+> `C:\Users\luizf\OneDrive\Área de Trabalho\DEV\_HANDOFF-plataforma\LEIA-PRIMEIRO.md`.
+
 ---
 
 ## 🔗 Links Críticos (guarde esses)

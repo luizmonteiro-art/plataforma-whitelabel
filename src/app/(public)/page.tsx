@@ -423,7 +423,7 @@ export default async function HomePage() {
                       <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
-                  <p className="text-sm text-zinc-400 leading-relaxed flex-1">"{t.text}"</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed flex-1">&ldquo;{t.text}&rdquo;</p>
                   <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
                     <div className="w-8 h-8 rounded-full bg-[var(--accent)]/20 border border-[var(--accent)]/30 flex items-center justify-center shrink-0">
                       <span className="text-[10px] font-bold text-[var(--accent)]">{t.avatar}</span>
