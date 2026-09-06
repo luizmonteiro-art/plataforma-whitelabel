@@ -444,6 +444,12 @@ export function CaptacaoClient() {
                         {MODULE_LABELS[module as ModuleFlag]}
                       </li>
                     ))}
+                    {planItem.staffLimit > 0 && (
+                      <li className="flex items-start gap-2 text-sm text-zinc-300">
+                        <Check size={15} className="mt-0.5 shrink-0 text-[#79e2ad]" />
+                        Até {planItem.staffLimit} logins de equipe
+                      </li>
+                    )}
                   </ul>
 
                   <button
@@ -574,6 +580,12 @@ export function CaptacaoClient() {
                           {MODULE_LABELS[module as ModuleFlag]}
                         </span>
                       ))}
+                      {plan.staffLimit > 0 && (
+                        <span className="flex items-center gap-2 text-sm text-zinc-300">
+                          <Check size={14} className="shrink-0 text-[#79e2ad]" />
+                          Até {plan.staffLimit} logins de equipe
+                        </span>
+                      )}
                     </div>
                   </div>
 
