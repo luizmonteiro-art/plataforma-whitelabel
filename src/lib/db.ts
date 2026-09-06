@@ -82,12 +82,20 @@ export async function countProducts(storeId: string): Promise<number> {
   return count ?? 0
 }
 
-export async function upsertProduct(storeId: string, product: Partial<Product> & { id?: string }) {
-  const { data, error } = await db()
-    .from('products')
-    .upsert({ ...product, store_id: storeId })
-    .select()
-    .single()
+export async function upsertProduct(storeId: string, product: Partial<Product> & { id?: string }, expectedStock?: number) {
+  if (product.stock_qty !== undefined && (!Number.isInteger(product.stock_qty) || product.stock_qty < 0)) {
+    throw new Error('O estoque deve ser um número inteiro igual ou maior que zero.')
+  }
+  // Compare-and-set: an old edit form must not overwrite a sale's new balance.
+  if (product.id && product.stock_qty !== undefined && expectedStock === undefined) {
+    throw new Error('Reabra o produto para conferir o estoque antes de salvar.')
+  }
+  let query = product.id
+    ? db().from('products').update({ ...product, store_id: storeId }).eq('id', product.id).eq('store_id', storeId)
+    : db().from('products').insert({ ...product, store_id: storeId })
+  if (product.id && expectedStock !== undefined) query = query.eq('stock_qty', expectedStock)
+  const { data, error } = await query.select().single()
+  if (error?.code === 'PGRST116') throw new Error('O estoque mudou ou o produto não está mais disponível. Atualize a página e reabra o produto.')
   if (error) throw error
   return data as Product
 }
@@ -216,30 +224,17 @@ export async function getSales(storeId: string): Promise<Sale[]> {
   return (data ?? []) as Sale[]
 }
 
-export async function insertSale(storeId: string, sale: Omit<Sale, 'id' | 'created_at'>) {
-  const { data, error } = await db()
-    .from('sales')
-    .insert({ ...sale, store_id: storeId })
-    .select()
-    .single()
+export async function saveSaleAtomic(storeId: string, sale: Pick<Sale, 'id' | 'items' | 'total' | 'payment_method' | 'customer_name' | 'status' | 'revision'>, requestId: string) {
+  const { data, error } = await db().rpc('save_sale_atomic', {
+    p_store_id: storeId, p_sale_id: sale.id, p_request_id: requestId,
+    p_revision: sale.revision ?? 0, p_items: sale.items, p_total: sale.total,
+    p_payment_method: sale.payment_method, p_customer_name: sale.customer_name ?? null,
+    p_status: sale.status ?? 'aprovado',
+  })
+  if (error?.code === 'PGRST202') throw new Error('Registro indisponível: a atualização do banco ainda não foi aplicada. Nenhuma confirmação foi emitida.')
   if (error) throw error
+  if (!data?.id) throw new Error('Não foi possível confirmar a gravação. Tente novamente para verificar a mesma operação.')
   return data as Sale
-}
-
-export async function upsertSale(storeId: string, sale: Partial<Sale> & { id: string }) {
-  const { data, error } = await db()
-    .from('sales')
-    .upsert({ ...sale, store_id: storeId })
-    .select()
-    .single()
-  if (error) throw error
-  return data as Sale
-}
-
-export async function deleteSale(storeId: string, id: string) {
-  const { error } = await db()
-    .from('sales').delete().eq('id', id).eq('store_id', storeId)
-  if (error) throw error
 }
 
 // ─── banners ──────────────────────────────────────────────────────

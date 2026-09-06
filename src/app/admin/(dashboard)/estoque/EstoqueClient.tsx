@@ -37,6 +37,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [imageUrlDraft, setImageUrlDraft] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -52,7 +53,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
 
   const openNew = () => {
     if (atLimit) { setShowLimitModal(true); return }
-    setForm(emptyForm); setEditProduct(null); setShowForm(true)
+    setForm(emptyForm); setEditProduct(null); setImageUrlDraft(''); setShowForm(true)
   }
 
   const openEdit = (p: Product) => {
@@ -64,7 +65,15 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
       images: [...p.images],
     })
     setEditProduct(p)
+    setImageUrlDraft('')
     setShowForm(true)
+  }
+
+  const addImageFromUrl = () => {
+    const value = imageUrlDraft.trim()
+    if (!value) return
+    setForm(f => ({ ...f, images: [...f.images, value].slice(0, 8) }))
+    setImageUrlDraft('')
   }
 
   // Faz upload das imagens para o Supabase Storage (com fallback p/ base64) e adiciona ao form
@@ -110,9 +119,8 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         stock_qty: Number(form.stock_qty),
         images: form.images,
       }
-      const saved = await upsertProduct(storeId, updated).catch(e => { console.error(e); return null })
+      const saved = await upsertProduct(storeId, updated, editProduct.stock_qty).catch(e => { alert(e.message || 'Não foi possível salvar. Atualize a página e confira o estoque.'); return null })
       if (!saved) {
-        alert('Não foi possível salvar as alterações. Verifique sua conexão e tente novamente.')
         return // mantém o modal aberto para nova tentativa; não falsifica sucesso
       }
       setProducts(prev => prev.map(p => p.id === editProduct.id ? saved : p))
@@ -141,8 +149,12 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
 
   const handleDelete = async (id: string) => {
     if (confirm('Remover este produto?')) {
-      await deleteProduct(storeId, id).catch(console.error)
-      setProducts(prev => prev.filter(p => p.id !== id))
+      try {
+        await deleteProduct(storeId, id)
+        setProducts(prev => prev.filter(p => p.id !== id))
+      } catch {
+        alert('Não foi possível excluir. Produtos vinculados ao histórico de vendas devem ser preservados; uma falha de conexão também impede a exclusão.')
+      }
     }
   }
 
@@ -431,6 +443,26 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                       )}
                     </div>
                   )}
+
+                  <div className="mt-3 space-y-2">
+                    <label className="block text-xs font-medium text-zinc-400">Ou cole a URL de uma imagem</label>
+                    <div className="flex gap-2">
+                      <input
+                        value={imageUrlDraft}
+                        onChange={e => setImageUrlDraft(e.target.value)}
+                        placeholder="https://..."
+                        className="flex-1 bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={addImageFromUrl}
+                        disabled={!imageUrlDraft.trim() || form.images.length >= 8}
+                        className="shrink-0 rounded-xl border border-white/[0.08] px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.04] transition-all disabled:opacity-40"
+                      >
+                        Adicionar
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Descrição */}

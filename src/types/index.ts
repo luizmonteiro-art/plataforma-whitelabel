@@ -70,6 +70,9 @@ export interface SaleItem {
 
 export interface Sale {
   id: string
+  status?: 'aprovado' | 'pendente' | 'cancelado'
+  revision?: number
+  stock_managed?: boolean
   items: SaleItem[]
   total: number
   payment_method: PaymentMethod

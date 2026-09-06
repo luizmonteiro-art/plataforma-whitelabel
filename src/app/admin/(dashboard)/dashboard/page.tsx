@@ -33,7 +33,9 @@ function MiniChart({ data }: { data: number[] }) {
 
 export default function AdminDashboardPage() {
   const { products, sales, appointments, serviceOrders, _loaded } = useAdminStore()
-  const totalRevenue = sales.reduce((acc, s) => acc + s.total, 0)
+  const approvedSales = sales.filter(s => s.stock_managed && s.status === 'aprovado')
+  const historicalCount = sales.filter(s => !s.stock_managed).length
+  const totalRevenue = approvedSales.reduce((acc, s) => acc + s.total, 0)
   const lowStockProducts = products.filter(p => p.stock_qty <= 2 && p.is_active)
   const pendingAppointments = appointments.filter(a => a.status === 'pendente')
   const activeOrders = serviceOrders.filter(o => !['entregue'].includes(o.status))
@@ -54,14 +56,14 @@ export default function AdminDashboardPage() {
       const d = new Date(today)
       d.setDate(today.getDate() - (6 - i)) // 0=6 dias atrás, 6=hoje
       const dayStr = d.toDateString()
-      return sales
+      return approvedSales
         .filter(s => new Date(s.created_at).toDateString() === dayStr)
         .reduce((acc, s) => acc + s.total, 0)
     })
   })()
 
   const statCards = [
-    { label: 'Receita Total', value: formatCurrency(totalRevenue), sub: `${sales.length} vendas registradas`, icon: TrendingUp, color: 'text-[var(--accent)]', bg: 'bg-[var(--accent)]/10 border-[var(--accent)]/20', href: '/admin/vendas' },
+    { label: 'Vendas aprovadas', value: formatCurrency(totalRevenue), sub: `${approvedSales.length} vendas · recebimento não conferido`, icon: TrendingUp, color: 'text-[var(--accent)]', bg: 'bg-[var(--accent)]/10 border-[var(--accent)]/20', href: '/admin/vendas' },
     { label: 'Produtos no Estoque', value: products.filter(p => p.is_active).length.toString(), sub: `${lowStockProducts.length} com estoque baixo`, icon: Package, color: lowStockProducts.length > 0 ? 'text-orange-400' : 'text-blue-400', bg: lowStockProducts.length > 0 ? 'bg-orange-500/10 border-orange-500/20' : 'bg-blue-500/10 border-blue-500/20', href: '/admin/estoque' },
     { label: 'Agendamentos', value: appointments.length.toString(), sub: `${pendingAppointments.length} pendente${pendingAppointments.length !== 1 ? 's' : ''}`, icon: Calendar, color: 'text-[var(--accent)]', bg: 'bg-[var(--accent)]/10 border-[var(--accent)]/20', href: '/admin/agendamentos' },
     { label: 'Ordens de Serviço', value: serviceOrders.length.toString(), sub: `${activeOrders.length} em aberto`, icon: Wrench, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', href: '/admin/servicos' },
@@ -106,6 +108,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stat Cards */}
+      {historicalCount > 0 && <p className="text-sm text-amber-300">{historicalCount} vendas antigas aguardam conferência e não entram nos totais por situação.</p>}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map(({ label, value, sub, icon: Icon, color, bg, href }) => (
           <Link key={label} href={href} className="group p-5 rounded-2xl bg-[#141414] border border-white/[0.06] hover:border-white/[0.12] transition-all hover:-translate-y-0.5">
@@ -127,8 +130,8 @@ export default function AdminDashboardPage() {
         <div className="lg:col-span-2 rounded-2xl bg-[#141414] border border-white/[0.06] p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-white">Receita (últimos 7 dias)</h3>
-              <p className="text-xs text-zinc-600">{sales.length > 0 ? 'Baseado nas vendas registradas' : 'Nenhuma venda registrada ainda'}</p>
+              <h3 className="text-sm font-semibold text-white">Vendas aprovadas (últimos 7 dias)</h3>
+              <p className="text-xs text-zinc-600">{approvedSales.length > 0 ? 'Exclui canceladas, pendentes e registros antigos a conferir' : 'Nenhuma venda aprovada conferida'}</p>
             </div>
             <span className="text-lg font-bold text-[var(--accent)]">{formatCurrency(chartData.reduce((a, b) => a + b, 0))}</span>
           </div>

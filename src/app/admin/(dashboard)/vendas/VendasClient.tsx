@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Plus, TrendingUp, X, ChevronDown, Target, Trash2, CheckCircle, XCircle, Search, ArrowLeft, Edit2, Package, Percent, Tag } from 'lucide-react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { Plus, TrendingUp, X, ChevronDown, Target, CheckCircle, XCircle, Search, ArrowLeft, Edit2, Package, Percent, Tag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, paymentMethodLabel, cn } from '@/lib/utils'
 import { useSales, useProducts, useAdminStore } from '@/contexts/AdminStore'
-import { insertSale, upsertSale, deleteSale, upsertProduct } from '@/lib/db'
+import { saveSaleAtomic } from '@/lib/db'
+import { pendingSaleJournal, type PendingSale } from '@/lib/pending-sale'
 import type { Sale, PaymentMethod } from '@/types'
 
 interface SaleWithStatus extends Sale {
-  saleStatus: 'aprovado' | 'pendente' | 'cancelado'
+  saleStatus: 'aprovado' | 'pendente' | 'cancelado' | 'historico'
 }
 
 interface EditItem {
@@ -19,23 +20,70 @@ interface EditItem {
   unit_price: number
 }
 
-interface Props { initialSales: Sale[] }
 type DateFilter = 'todos' | 'hoje' | 'semana' | 'mes'
 
-export function VendasClient({ initialSales: _ }: Props) {
+export function VendasClient() {
   const router = useRouter()
-  const { storeId } = useAdminStore()
+  const { storeId, reload, _error, _loaded } = useAdminStore()
   const [rawSales, setSalesRaw] = useSales()
-  const [storeProducts, setProducts] = useProducts()
-  const [sales, setSalesLocal] = useState<SaleWithStatus[]>(() =>
-    rawSales.map(s => ({ ...s, saleStatus: 'aprovado' as const }))
-  )
-  const setSales = (fn: (prev: SaleWithStatus[]) => SaleWithStatus[]) => {
-    setSalesLocal(prev => {
-      const next = fn(prev)
-      setSalesRaw(() => next.map(({ saleStatus: _, ...s }) => s as Sale))
-      return next
-    })
+  const [storeProducts] = useProducts()
+  const sales: SaleWithStatus[] = rawSales.map(s => ({ ...s, saleStatus: s.stock_managed ? s.status ?? 'aprovado' : 'historico' }))
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [pendingCancellation, setPendingCancellation] = useState<Sale | null>(null)
+  const saving = useRef(false)
+  const newSaleId = useRef<string | null>(null)
+  const [recovery, setRecovery] = useState<PendingSale | null>(null)
+  useEffect(() => {
+    // Read browser-only storage after hydration; SSR cannot supply this snapshot.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    try { setRecovery(pendingSaleJournal(sessionStorage, storeId).read()) }
+    catch { setError('Não foi possível ler a recuperação de vendas deste navegador. Confira os registros antes de continuar.') }
+  }, [storeId])
+
+  const persist = async (sale: Parameters<typeof saveSaleAtomic>[1], recovering = false) => {
+    if (saving.current) return false
+    if (_error || !_loaded) {
+      setError('Atualize a página para carregar os dados antes de registrar outra operação.')
+      return false
+    }
+    saving.current = true
+    setBusy(true)
+    setError(null)
+    try {
+      const journal = pendingSaleJournal(sessionStorage, storeId)
+      const previous = journal.read()
+      if (previous && !recovering) {
+        setRecovery(previous)
+        setError('Confira a operação pendente antes de iniciar ou alterar outra venda.')
+        return false
+      }
+      const pending = previous ?? journal.begin(sale)
+      setRecovery(pending)
+      const saved = await saveSaleAtomic(storeId, pending.sale, pending.requestId)
+      setSalesRaw(prev => [saved, ...prev.filter(s => s.id !== saved.id)])
+      journal.clear()
+      setRecovery(null)
+      await reload()
+      return true
+    } catch (err) {
+      // A PostgreSQL exception rolls back the whole transaction. Transport
+      // failures remain pending because the server may have committed.
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'P0001') {
+        try { pendingSaleJournal(sessionStorage, storeId).clear(); setRecovery(null) } catch { /* Keep recovery visible. */ }
+      } else {
+        // Make the recovery action reachable instead of leaving it behind a modal.
+        setShowForm(false)
+        setEditSale(null)
+        setPendingCancellation(null)
+      }
+      const message = err && typeof err === 'object' && 'message' in err ? String(err.message) : 'Não foi possível confirmar a operação. Tente novamente antes de iniciar outra venda.'
+      setError(message)
+      return false
+    } finally {
+      saving.current = false
+      setBusy(false)
+    }
   }
 
   // ── Novo registro ──
@@ -50,7 +98,7 @@ export function VendasClient({ initialSales: _ }: Props) {
   const [editItems, setEditItems] = useState<EditItem[]>([])
   const [editCustomer, setEditCustomer] = useState('')
   const [editPayment, setEditPayment] = useState<PaymentMethod>('pix')
-  const [editStatus, setEditStatus] = useState<SaleWithStatus['saleStatus']>('aprovado')
+  const [editStatus, setEditStatus] = useState<NonNullable<Sale['status']>>('aprovado')
   const [editDiscount, setEditDiscount] = useState('0')      // % de desconto
   const [editTotalOverride, setEditTotalOverride] = useState('') // valor manual
   const [addProductId, setAddProductId] = useState('')
@@ -70,7 +118,7 @@ export function VendasClient({ initialSales: _ }: Props) {
     setEditItems(sale.items.map(i => ({ ...i })))
     setEditCustomer(sale.customer_name || '')
     setEditPayment(sale.payment_method)
-    setEditStatus(sale.saleStatus)
+    setEditStatus(sale.status ?? 'aprovado')
     setEditDiscount('0')
     setEditTotalOverride('')
     setAddProductId('')
@@ -114,14 +162,10 @@ export function VendasClient({ initialSales: _ }: Props) {
       total: editTotal,
       customer_name: editCustomer || undefined,
       payment_method: editPayment,
+      status: editStatus,
+      revision: editSale.revision,
     }
-    await upsertSale(storeId, changes).catch(console.error)
-    setSales(prev => prev.map(s => s.id === editSale.id ? {
-      ...s,
-      ...changes,
-      saleStatus: editStatus,
-    } : s))
-    setEditSale(null)
+    if (await persist(changes)) setEditSale(null)
   }
 
   // ─────────────── filtros ───────────────
@@ -154,7 +198,11 @@ export function VendasClient({ initialSales: _ }: Props) {
   const handleRegister = async () => {
     const product = storeProducts.find(p => p.id === formProduct)
     if (!product) return
-    const qty = Number(formQty) || 1
+    const qty = Number(formQty)
+    if (!Number.isInteger(qty) || qty < 1 || qty > product.stock_qty) {
+      setError('Informe uma quantidade inteira dentro do estoque disponível.')
+      return
+    }
     const total = (product.promo_price ?? product.price) * qty
     const payload = {
       items: [{ product_id: product.id, product_name: product.name, quantity: qty, unit_price: product.promo_price ?? product.price }],
@@ -162,34 +210,23 @@ export function VendasClient({ initialSales: _ }: Props) {
       payment_method: formPayment,
       customer_name: formCustomer || undefined,
     }
-    const saved = await insertSale(storeId, payload).catch(() => null)
-
-    // Decrementa o estoque do produto vendido (persiste + atualiza UI)
-    const newStock = Math.max(0, product.stock_qty - qty)
-    upsertProduct(storeId, { id: product.id, stock_qty: newStock }).catch(console.error)
-    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock_qty: newStock } : p))
-
-    const newSale: SaleWithStatus = {
-      id: saved?.id ?? `VD${String(Date.now()).slice(-4)}`,
-      created_at: saved?.created_at ?? new Date().toISOString(),
-      ...payload,
-      saleStatus: 'aprovado',
+    newSaleId.current ??= crypto.randomUUID()
+    if (await persist({ ...payload, id: newSaleId.current, revision: 0, status: 'aprovado' })) {
+      newSaleId.current = null
+      setShowForm(false)
+      setFormProduct(''); setFormQty('1'); setFormCustomer('')
     }
-    setSales(prev => [newSale, ...prev])
-    setShowForm(false)
-    setFormProduct(''); setFormQty('1'); setFormCustomer('')
   }
 
-  const changeStatus = (id: string, status: SaleWithStatus['saleStatus']) =>
-    setSales(prev => prev.map(s => s.id === id ? { ...s, saleStatus: status } : s))
-
-  const removeSale = async (id: string) => {
-    if (!confirm('Remover esta venda?')) return
-    await deleteSale(storeId, id).catch(console.error)
-    setSales(prev => prev.filter(s => s.id !== id))
+  const changeStatus = async (id: string, status: NonNullable<Sale['status']>) => {
+    const sale = rawSales.find(s => s.id === id)
+    if (!sale) return
+    if (status === 'cancelado') { setPendingCancellation(sale); return }
+    await persist({ ...sale, status })
   }
 
   const statusColors = {
+    historico: 'bg-zinc-500/20 text-zinc-300 border-zinc-500/30',
     aprovado: 'bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--accent)]/30',
     pendente: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
     cancelado: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -203,8 +240,36 @@ export function VendasClient({ initialSales: _ }: Props) {
 
   const inputCls = 'w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all'
 
+  if (!_loaded) return <p role="status" className="p-6 text-zinc-300">Carregando vendas e estoque...</p>
+
   return (
     <div className="space-y-6 max-w-7xl">
+      {pendingCancellation && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4">
+        <section role="dialog" aria-modal="true" aria-labelledby="cancel-sale-title" className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#141414] p-6">
+          <h2 id="cancel-sale-title" className="text-lg font-semibold">Cancelar venda?</h2>
+          <p className="my-4 text-sm text-zinc-300">Os itens voltarão ao estoque e o histórico será preservado.</p>
+          <div className="flex gap-3">
+            <button autoFocus disabled={busy} onClick={()=>setPendingCancellation(null)} className="flex-1 rounded-xl border border-white/20 px-3 py-3">Manter venda</button>
+            <button disabled={busy} onClick={async()=>{if(await persist({...pendingCancellation,status:'cancelado'}))setPendingCancellation(null)}} className="flex-1 rounded-xl bg-red-600 px-3 py-3 text-white">{busy ? 'Salvando...' : 'Confirmar cancelamento'}</button>
+          </div>
+        </section>
+      </div>}
+      {_error && <p role="alert" className="text-red-300">Não foi possível atualizar os dados. Recarregue a página antes de continuar.</p>}
+      {recovery && <div role="status" className="rounded-xl border border-amber-400/40 bg-amber-950 p-4 text-sm text-amber-100">
+        <p>Existe uma operação sem confirmação. Verifique a mesma operação antes de registrar outra venda.</p>
+        <button disabled={busy} className="mt-3 min-h-11 rounded-lg bg-amber-100 px-4 font-semibold text-amber-950 disabled:opacity-50" onClick={async () => {
+          if (await persist(recovery.sale, true)) {
+            newSaleId.current = null
+            setShowForm(false)
+            setEditSale(null)
+            setPendingCancellation(null)
+            setFormProduct(''); setFormQty('1'); setFormCustomer('')
+          }
+        }}>{busy ? 'Verificando...' : 'Verificar operação pendente'}</button>
+      </div>}
+      {error && <div role="alert" className="fixed bottom-4 left-4 right-4 z-[70] rounded-xl border border-red-400 bg-red-950 p-4 text-sm text-white shadow-xl">{error}<button className="ml-4 underline" onClick={() => setError(null)}>Fechar</button></div>}
+      {rawSales.some(s => !s.stock_managed) && <p className="text-sm text-amber-300">Vendas antigas estão disponíveis para consulta e fora dos totais por situação. A situação e o estoque desses registros precisam de conferência antes de permitir alterações.</p>}
+      <p className="text-xs text-zinc-400">Vendas pendentes reservam estoque. Cancelar devolve os itens. A situação da venda não confirma o recebimento do pagamento.</p>
       {/* Header */}
       <div className="space-y-1">
         <button onClick={() => router.back()} className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-white transition-colors group">
@@ -227,7 +292,7 @@ export function VendasClient({ initialSales: _ }: Props) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <TrendingUp size={16} className="text-[var(--accent)]" />
-              <span className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">Receita aprovada</span>
+              <span className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider">Vendas aprovadas</span>
             </div>
             <span className="text-xs text-zinc-600">{approved.length} vendas</span>
           </div>
@@ -314,7 +379,25 @@ export function VendasClient({ initialSales: _ }: Props) {
       </div>
 
       {/* Tabela */}
-      <div className="rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
+      <div className="space-y-3 sm:hidden">
+        {filtered.map(sale=><article key={sale.id} className="rounded-2xl border border-white/10 bg-[#141414] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-zinc-400" title={sale.id}>#{sale.id.slice(0,8).toUpperCase()}</span>
+            <span className={cn('rounded-full border px-2 py-1 text-xs',statusColors[sale.saleStatus])}>{sale.saleStatus==='historico'?'A conferir':sale.saleStatus}</span>
+          </div>
+          <p className="mt-3 font-medium">{sale.items.map(i=>`${i.product_name} (${i.quantity}x)`).join(', ')}</p>
+          <p className="mt-1 text-sm text-zinc-400">{sale.customer_name || 'Cliente não informado'}</p>
+          <div className="my-3 flex justify-between gap-3"><strong className="text-[var(--accent)]">{formatCurrency(sale.total)}</strong><span className="text-sm text-zinc-300">{paymentMethodLabel[sale.payment_method]}</span></div>
+          <p className="text-xs text-zinc-400">{formatDateTime(sale.created_at)}</p>
+          {sale.stock_managed && <div className="mt-4 flex flex-wrap gap-2">
+            <button disabled={busy} onClick={()=>openEdit(sale)} className="min-h-11 rounded-xl border border-white/20 px-4 text-sm">Editar venda</button>
+            {sale.saleStatus==='pendente' && <button disabled={busy} onClick={()=>changeStatus(sale.id,'aprovado')} className="min-h-11 rounded-xl border border-green-500/40 px-4 text-sm text-green-300">Aprovar</button>}
+            {sale.saleStatus!=='cancelado' && <button disabled={busy} onClick={()=>changeStatus(sale.id,'cancelado')} className="min-h-11 rounded-xl border border-red-500/40 px-4 text-sm text-red-300">Cancelar venda</button>}
+          </div>}
+        </article>)}
+        {filtered.length===0 && <p className="p-6 text-center text-zinc-400">Nenhuma venda encontrada.</p>}
+      </div>
+      <div className="hidden sm:block rounded-2xl bg-[#141414] border border-white/[0.06] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -337,7 +420,7 @@ export function VendasClient({ initialSales: _ }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     <span className={cn('text-[10px] font-semibold px-2 py-1 rounded-full border', statusColors[sale.saleStatus])}>
-                      {sale.saleStatus}
+                        {sale.saleStatus === 'historico' ? 'A conferir' : sale.saleStatus}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm font-bold text-[var(--accent)]">{formatCurrency(sale.total)}</td>
@@ -345,26 +428,22 @@ export function VendasClient({ initialSales: _ }: Props) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       {/* Editar */}
-                      <button onClick={() => openEdit(sale)} title="Editar venda"
+                      <button disabled={busy || !sale.stock_managed} onClick={() => openEdit(sale)} title="Editar venda"
                         className="p-1.5 rounded-lg text-zinc-600 hover:text-blue-400 hover:bg-blue-500/10 active:scale-90 transition-all">
                         <Edit2 size={13} />
                       </button>
                       {sale.saleStatus === 'pendente' && (
-                        <button onClick={() => changeStatus(sale.id, 'aprovado')} title="Aprovar"
+                        <button disabled={busy || !sale.stock_managed} onClick={() => changeStatus(sale.id, 'aprovado')} title="Aprovar"
                           className="p-1.5 rounded-lg text-zinc-500 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 active:scale-90 transition-all">
                           <CheckCircle size={13} />
                         </button>
                       )}
                       {sale.saleStatus !== 'cancelado' && (
-                        <button onClick={() => changeStatus(sale.id, 'cancelado')} title="Cancelar"
+                        <button disabled={busy || !sale.stock_managed} onClick={() => changeStatus(sale.id, 'cancelado')} title="Cancelar"
                           className="p-1.5 rounded-lg text-zinc-500 hover:text-yellow-400 hover:bg-yellow-500/10 active:scale-90 transition-all">
                           <XCircle size={13} />
                         </button>
                       )}
-                      <button onClick={() => removeSale(sale.id)} title="Remover"
-                        className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 active:scale-90 transition-all">
-                        <Trash2 size={13} />
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -431,7 +510,7 @@ export function VendasClient({ initialSales: _ }: Props) {
             </div>
             <div className="flex gap-3 px-6 py-4 border-t border-white/[0.06]">
               <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] active:scale-95 transition-all">Cancelar</button>
-              <button onClick={handleRegister} disabled={!formProduct} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all">Registrar</button>
+              <button onClick={handleRegister} disabled={!formProduct || busy} className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all">{busy ? 'Salvando...' : 'Registrar'}</button>
             </div>
           </div>
         </div>
@@ -614,7 +693,7 @@ export function VendasClient({ initialSales: _ }: Props) {
               <button onClick={() => setEditSale(null)} className="flex-1 py-2.5 border border-white/[0.08] text-zinc-400 rounded-xl text-sm hover:bg-white/[0.04] active:scale-95 transition-all">Cancelar</button>
               <button
                 onClick={saveEdit}
-                disabled={editItems.length === 0}
+                disabled={editItems.length === 0 || busy}
                 className="flex-1 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent)] active:scale-95 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-all"
               >
                 Salvar alterações

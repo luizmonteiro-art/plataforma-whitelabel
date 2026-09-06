@@ -26,12 +26,16 @@ export default function ConfiguracoesAdminPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('loading')
   const [errorMsg, setErrorMsg] = useState('')
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [logoUrlDraft, setLogoUrlDraft] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     getStoreConfig(storeId)
       .then(data => {
-        if (data) setConfig(data)
+        if (data) {
+          setConfig(data)
+          setLogoUrlDraft(data.logo_url ?? '')
+        }
         setStatus('idle')
       })
       .catch(() => {
@@ -60,6 +64,11 @@ export default function ConfiguracoesAdminPage() {
   const set = (key: keyof StoreConfig, value: string) =>
     setConfig(c => ({ ...c, [key]: value }))
 
+  const applyLogoUrl = () => {
+    const value = logoUrlDraft.trim()
+    set('logo_url', value)
+  }
+
   const handleLogoFile = async (files: FileList | null) => {
     const file = files?.[0]
     if (!file || !file.type.startsWith('image/')) return
@@ -67,6 +76,7 @@ export default function ConfiguracoesAdminPage() {
     try {
       const url = await uploadImage(file, 'logos', storeId)
       set('logo_url', url)
+      setLogoUrlDraft(url)
     } catch (e) {
       console.error(e)
       setStatus('error')
@@ -190,6 +200,24 @@ export default function ConfiguracoesAdminPage() {
               className="sr-only"
               onChange={e => handleLogoFile(e.target.files)}
             />
+            <div className="mt-4 w-full space-y-2">
+              <label className="block text-xs font-medium text-zinc-400">Ou cole a URL do logo</label>
+              <div className="flex gap-2">
+                <input
+                  value={logoUrlDraft}
+                  onChange={e => setLogoUrlDraft(e.target.value)}
+                  placeholder="https://..."
+                  className="flex-1 bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--accent)]/40 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={applyLogoUrl}
+                  className="shrink-0 inline-flex items-center rounded-xl border border-white/[0.08] px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/[0.04] transition-all"
+                >
+                  Aplicar
+                </button>
+              </div>
+            </div>
           </div>
           <p className="text-[11px] text-zinc-600 mt-3">
             Depois de enviar, clique em <span className="text-zinc-400">Salvar configurações</span> no fim da página.

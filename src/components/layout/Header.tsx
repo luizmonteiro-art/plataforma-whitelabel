@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import {
   Menu, X, Smartphone, Wrench, Calendar, Info,
   ChevronRight, Shield, Phone, MapPin, Clock,
-  MessageCircle, AtSign, ChevronDown, Store,
+  MessageCircle, ChevronDown, Store,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CustomerMenu } from './CustomerMenu'
@@ -46,6 +46,10 @@ export function Header({ brand }: { brand: Brand }) {
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
   const infoRef = useRef<HTMLDivElement>(null)
+  const closeMenus = () => {
+    setDrawerOpen(false)
+    setInfoOpen(false)
+  }
 
   useEffect(() => {
     let ticking = false
@@ -60,8 +64,6 @@ export function Header({ brand }: { brand: Brand }) {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  useEffect(() => { setDrawerOpen(false); setInfoOpen(false) }, [pathname])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -97,7 +99,7 @@ export function Header({ brand }: { brand: Brand }) {
           </div>
 
           {/* LOGO */}
-          <Link href="/" className="group relative flex items-center gap-2">
+          <Link href="/" onClick={closeMenus} className="group relative flex items-center gap-2">
             <span className="absolute -inset-3 rounded-2xl bg-[var(--accent)]/0 group-hover:bg-[var(--accent)]/[0.06] transition-all duration-300 blur-sm" />
             <span className="relative flex items-center gap-1.5 transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 group-active:scale-95 group-active:translate-y-0">
               <BrandLogo brand={brand} size="md" />
@@ -113,6 +115,7 @@ export function Header({ brand }: { brand: Brand }) {
               <Link
                 key={href}
                 href={href}
+                onClick={closeMenus}
                 className={cn(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
                   pathname === href || pathname.startsWith(href + '/')
@@ -156,6 +159,7 @@ export function Header({ brand }: { brand: Brand }) {
                         <Link
                           key={label}
                           href={href}
+                          onClick={closeMenus}
                           target={external && href.startsWith('http') ? '_blank' : undefined}
                           rel={external && href.startsWith('http') ? 'noopener noreferrer' : undefined}
                           className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] transition-all group/item"
@@ -178,6 +182,7 @@ export function Header({ brand }: { brand: Brand }) {
                           <Link
                             key={href}
                             href={href}
+                            onClick={closeMenus}
                             className="flex items-center justify-center px-2 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-500 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.12] transition-all"
                           >
                             {label}
@@ -193,6 +198,7 @@ export function Header({ brand }: { brand: Brand }) {
             {/* CTA Agendar */}
             <Link
               href="/agendar"
+              onClick={closeMenus}
               className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent)] text-black text-sm font-bold rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[var(--accent)]/25 hover:scale-[1.03] active:scale-95"
             >
               <Calendar size={14} />
@@ -202,6 +208,7 @@ export function Header({ brand }: { brand: Brand }) {
             {/* Admin link discreto */}
             <Link
               href="/admin"
+              onClick={closeMenus}
               className="hidden md:flex p-2 rounded-lg text-zinc-700 hover:text-zinc-500 hover:bg-white/[0.04] transition-all"
               title="Área administrativa"
             >
@@ -271,6 +278,7 @@ export function Header({ brand }: { brand: Brand }) {
             <Link
               key={href}
               href={href}
+              onClick={closeMenus}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
                 pathname === href || pathname.startsWith(href + '/')
@@ -289,6 +297,7 @@ export function Header({ brand }: { brand: Brand }) {
         <div className="p-4 border-t border-white/[0.06] space-y-2">
           <Link
             href="/agendar"
+            onClick={closeMenus}
             className="flex items-center justify-center gap-2 w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent)] text-black text-sm font-bold rounded-xl transition-all active:scale-95"
           >
             <Calendar size={16} />
@@ -296,6 +305,7 @@ export function Header({ brand }: { brand: Brand }) {
           </Link>
           <Link
             href="/admin"
+            onClick={closeMenus}
             className="flex items-center justify-center gap-2 w-full py-2.5 border border-white/[0.07] text-zinc-600 hover:text-zinc-400 text-xs font-medium rounded-xl transition-all hover:bg-white/[0.03]"
           >
             <Shield size={13} />

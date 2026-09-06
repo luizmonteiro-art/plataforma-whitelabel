@@ -345,7 +345,7 @@ export default function PromocoesAdminPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-white flex items-center gap-2"><Newspaper size={16} className="text-[var(--accent)]" /> Feed de Novidades</h2>
-              <p className="text-xs text-zinc-600 mt-0.5">Posts aparecem na seção "Novidades" da home. Adicione fotos dos produtos, promoções e lançamentos.</p>
+              <p className="text-xs text-zinc-600 mt-0.5">Posts aparecem na seção &quot;Novidades&quot; da home. Adicione fotos dos produtos, promoções e lançamentos.</p>
             </div>
             <button onClick={() => setShowPostForm(true)} className="flex items-center gap-2 px-3 py-2 bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/20 rounded-xl text-xs font-medium transition-all active:scale-95">
               <Plus size={14} /> Novo post
