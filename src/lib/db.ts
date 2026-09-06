@@ -8,6 +8,7 @@
 import { cache } from 'react'
 import { supabase as anonClient } from './supabase'
 import { getSupabaseBrowser } from './supabase-browser'
+import { compressImage } from './image'
 import type { Product, Service, Appointment, ServiceOrder, Sale, Banner, Quote } from '@/types'
 
 /**
@@ -276,11 +277,12 @@ const STORAGE_BUCKET = 'store-assets'
  * gigantes no banco e mascarava problemas de upload/RLS.)
  */
 export async function uploadImage(file: File, folder: string, storeId: string): Promise<string> {
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const compressed = await compressImage(file)
+  const ext = compressed.name.split('.').pop()?.toLowerCase() || 'jpg'
   const path = `${storeId}/${folder}/${crypto.randomUUID()}.${ext}`
   const { error } = await db().storage
     .from(STORAGE_BUCKET)
-    .upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type })
+    .upload(path, compressed, { upsert: true, cacheControl: '3600', contentType: compressed.type })
   if (error) throw error
   return db().storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl
 }

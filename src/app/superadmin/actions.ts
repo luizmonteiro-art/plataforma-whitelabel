@@ -716,3 +716,26 @@ export async function deleteStore(id: string): Promise<ActionResult> {
   revalidatePath('/superadmin')
   return { ok: true, message: `Loja "${store.slug}" excluida por completo.` }
 }
+
+/** Gera uma nova senha temporaria para o dono da loja (esqueceu a senha). */
+export async function resetStorePassword(id: string): Promise<ActionResult> {
+  const blocked = await ensureSuperadmin()
+  if (blocked) return blocked
+
+  const admin = getSupabaseAdmin()
+  if (!admin) return { ok: false, error: 'Service role nao configurada no servidor.' }
+
+  const { data: store } = await admin.from('stores').select('slug, admin_email').eq('id', id).maybeSingle()
+  if (!store) return { ok: false, error: 'Loja nao encontrada.' }
+
+  const email = (store.admin_email ?? '').trim().toLowerCase()
+  const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
+  const user = list?.users?.find((entry) => (entry.email ?? '').toLowerCase() === email)
+  if (!user) return { ok: false, error: 'Usuario do lojista nao encontrado no Auth.' }
+
+  const password = genPassword()
+  const { error } = await admin.auth.admin.updateUserById(user.id, { password })
+  if (error) return { ok: false, error: 'Falha ao gerar nova senha: ' + error.message }
+
+  return { ok: true, message: `Nova senha gerada para "${store.slug}".`, tempPassword: password, slug: store.slug }
+}

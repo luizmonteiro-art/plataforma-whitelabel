@@ -14,6 +14,7 @@ import {
   createStore,
   deleteRequest,
   deleteStore,
+  resetStorePassword,
   setStoreActive,
   updateRequestStatus,
   type CreateStoreInput,
@@ -224,6 +225,30 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
       setToast(res.ok ? { kind: 'ok', text: res.message } : { kind: 'err', text: res.error })
       router.refresh()
       finishToast(5000)
+    })
+  }
+
+  const resetPassword = (store: StoreRow) => {
+    const ok = confirm(`Gerar uma nova senha temporaria para "${store.admin_email}"? A senha atual deixa de funcionar.`)
+    if (!ok) return
+
+    startTransition(async () => {
+      const res = await resetStorePassword(store.id)
+      if (res.ok) {
+        setToast({ kind: 'ok', text: res.message })
+        if (res.tempPassword) {
+          const cfg = firstStoreConfig(store)
+          setTempPass({
+            email: store.admin_email,
+            pass: res.tempPassword,
+            slug: res.slug ?? store.slug,
+            whatsapp: cfg?.whatsapp ?? '',
+          })
+        }
+      } else {
+        setToast({ kind: 'err', text: res.error })
+      }
+      finishToast(6000)
     })
   }
 
@@ -641,6 +666,9 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
                       </a>
                       <button onClick={() => toggleActive(store)} disabled={pending} className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all disabled:opacity-50 ${store.is_active ? 'border border-white/[0.08] text-zinc-300 hover:bg-white/[0.05]' : 'bg-[#79e2ad] text-black hover:bg-[#9decc2]'}`}>
                         {store.is_active ? <><Power size={12} /> Desativar</> : <><Check size={12} /> Ativar</>}
+                      </button>
+                      <button onClick={() => resetPassword(store)} disabled={pending} title="Gerar nova senha temporaria para o lojista" className="flex items-center gap-1 rounded-lg border border-white/[0.08] px-2.5 py-1.5 text-[11px] text-zinc-300 hover:bg-white/[0.05] transition-all disabled:opacity-50">
+                        <KeyRound size={12} /> Resetar senha
                       </button>
                       <button onClick={() => removeStore(store)} disabled={pending} title="Excluir loja e todos os dados (permanente)" className="flex items-center gap-1 rounded-lg border border-red-500/30 px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:bg-red-500/10 hover:border-red-500/50 transition-all disabled:opacity-50">
                         <Trash2 size={12} /> Excluir
