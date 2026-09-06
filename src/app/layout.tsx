@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
-import { headers } from "next/headers";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { getStoreConfig } from "@/lib/db";
 import { getStoreIdFromHeaders } from "@/lib/store-headers";
@@ -8,6 +7,12 @@ import StoreTheme from "@/components/StoreTheme";
 
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const display = Space_Grotesk({
+  variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
 });
@@ -48,7 +53,7 @@ export default async function RootLayout({
   } catch {}
 
   return (
-    <html lang="pt-BR" className={`${inter.variable} h-full antialiased`} style={{ backgroundColor: '#0a0a0a' }}>
+    <html lang="pt-BR" className={`${inter.variable} ${display.variable} h-full antialiased`} style={{ backgroundColor: '#0a0a0a' }}>
       <body className="min-h-full flex flex-col bg-[#0a0a0a] text-white font-[family-name:var(--font-inter)]">
         <StoreTheme accentColor={accentColor} />
         {children}

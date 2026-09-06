@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07130F"/><stop offset="1" stop-color="#0D211B"/></linearGradient>
+    <linearGradient id="mint" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#C9F7DF"/><stop offset="1" stop-color="#57D697"/></linearGradient>
+    <pattern id="grid" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0H0V54" fill="none" stroke="#C9F7DF" stroke-opacity=".045"/></pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="28"/></filter>
+  </defs>
+  <rect width="1440" height="960" fill="url(#bg)"/>
+  <rect width="1440" height="960" fill="url(#grid)"/>
+  <circle cx="1200" cy="80" r="220" fill="#79E2AD" opacity=".08" filter="url(#glow)"/>
+  <g transform="translate(74 66)">
+    <rect width="78" height="78" rx="23" fill="#0D211B" stroke="#315E4D" stroke-width="2"/>
+    <path d="M19 59V21" stroke="#79E2AD" stroke-width="11" stroke-linecap="round"/>
+    <path d="M24 22L39 44" stroke="#C9F7DF" stroke-width="11" stroke-linecap="round"/>
+    <path d="M39 44L54 22" stroke="#9DECC2" stroke-width="11" stroke-linecap="round"/>
+    <path d="M59 21V59" stroke="#57D697" stroke-width="11" stroke-linecap="round"/>
+    <text x="103" y="47" fill="#F4FAF6" font-family="Space Grotesk,Arial" font-size="39" font-weight="700" letter-spacing="-1.5">MODUS</text>
+    <text x="104" y="71" fill="#86B99F" font-family="Inter,Arial" font-size="11" font-weight="700" letter-spacing="3">OPERAÇÃO DIGITAL</text>
+  </g>
+  <text x="74" y="206" fill="#86B99F" font-family="Inter,Arial" font-size="13" font-weight="700" letter-spacing="3">DIREÇÃO DE MARCA 01 · 06 SET 2026</text>
+  <text x="74" y="278" fill="#F4FAF6" font-family="Space Grotesk,Arial" font-size="62" font-weight="700" letter-spacing="-3">Seu negócio em modo</text>
+  <text x="74" y="344" fill="url(#mint)" font-family="Space Grotesk,Arial" font-size="62" font-weight="700" letter-spacing="-3">de avançar.</text>
+  <text x="78" y="394" fill="#A7B9B0" font-family="Inter,Arial" font-size="19">Estrutura modular, operação clara e tecnologia acessível.</text>
+
+  <g transform="translate(74 458)">
+    <text fill="#86B99F" font-family="Inter,Arial" font-size="12" font-weight="700" letter-spacing="2.5">PALETA PRINCIPAL</text>
+    <g transform="translate(0 35)"><rect width="150" height="108" rx="20" fill="#07130F" stroke="#315E4D"/><text x="16" y="76" fill="#F4FAF6" font-family="Inter,Arial" font-size="13" font-weight="600">NOITE</text><text x="16" y="96" fill="#86B99F" font-family="Inter,Arial" font-size="11">#07130F</text></g>
+    <g transform="translate(166 35)"><rect width="150" height="108" rx="20" fill="#0D211B" stroke="#315E4D"/><text x="16" y="76" fill="#F4FAF6" font-family="Inter,Arial" font-size="13" font-weight="600">FLORESTA</text><text x="16" y="96" fill="#86B99F" font-family="Inter,Arial" font-size="11">#0D211B</text></g>
+    <g transform="translate(332 35)"><rect width="150" height="108" rx="20" fill="#79E2AD"/><text x="16" y="76" fill="#0B1B16" font-family="Inter,Arial" font-size="13" font-weight="700">MENTA ATIVA</text><text x="16" y="96" fill="#274D3E" font-family="Inter,Arial" font-size="11">#79E2AD</text></g>
+    <g transform="translate(498 35)"><rect width="150" height="108" rx="20" fill="#C9F7DF"/><text x="16" y="76" fill="#0B1B16" font-family="Inter,Arial" font-size="13" font-weight="700">MENTA CLARA</text><text x="16" y="96" fill="#477060" font-family="Inter,Arial" font-size="11">#C9F7DF</text></g>
+    <g transform="translate(664 35)"><rect width="150" height="108" rx="20" fill="#F4FAF6"/><text x="16" y="76" fill="#0B1B16" font-family="Inter,Arial" font-size="13" font-weight="700">NÉVOA</text><text x="16" y="96" fill="#477060" font-family="Inter,Arial" font-size="11">#F4FAF6</text></g>
+  </g>
+
+  <g transform="translate(930 212)">
+    <rect width="430" height="498" rx="34" fill="#0A1914" stroke="#315E4D" stroke-opacity=".7"/>
+    <text x="34" y="50" fill="#86B99F" font-family="Inter,Arial" font-size="12" font-weight="700" letter-spacing="2.5">COMPONENTES DA MARCA</text>
+    <text x="34" y="105" fill="#F4FAF6" font-family="Space Grotesk,Arial" font-size="32" font-weight="700" letter-spacing="-1">Operação organizada.</text>
+    <text x="34" y="140" fill="#A7B9B0" font-family="Inter,Arial" font-size="15">Clareza para decidir o próximo passo.</text>
+    <rect x="34" y="182" width="186" height="50" rx="25" fill="#79E2AD"/><text x="61" y="213" fill="#0B1B16" font-family="Inter,Arial" font-size="14" font-weight="700">Começar agora →</text>
+    <rect x="232" y="182" width="164" height="50" rx="25" fill="none" stroke="#86B99F" stroke-opacity=".55"/><text x="266" y="213" fill="#F4FAF6" font-family="Inter,Arial" font-size="14" font-weight="600">Ver produto</text>
+    <rect x="34" y="266" width="362" height="94" rx="22" fill="#10271F" stroke="#315E4D"/>
+    <circle cx="70" cy="313" r="16" fill="#79E2AD" opacity=".15"/><path d="M62 313h16M70 305v16" stroke="#79E2AD" stroke-width="2" stroke-linecap="round"/>
+    <text x="99" y="304" fill="#F4FAF6" font-family="Inter,Arial" font-size="14" font-weight="700">Tudo em um só lugar</text>
+    <text x="99" y="328" fill="#86B99F" font-family="Inter,Arial" font-size="12">Vitrine, estoque e atendimento.</text>
+    <text x="34" y="412" fill="#86B99F" font-family="Inter,Arial" font-size="11" font-weight="700" letter-spacing="2">PERSONALIDADE</text>
+    <text x="34" y="450" fill="#C9F7DF" font-family="Space Grotesk,Arial" font-size="19" font-weight="600">CLARA · PRÁTICA · SEGURA · PRÓXIMA</text>
+  </g>
+
+  <g transform="translate(74 680)">
+    <text fill="#86B99F" font-family="Inter,Arial" font-size="12" font-weight="700" letter-spacing="2.5">SISTEMA DE LOGO</text>
+    <g transform="translate(0 32)"><rect width="168" height="168" rx="32" fill="#F3F7F4"/><rect x="45" y="45" width="78" height="78" rx="23" fill="#0D211B" stroke="#315E4D" stroke-width="2"/><path d="M64 104V66M69 67L84 89M84 89L99 67M104 66V104" stroke="#79E2AD" stroke-width="10" stroke-linecap="round"/></g>
+    <g transform="translate(190 32)"><rect width="624" height="168" rx="32" fill="#F3F7F4"/><rect x="38" y="45" width="78" height="78" rx="23" fill="#0D211B" stroke="#315E4D" stroke-width="2"/><path d="M57 104V66M62 67L77 89M77 89L92 67M97 66V104" stroke="#79E2AD" stroke-width="10" stroke-linecap="round"/><text x="146" y="89" fill="#0B1B16" font-family="Space Grotesk,Arial" font-size="38" font-weight="700" letter-spacing="-1.5">MODUS</text><text x="147" y="113" fill="#477060" font-family="Inter,Arial" font-size="10" font-weight="700" letter-spacing="2.5">OPERAÇÃO DIGITAL</text></g>
+  </g>
+  <text x="1010" y="900" fill="#86B99F" font-family="Inter,Arial" font-size="12">M modular · caminho central · movimento</text>
+</svg>

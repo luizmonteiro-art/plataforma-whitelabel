@@ -15,6 +15,14 @@
   --muted: #1a1a1a;
   --muted-foreground: #a1a1aa;
   --accent: #22c55e;
+  --modus-night: #07130f;
+  --modus-forest: #0d211b;
+  --modus-border: #315e4d;
+  --modus-mint: #79e2ad;
+  --modus-mint-light: #c9f7df;
+  --modus-ink: #0b1b16;
+  --modus-fog: #f4faf6;
+  --modus-sage: #86b99f;
 }
 
 * {
@@ -63,6 +71,10 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
 }
 
 @keyframes shimmer {
