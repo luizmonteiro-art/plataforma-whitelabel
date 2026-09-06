@@ -375,8 +375,24 @@ drop policy if exists "store-assets upload" on storage.objects;
 drop policy if exists "store-assets escrita" on storage.objects;
 create policy "store-assets escrita" on storage.objects
   for all to authenticated
-  using (bucket_id = 'store-assets')
-  with check (bucket_id = 'store-assets');
+  using (
+    bucket_id = 'store-assets'
+    and exists (
+      select 1
+      from stores
+      where stores.id::text = split_part(name, '/', 1)
+        and stores.admin_email = (auth.jwt() ->> 'email')
+    )
+  )
+  with check (
+    bucket_id = 'store-assets'
+    and exists (
+      select 1
+      from stores
+      where stores.id::text = split_part(name, '/', 1)
+        and stores.admin_email = (auth.jwt() ->> 'email')
+    )
+  );
 
 -- ─── posts (Feed / Novidades da home) ─────────────────────────────
 create table if not exists posts (
