@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, serviceStatusLabel, serviceStatusColor, cn } from '@/lib/utils'
 import { useServiceOrders, useAdminStore, useStoreConfig } from '@/contexts/AdminStore'
 import { upsertServiceOrder, deleteServiceOrder } from '@/lib/db'
+import { novoIdOrdemServico } from '@/lib/ids'
 import type { ServiceOrder, ServiceStatus } from '@/types'
 
 interface Props { initialOrders: ServiceOrder[] }
@@ -52,23 +53,37 @@ export function ServicosClient({ initialOrders: _ }: Props) {
     if (!form.customer_name || !form.device_brand || !form.problem) return
     // id gerado no client — service_orders.id é TEXT PRIMARY KEY (sem default no DB)
     const newOrder: ServiceOrder = {
-      id: `OS${String(Date.now()).slice(-6)}`,
+      id: novoIdOrdemServico(),
       ...form,
       status: 'recebido',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
-    const saved = await upsertServiceOrder(storeId, newOrder).catch(() => newOrder)
+    const saved = await upsertServiceOrder(storeId, newOrder).catch(() => null)
+    if (!saved) {
+      alert('Não foi possível criar a ordem de serviço. Verifique sua conexão e tente novamente.')
+      return
+    }
     setOrders(prev => [saved, ...prev])
     setShowForm(false)
     setForm(emptyForm)
   }
 
-  const moveStatus = (id: string, status: ServiceStatus) => {
+  const moveStatus = async (id: string, status: ServiceStatus) => {
+    const anterior = orders.find(o => o.id === id)?.status
     const updated_at = new Date().toISOString()
-    upsertServiceOrder(storeId, { id, status, updated_at }).catch(console.error)
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status, updated_at } : o))
     if (editOrder?.id === id) setEditOrder(prev => prev ? { ...prev, status } : null)
+    try {
+      await upsertServiceOrder(storeId, { id, status, updated_at })
+    } catch {
+      // desfaz o otimismo: o card voltaria pra coluna errada no próximo reload
+      if (anterior) {
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: anterior } : o))
+        if (editOrder?.id === id) setEditOrder(prev => prev ? { ...prev, status: anterior } : null)
+      }
+      alert('Não foi possível mover a ordem de serviço. Verifique sua conexão e tente novamente.')
+    }
   }
 
   const finalizeOrder = async (id: string) => {

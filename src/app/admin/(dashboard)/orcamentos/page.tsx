@@ -5,6 +5,7 @@ import { Plus, Trash2, MessageCircle, X, FileText, Copy, CheckCircle, ArrowLeft,
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
 import { getServices, getQuotes, upsertQuote, deleteQuote, getStoreConfig, upsertServiceOrder } from '@/lib/db'
+import { novoIdOrdemServico } from '@/lib/ids'
 import { useServiceOrders, useAdminStore } from '@/contexts/AdminStore'
 import type { Service, Quote, QuoteItem, QuoteStatus, ServiceOrder } from '@/types'
 
@@ -109,17 +110,31 @@ export default function OrcamentosPage() {
       status: 'pendente',
       created_at: new Date().toISOString(),
     }
-    const saved = await upsertQuote(storeId, orc).catch(() => orc)
+    const saved = await upsertQuote(storeId, orc).catch(() => null)
+    if (!saved) {
+      alert('Não foi possível salvar o orçamento. Verifique sua conexão e tente novamente.')
+      return
+    }
     setOrcamentos(prev => [saved, ...prev])
     setShowForm(false)
     resetForm()
     setViewing(saved)
   }
 
-  const updateStatus = (id: string, status: OrcStatus) => {
-    upsertQuote(storeId, { id, status }).catch(console.error)
+  const updateStatus = async (id: string, status: OrcStatus) => {
+    const anterior = orcamentos.find(o => o.id === id)?.status
     setOrcamentos(prev => prev.map(o => o.id === id ? { ...o, status } : o))
     if (viewing?.id === id) setViewing(prev => prev ? { ...prev, status } : null)
+    try {
+      await upsertQuote(storeId, { id, status })
+    } catch {
+      // desfaz o otimismo: o status não chegou ao banco
+      if (anterior) {
+        setOrcamentos(prev => prev.map(o => o.id === id ? { ...o, status: anterior } : o))
+        if (viewing?.id === id) setViewing(prev => prev ? { ...prev, status: anterior } : null)
+      }
+      alert('Não foi possível alterar o status. Verifique sua conexão e tente novamente.')
+    }
   }
 
   const removeOrcamento = async (id: string) => {
@@ -134,7 +149,7 @@ export default function OrcamentosPage() {
     const problem = orc.items.map(i => i.descricao).filter(Boolean).join(', ') || 'Convertido de orçamento'
     // id gerado no client — service_orders.id é TEXT PRIMARY KEY (formato OS……)
     const order: ServiceOrder = {
-      id: `OS${String(Date.now()).slice(-6)}`,
+      id: novoIdOrdemServico(),
       customer_name: orc.customer_name,
       customer_phone: orc.customer_phone,
       device_brand: orc.device,
@@ -146,10 +161,14 @@ export default function OrcamentosPage() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
-    const saved = await upsertServiceOrder(storeId, order).catch(() => order)
+    const saved = await upsertServiceOrder(storeId, order).catch(() => null)
+    if (!saved) {
+      alert('Não foi possível criar a ordem de serviço. Verifique sua conexão e tente novamente — o orçamento continua aberto.')
+      return
+    }
     setServiceOrders(prev => [saved, ...prev])
     // Marca o orçamento como aprovado ao virar O.S.
-    updateStatus(orc.id, 'aprovado')
+    await updateStatus(orc.id, 'aprovado')
     setViewing(null)
     router.push('/admin/servicos')
   }
