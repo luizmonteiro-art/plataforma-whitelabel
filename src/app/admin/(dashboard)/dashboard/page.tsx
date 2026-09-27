@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { TrendingUp, Package, Calendar, Wrench, ArrowUpRight, AlertTriangle, Clock, X, CheckCircle2 } from 'lucide-react'
 import { formatCurrency, formatDateTime, serviceStatusLabel, serviceStatusColor, appointmentStatusLabel, cn } from '@/lib/utils'
 import { useAdminStore } from '@/contexts/AdminStore'
+import { PeriodoMeta } from '@/components/admin/PeriodoMeta'
 import Link from 'next/link'
 
 function MiniChart({ data }: { data: number[] }) {
@@ -106,6 +107,9 @@ export default function AdminDashboardPage() {
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-sm text-zinc-500 mt-0.5">Visão geral da loja</p>
       </div>
+
+      {/* Resultado do período, meta e lucro — só nos planos com FINANCEIRO */}
+      <PeriodoMeta />
 
       {/* Stat Cards */}
       {historicalCount > 0 && <p className="text-sm text-amber-300">{historicalCount} vendas antigas aguardam conferência e não entram nos totais por situação.</p>}

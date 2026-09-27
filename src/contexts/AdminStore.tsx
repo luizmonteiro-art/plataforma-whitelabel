@@ -7,10 +7,11 @@
  */
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import type { Product, Service, Appointment, ServiceOrder, Sale, Banner } from '@/types'
+import type { Product, Service, Appointment, ServiceOrder, Sale, Banner, Expense, DashboardPeriod } from '@/types'
 import {
   getProducts, getServices, getAppointments,
   getServiceOrders, getSales, getBanners, getStoreConfig,
+  getExpenses, getPeriods,
   type StoreConfig,
 } from '@/lib/db'
 import { getPlan, planHasModule, type ModuleFlag, type PlanDef } from '@/lib/plans'
@@ -27,6 +28,8 @@ interface AdminStoreState {
   serviceOrders: ServiceOrder[]
   sales: Sale[]
   banners: Banner[]
+  expenses: Expense[]
+  periods: DashboardPeriod[]
   _loaded: boolean
   _error: string | null
 }
@@ -38,6 +41,8 @@ interface AdminStoreActions {
   setServiceOrders: (fn: (prev: ServiceOrder[]) => ServiceOrder[]) => void
   setSales: (fn: (prev: Sale[]) => Sale[]) => void
   setBanners: (fn: (prev: Banner[]) => Banner[]) => void
+  setExpenses: (fn: (prev: Expense[]) => Expense[]) => void
+  setPeriods: (fn: (prev: DashboardPeriod[]) => DashboardPeriod[]) => void
   reload: () => Promise<void>
 }
 
@@ -66,13 +71,18 @@ export function AdminStoreProvider({ storeId, planId, children }: ProviderProps)
     serviceOrders: [],
     sales: [],
     banners: [],
+    expenses: [],
+    periods: [],
     _loaded: false,
     _error: null,
   })
 
   const load = async () => {
     try {
-      const [storeConfig, products, services, appointments, serviceOrders, sales, banners] =
+      // O financeiro só existe no plano que tem o módulo; nos demais as
+      // tabelas nem são consultadas (a RLS barraria, mas não custa não pedir).
+      const temFinanceiro = planHasModule(planId, 'FINANCEIRO')
+      const [storeConfig, products, services, appointments, serviceOrders, sales, banners, expenses, periods] =
         await Promise.all([
           getStoreConfig(storeId),
           getProducts(storeId),
@@ -81,6 +91,8 @@ export function AdminStoreProvider({ storeId, planId, children }: ProviderProps)
           getServiceOrders(storeId),
           getSales(storeId),
           getBanners(storeId),
+          temFinanceiro ? getExpenses(storeId) : Promise.resolve([]),
+          temFinanceiro ? getPeriods(storeId) : Promise.resolve([]),
         ])
       setState(s => ({
         ...s,
@@ -91,6 +103,8 @@ export function AdminStoreProvider({ storeId, planId, children }: ProviderProps)
         serviceOrders,
         sales,
         banners,
+        expenses,
+        periods,
         _loaded: true,
         _error: null,
       }))
@@ -118,6 +132,8 @@ export function AdminStoreProvider({ storeId, planId, children }: ProviderProps)
     setServiceOrders: make('serviceOrders'),
     setSales: make('sales'),
     setBanners: make('banners'),
+    setExpenses: make('expenses'),
+    setPeriods: make('periods'),
     reload: load,
   }
 
@@ -161,3 +177,6 @@ export const useAppointments  = () => { const s = useAdminStore(); return [s.app
 export const useServiceOrders = () => { const s = useAdminStore(); return [s.serviceOrders, s.setServiceOrders] as const }
 export const useSales         = () => { const s = useAdminStore(); return [s.sales,         s.setSales]         as const }
 export const useBanners       = () => { const s = useAdminStore(); return [s.banners,       s.setBanners]       as const }
+export const useExpenses      = () => { const s = useAdminStore(); return [s.expenses,      s.setExpenses]      as const }
+export const usePeriods       = () => { const s = useAdminStore(); return [s.periods,       s.setPeriods]       as const }
+export const useLoaded        = () => useAdminStore()._loaded

@@ -21,6 +21,7 @@ export const MODULES = [
   'AGENDAMENTOS',
   'PROMOCOES',
   'RELATORIOS',
+  'FINANCEIRO',
 ] as const
 
 export type ModuleFlag = (typeof MODULES)[number]
@@ -37,6 +38,7 @@ export const MODULE_LABELS: Record<ModuleFlag, string> = {
   AGENDAMENTOS: 'Agendamentos',
   PROMOCOES: 'Promoções & Feed',
   RELATORIOS: 'Relatórios avançados',
+  FINANCEIRO: 'Financeiro (despesas, fiado e meta)',
 }
 
 export interface PlanDef {
@@ -80,7 +82,7 @@ export const PLANS: Record<string, PlanDef> = {
     modules: [
       'VITRINE_PUBLICA', 'ESTOQUE', 'CONFIGURACOES',
       'DASHBOARD', 'VENDAS', 'ORDENS_SERVICO', 'ORCAMENTOS', 'AGENDAMENTOS',
-      'PROMOCOES', 'RELATORIOS',
+      'PROMOCOES', 'RELATORIOS', 'FINANCEIRO',
     ],
   },
 }
@@ -137,6 +139,8 @@ export const ROUTE_MODULE: { prefix: string; exact?: boolean; module: ModuleFlag
   { prefix: '/admin/orcamentos', module: 'ORCAMENTOS' },
   { prefix: '/admin/assistencia', module: 'AGENDAMENTOS' },
   { prefix: '/admin/promocoes', module: 'PROMOCOES' },
+  { prefix: '/admin/despesas', module: 'FINANCEIRO' },
+  { prefix: '/admin/devedores', module: 'FINANCEIRO' },
   { prefix: '/admin/configuracoes', module: 'CONFIGURACOES' },
 ]
 

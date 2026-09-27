@@ -5,7 +5,7 @@ import { Plus, TrendingUp, X, ChevronDown, Target, CheckCircle, XCircle, Search,
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, paymentMethodLabel, cn } from '@/lib/utils'
 import { useSales, useProducts, useAdminStore, usePlan } from '@/contexts/AdminStore'
-import { saveSaleAtomic } from '@/lib/db'
+import { saveSaleAtomic, setSalePaymentTerms } from '@/lib/db'
 import { pendingSaleJournal, type PendingSale } from '@/lib/pending-sale'
 import type { Sale, PaymentMethod } from '@/types'
 
@@ -93,6 +93,10 @@ export function VendasClient() {
   const [formQty, setFormQty] = useState('1')
   const [formPayment, setFormPayment] = useState<PaymentMethod>('pix')
   const [formCustomer, setFormCustomer] = useState('')
+  // ── Venda a prazo (fiado) ──
+  const [formAPrazo, setFormAPrazo] = useState(false)
+  const [formEntrada, setFormEntrada] = useState('')
+  const [formVencimento, setFormVencimento] = useState('')
 
   // ── Edição de venda ──
   const [editSale, setEditSale] = useState<SaleWithStatus | null>(null)
@@ -253,10 +257,26 @@ export function VendasClient() {
       customer_name: formCustomer || undefined,
     }
     newSaleId.current ??= crypto.randomUUID()
-    if (await persist({ ...payload, id: newSaleId.current, revision: 0, status: 'aprovado' })) {
+    const saleId = newSaleId.current
+    if (await persist({ ...payload, id: saleId, revision: 0, status: 'aprovado' })) {
+      // A condição de pagamento é gravada depois: save_sale_atomic é dona do
+      // estoque e do total, e não foi estendida para não arriscar suas defesas.
+      if (formAPrazo) {
+        try {
+          const atualizada = await setSalePaymentTerms(storeId, saleId, {
+            payment_type: 'aprazo',
+            valor_pago: Number(formEntrada.replace(',', '.')) || 0,
+            vencimento: formVencimento || null,
+          })
+          setSalesRaw(prev => prev.map(s => s.id === atualizada.id ? atualizada : s))
+        } catch {
+          setError('A venda foi registrada, mas não foi possível marcá-la como a prazo. Ajuste pela tela de Devedores.')
+        }
+      }
       newSaleId.current = null
       setShowForm(false)
       setFormProduct(''); setFormQty('1'); setFormCustomer('')
+      setFormAPrazo(false); setFormEntrada(''); setFormVencimento('')
     }
   }
 
@@ -560,6 +580,35 @@ export function VendasClient() {
                   </div>
                 </div>
               </div>
+              {hasModule('FINANCEIRO') && (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 space-y-3">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={formAPrazo}
+                      onChange={e => setFormAPrazo(e.target.checked)}
+                      className="accent-[var(--accent)]" />
+                    <span className="text-sm text-zinc-300">Venda a prazo (fiado)</span>
+                  </label>
+                  {formAPrazo && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1.5">Entrada (R$)</label>
+                        <input type="number" step="0.01" min="0" value={formEntrada}
+                          onChange={e => setFormEntrada(e.target.value)} placeholder="0,00"
+                          className={inputCls} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1.5">Vencimento</label>
+                        <input type="date" value={formVencimento}
+                          onChange={e => setFormVencimento(e.target.value)}
+                          className={inputCls} />
+                      </div>
+                      <p className="col-span-2 text-[10px] text-zinc-600">
+                        O saldo em aberto aparece na tela Devedores até ser quitado.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1.5">Cliente (opcional)</label>
                 <input value={formCustomer} onChange={e => setFormCustomer(e.target.value)} placeholder="Nome do cliente"

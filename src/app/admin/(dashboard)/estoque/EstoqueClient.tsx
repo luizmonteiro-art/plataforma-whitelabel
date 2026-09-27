@@ -13,7 +13,7 @@ interface Props { initialProducts: Product[] }
 
 const emptyForm = {
   name: '', brand: '', category: 'iphone' as ProductCategory,
-  condition: 'lacrado' as ProductCondition, price: '', promo_price: '',
+  condition: 'lacrado' as ProductCondition, price: '', promo_price: '', cost: '',
   stock_qty: '', description: '', images: [] as string[],
 }
 
@@ -61,6 +61,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
       name: p.name, brand: p.brand, category: p.category,
       condition: p.condition, price: String(p.price),
       promo_price: p.promo_price ? String(p.promo_price) : '',
+      cost: p.cost ? String(p.cost) : '',
       stock_qty: String(p.stock_qty), description: p.description,
       images: [...p.images],
     })
@@ -116,6 +117,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         ...editProduct, ...form,
         price: Number(form.price),
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
+        cost: form.cost ? Number(form.cost) : undefined,
         stock_qty: Number(form.stock_qty),
         images: form.images,
       }
@@ -135,6 +137,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
         images: form.images,
         price: Number(form.price),
         promo_price: form.promo_price ? Number(form.promo_price) : undefined,
+        cost: form.cost ? Number(form.cost) : undefined,
         stock_qty: Number(form.stock_qty),
       }
       const saved = await upsertProduct(storeId, payload).catch(e => { console.error(e); return null })
@@ -352,6 +355,14 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">Preço promo (R$)</label>
                   <input type="number" value={form.promo_price} onChange={e => setForm(f => ({ ...f, promo_price: e.target.value }))} placeholder="3899 (opcional)"
                     className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
+                </div>
+
+                {/* Custo — base do cálculo de lucro */}
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Custo (R$)</label>
+                  <input type="number" value={form.cost} onChange={e => setForm(f => ({ ...f, cost: e.target.value }))} placeholder="Quanto você pagou"
+                    className="w-full bg-[#1a1a1a] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)]/40 transition-all" />
+                  <p className="mt-1 text-[10px] text-zinc-600">Sem o custo, o painel mostra faturamento mas não consegue calcular lucro.</p>
                 </div>
 
                 {/* Qtd */}

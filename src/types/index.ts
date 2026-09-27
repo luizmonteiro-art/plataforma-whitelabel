@@ -11,6 +11,8 @@ export interface Product {
   description: string
   price: number
   promo_price?: number
+  /** Quanto a loja pagou pelo produto. Base de todo cálculo de lucro. */
+  cost?: number
   stock_qty: number
   category: ProductCategory
   brand: string
@@ -66,7 +68,17 @@ export interface SaleItem {
   product_name: string
   quantity: number
   unit_price: number
+  /**
+   * Custo unitário congelado no momento da venda. Ainda não é gravado — quem
+   * normaliza os itens é `save_sale_atomic`, que hoje descarta campos extras.
+   * Fica opcional para que o cálculo de lucro use o custo atual do produto
+   * como base e passe a usar o congelado assim que a função for estendida.
+   */
+  unit_cost?: number
 }
+
+/** À vista quita no ato; a prazo gera saldo devedor e aparece em Devedores. */
+export type SalePaymentType = 'avista' | 'aprazo'
 
 export interface Sale {
   id: string
@@ -76,9 +88,42 @@ export interface Sale {
   items: SaleItem[]
   total: number
   payment_method: PaymentMethod
+  payment_type?: SalePaymentType
+  /** Quanto já foi recebido desta venda. */
+  valor_pago?: number
+  vencimento?: string | null
   customer_name?: string
   customer_phone?: string
   notes?: string
+  created_at: string
+}
+
+export type ExpenseCategory =
+  | 'aluguel' | 'fornecedor' | 'peca' | 'salario'
+  | 'imposto' | 'marketing' | 'contas' | 'outros'
+
+export interface Expense {
+  id: string
+  description: string
+  amount: number
+  category: ExpenseCategory
+  payment_method: PaymentMethod
+  date: string
+  notes?: string
+  /** Falso quando é só registro contábil e não sai do caixa. */
+  affects_cash: boolean
+  created_at: string
+}
+
+/**
+ * Janela [started_at, ended_at) usada como filtro de leitura do dashboard.
+ * Fechar um período não move nem apaga venda nenhuma.
+ */
+export interface DashboardPeriod {
+  id: string
+  started_at: string
+  ended_at: string | null
+  meta_valor: number
   created_at: string
 }
 

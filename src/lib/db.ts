@@ -9,7 +9,10 @@ import { cache } from 'react'
 import { supabase as anonClient } from './supabase'
 import { getSupabaseBrowser } from './supabase-browser'
 import { compressImage } from './image'
-import type { Product, Service, Appointment, ServiceOrder, Sale, Banner, Quote } from '@/types'
+import type {
+  Product, Service, Appointment, ServiceOrder, Sale, Banner, Quote,
+  Expense, DashboardPeriod, SalePaymentType,
+} from '@/types'
 
 /**
  * Seletor de cliente Supabase, ciente do contexto (RLS):
@@ -236,6 +239,123 @@ export async function saveSaleAtomic(storeId: string, sale: Pick<Sale, 'id' | 'i
   if (error) throw error
   if (!data?.id) throw new Error('Não foi possível confirmar a gravação. Tente novamente para verificar a mesma operação.')
   return data as Sale
+}
+
+/**
+ * Registra um pagamento de venda a prazo. Vai por RPC porque `sales` tem
+ * insert/update revogados desde a migração de vendas atômicas — e porque o
+ * saldo precisa ser conferido com a linha travada, não no navegador.
+ */
+export async function registerSalePayment(storeId: string, saleId: string, valor: number) {
+  const { data, error } = await db().rpc('register_sale_payment', {
+    p_store_id: storeId, p_sale_id: saleId, p_valor: valor,
+  })
+  if (error?.code === 'PGRST202') throw new Error('Recebimento indisponível: a atualização do banco ainda não foi aplicada.')
+  if (error) throw error
+  if (!data?.id) throw new Error('Não foi possível confirmar o pagamento. Tente novamente.')
+  return data as Sale
+}
+
+/** Define se a venda é à vista ou a prazo, logo após ela ser gravada. */
+export async function setSalePaymentTerms(
+  storeId: string, saleId: string,
+  terms: { payment_type: SalePaymentType; valor_pago?: number; vencimento?: string | null },
+) {
+  const { data, error } = await db().rpc('set_sale_payment_terms', {
+    p_store_id: storeId, p_sale_id: saleId, p_payment_type: terms.payment_type,
+    p_valor_pago: terms.valor_pago ?? 0, p_vencimento: terms.vencimento ?? null,
+  })
+  if (error?.code === 'PGRST202') throw new Error('Condição de pagamento indisponível: a atualização do banco ainda não foi aplicada.')
+  if (error) throw error
+  return data as Sale
+}
+
+// ─── expenses (despesas) ──────────────────────────────────────────
+
+export async function getExpenses(storeId: string): Promise<Expense[]> {
+  const { data, error } = await db()
+    .from('expenses')
+    .select('*')
+    .eq('store_id', storeId)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as Expense[]
+}
+
+export async function upsertExpense(storeId: string, expense: Partial<Expense> & { id?: string }) {
+  const { data, error } = await db()
+    .from('expenses')
+    .upsert({ ...expense, store_id: storeId })
+    .select()
+    .single()
+  if (error) throw error
+  return data as Expense
+}
+
+export async function deleteExpense(storeId: string, id: string) {
+  const { error } = await db()
+    .from('expenses').delete().eq('id', id).eq('store_id', storeId)
+  if (error) throw error
+}
+
+// ─── dashboard_periods (período + meta) ───────────────────────────
+
+export async function getPeriods(storeId: string): Promise<DashboardPeriod[]> {
+  const { data, error } = await db()
+    .from('dashboard_periods')
+    .select('*')
+    .eq('store_id', storeId)
+    .order('started_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as DashboardPeriod[]
+}
+
+/** Cria o período inicial da loja, se ela ainda não tiver um aberto. */
+export async function ensureActivePeriod(storeId: string): Promise<DashboardPeriod | null> {
+  const periods = await getPeriods(storeId)
+  const ativo = periods.find(p => p.ended_at === null)
+  if (ativo) return ativo
+  const { data, error } = await db()
+    .from('dashboard_periods')
+    .insert({ store_id: storeId, meta_valor: 0 })
+    .select()
+    .single()
+  // Corrida entre duas abas: o índice único parcial barra o segundo insert e
+  // quem perdeu simplesmente lê o período que o outro criou.
+  if (error?.code === '23505') return (await getPeriods(storeId)).find(p => p.ended_at === null) ?? null
+  if (error) throw error
+  return data as DashboardPeriod
+}
+
+export async function setPeriodMeta(storeId: string, periodId: string, meta: number) {
+  const { data, error } = await db()
+    .from('dashboard_periods')
+    .update({ meta_valor: meta })
+    .eq('id', periodId).eq('store_id', storeId)
+    .select()
+    .single()
+  if (error) throw error
+  return data as DashboardPeriod
+}
+
+/**
+ * Fecha o período atual e abre outro. Não apaga nem move nenhuma venda — só
+ * muda a janela que o dashboard lê.
+ */
+export async function closePeriod(storeId: string, periodId: string) {
+  const agora = new Date().toISOString()
+  const { error: errFechar } = await db()
+    .from('dashboard_periods')
+    .update({ ended_at: agora })
+    .eq('id', periodId).eq('store_id', storeId)
+  if (errFechar) throw errFechar
+  const { data, error } = await db()
+    .from('dashboard_periods')
+    .insert({ store_id: storeId, started_at: agora, meta_valor: 0 })
+    .select()
+    .single()
+  if (error) throw error
+  return data as DashboardPeriod
 }
 
 // ─── banners ──────────────────────────────────────────────────────

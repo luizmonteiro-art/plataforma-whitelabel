@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingCart, Wrench, Calendar,
   Settings, Smartphone, ChevronLeft, ChevronRight, LogOut, Tag, X, Menu, FileText, Stethoscope,
+  TrendingDown, Wallet,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePlan, useStoreConfig } from '@/contexts/AdminStore'
@@ -20,6 +21,8 @@ const navItems: { href: string; label: string; icon: React.ElementType; exact?: 
   { href: '/admin/orcamentos', label: 'Orçamentos', icon: FileText, module: 'ORCAMENTOS' },
   { href: '/admin/assistencia', label: 'Serviços', icon: Stethoscope, module: 'AGENDAMENTOS' },
   { href: '/admin/promocoes', label: 'Promoções & Feed', icon: Tag, module: 'PROMOCOES' },
+  { href: '/admin/despesas', label: 'Despesas', icon: TrendingDown, module: 'FINANCEIRO' },
+  { href: '/admin/devedores', label: 'Devedores', icon: Wallet, module: 'FINANCEIRO' },
   { href: '/admin/configuracoes', label: 'Configurações', icon: Settings, module: 'CONFIGURACOES' },
 ]
 
