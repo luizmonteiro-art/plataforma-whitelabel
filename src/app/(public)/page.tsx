@@ -3,7 +3,7 @@ import { Battery, Monitor, Plug, HardDrive, Cpu, Sparkles, Camera, ArrowRight, S
 import { HeroBanner } from '@/components/store/HeroBanner'
 import { ProductCard } from '@/components/store/ProductCard'
 import { FadeIn, StaggerChildren, StaggerItem } from '@/components/ui/FadeIn'
-import { getProducts, getServices, getBanners, getStoreConfig, getPosts } from '@/lib/db'
+import { getPublicProducts, getServices, getBanners, getStoreConfig, getPosts } from '@/lib/db'
 import { getStoreIdFromHeaders } from '@/lib/store-headers'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -89,7 +89,7 @@ export const revalidate = 60
 export default async function HomePage() {
   const storeId = await getStoreIdFromHeaders()
   const [products, services, banners, config, posts] = await Promise.all([
-    getProducts(storeId).catch(() => []),
+    getPublicProducts(storeId).catch(() => []),
     getServices(storeId).catch(() => []),
     getBanners(storeId).catch(() => []),
     getStoreConfig(storeId).catch(() => null),

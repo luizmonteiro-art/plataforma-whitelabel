@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, MessageCircle, Calendar, CheckCircle, Package } from 'lucide-react'
-import { getProducts, getStoreConfig } from '@/lib/db'
+import { getPublicProducts, getStoreConfig } from '@/lib/db'
 import { getStoreIdFromHeaders } from '@/lib/store-headers'
 import { formatCurrency, conditionLabel, conditionColor, cn } from '@/lib/utils'
 
@@ -14,7 +14,7 @@ export default async function ProductPage({ params }: Props) {
   const { slug } = await params
   const storeId = await getStoreIdFromHeaders()
   const [products, config] = await Promise.all([
-    getProducts(storeId).catch(() => []),
+    getPublicProducts(storeId).catch(() => []),
     getStoreConfig(storeId).catch(() => null),
   ])
   const product = products.find(p => p.slug === slug && p.is_active)

@@ -77,6 +77,30 @@ export async function getProducts(storeId: string): Promise<Product[]> {
   return (data ?? []) as Product[]
 }
 
+/**
+ * Colunas de produto que a vitrine pode mostrar. `cost` fica de fora de
+ * propósito: é a margem do lojista.
+ *
+ * Precisa ser lista explícita, e não `*`: o papel `anon` perdeu o SELECT de
+ * tabela e só tem privilégio nestas colunas, então `select('*')` viria com
+ * "permission denied for column cost". A lista aqui e o GRANT no banco andam
+ * juntos — mexeu em um, mexa no outro.
+ */
+const COLUNAS_PUBLICAS_PRODUTO =
+  'id, store_id, name, slug, description, price, promo_price, stock_qty, ' +
+  'category, brand, condition, images, is_featured, is_active, specs, created_at'
+
+/** Leitura de catálogo para a vitrine — nunca expõe o custo. */
+export async function getPublicProducts(storeId: string): Promise<Product[]> {
+  const { data, error } = await db()
+    .from('products')
+    .select(COLUNAS_PUBLICAS_PRODUTO)
+    .eq('store_id', storeId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []) as unknown as Product[]
+}
+
 export async function countProducts(storeId: string): Promise<number> {
   const { count, error } = await db()
     .from('products')
