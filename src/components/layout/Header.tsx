@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CustomerMenu } from './CustomerMenu'
+import { BotaoCarrinho } from '@/components/store/BotaoCarrinho'
 import type { Brand } from '@/lib/brand'
 import { waLink } from '@/lib/brand'
 
@@ -130,6 +131,8 @@ export function Header({ brand }: { brand: Brand }) {
 
           {/* Direita */}
           <div className="flex items-center gap-2">
+            {/* Aparece só quando há itens escolhidos */}
+            <BotaoCarrinho />
             {quickInfo.length > 0 && (
               <div className="relative hidden md:block" ref={infoRef}>
                 <button

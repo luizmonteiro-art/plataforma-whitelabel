@@ -5,6 +5,7 @@ import { ArrowLeft, MessageCircle, Calendar, CheckCircle, Package } from 'lucide
 import { getPublicProducts, getStoreConfig } from '@/lib/db'
 import { getStoreIdFromHeaders } from '@/lib/store-headers'
 import { formatCurrency, conditionLabel, conditionColor, cn } from '@/lib/utils'
+import { BotaoAdicionar } from '@/components/store/BotaoAdicionar'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -125,6 +126,16 @@ export default async function ProductPage({ params }: Props) {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <BotaoAdicionar
+              className="flex-1 py-3.5 text-sm"
+              disponivel={product.stock_qty > 0}
+              item={{
+                id: product.id,
+                nome: product.name,
+                preco: product.promo_price ?? product.price,
+                imagem: product.images?.[0],
+              }}
+            />
             <a
               href={whatsappUrl}
               target="_blank"

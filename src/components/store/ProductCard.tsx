@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 import { cn, formatCurrency, conditionLabel, conditionColor } from '@/lib/utils'
+import { BotaoAdicionar } from './BotaoAdicionar'
 import { BrandIcon } from '@/components/icons/BrandIcons'
 import type { Product } from '@/types'
 
@@ -196,6 +197,18 @@ export function ProductCard({ product, className }: ProductCardProps) {
             <span className="text-base font-bold text-white">{formatCurrency(product.price)}</span>
           )}
         </div>
+
+        {/* Adicionar sem precisar abrir o produto */}
+        <BotaoAdicionar
+          className="w-full py-2 text-xs mt-1"
+          disponivel={product.stock_qty > 0}
+          item={{
+            id: product.id,
+            nome: product.name,
+            preco: product.promo_price ?? product.price,
+            imagem: product.images?.[0],
+          }}
+        />
       </div>
     </Link>
   )
