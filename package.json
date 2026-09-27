@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --test tests/atomic-sales.test.mjs tests/proxy.test.mjs tests/pending-sale.test.mjs tests/financeiro.test.mjs",
     "test:sales": "node --test tests/atomic-sales.test.mjs",
+    "test:financeiro": "node --test tests/financeiro.test.mjs",
     "test:concurrency": "node tests/postgres-concurrency.mjs",
     "test:isolation": "node tests/full-schema-isolation.mjs",
     "qa:sales": "node tests/browser-harness.mjs"

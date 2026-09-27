@@ -92,6 +92,10 @@ export interface Sale {
   /** Quanto já foi recebido desta venda. */
   valor_pago?: number
   vencimento?: string | null
+  /** Aparelho recebido como parte do pagamento (ex.: "iPhone 11 128GB"). */
+  trade_in_device?: string | null
+  /** Valor avaliado da troca. Abate o saldo devedor; não entra no total. */
+  trade_in_value?: number
   customer_name?: string
   customer_phone?: string
   notes?: string

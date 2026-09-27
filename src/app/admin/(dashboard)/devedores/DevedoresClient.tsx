@@ -133,7 +133,14 @@ export function DevedoresClient() {
                         {atrasado && <span className="ml-2 text-[10px] uppercase tracking-wide">atrasado</span>}
                       </td>
                       <td className="px-4 py-3 text-right text-zinc-400">{formatCurrency(s.total)}</td>
-                      <td className="px-4 py-3 text-right text-zinc-400">{formatCurrency(s.valor_pago ?? 0)}</td>
+                      <td className="px-4 py-3 text-right text-zinc-400">
+                        {formatCurrency((s.valor_pago ?? 0) + (s.trade_in_value ?? 0))}
+                        {(s.trade_in_value ?? 0) > 0 && (
+                          <span className="block text-[10px] text-zinc-600">
+                            inclui troca: {formatCurrency(s.trade_in_value ?? 0)}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-right font-semibold text-white">{formatCurrency(saldo)}</td>
                       <td className="px-4 py-3 text-right">
                         <button

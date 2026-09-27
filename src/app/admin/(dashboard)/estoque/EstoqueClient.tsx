@@ -40,6 +40,7 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
   const [imageUrlDraft, setImageUrlDraft] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ atual: number; total: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const atLimit = products.length >= productLimit
@@ -83,14 +84,26 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
     const imageFiles = Array.from(files).slice(0, 8).filter(f => f.type.startsWith('image/'))
     if (imageFiles.length === 0) return
     setUploading(true)
+    // Uma de cada vez, de proposito: oito fotos de celular em paralelo numa
+    // rede 4G costumam estourar a memoria da aba ou a banda e derrubar o lote
+    // inteiro. Em serie, cada foto que sobe fica salva mesmo se a seguinte
+    // falhar, e da para mostrar o progresso.
+    const enviadas: string[] = []
     try {
-      const urls = await Promise.all(imageFiles.map(f => uploadImage(f, 'products', storeId)))
-      setForm(f => ({ ...f, images: [...f.images, ...urls] }))
+      for (let i = 0; i < imageFiles.length; i++) {
+        setUploadProgress({ atual: i + 1, total: imageFiles.length })
+        const url = await uploadImage(imageFiles[i], 'products', storeId)
+        enviadas.push(url)
+        setForm(f => ({ ...f, images: [...f.images, url] }))
+      }
     } catch (e) {
       console.error(e)
-      alert('Não foi possível enviar as imagens. Verifique sua conexão e tente novamente.')
+      alert(enviadas.length > 0
+        ? `Enviamos ${enviadas.length} de ${imageFiles.length} fotos. A próxima falhou — verifique sua conexão e envie as restantes.`
+        : 'Não foi possível enviar as imagens. Verifique sua conexão e tente novamente.')
     } finally {
       setUploading(false)
+      setUploadProgress(null)
     }
   }
 
@@ -402,7 +415,11 @@ export function EstoqueClient({ initialProducts: _ }: Props) {
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-medium text-white">
-                        {uploading ? 'Enviando imagens…' : isDragging ? 'Solte as imagens aqui' : 'Toque para escolher fotos'}
+                        {uploading
+                          ? (uploadProgress
+                              ? `Enviando foto ${uploadProgress.atual} de ${uploadProgress.total}…`
+                              : 'Enviando imagens…')
+                          : isDragging ? 'Solte as imagens aqui' : 'Toque para escolher fotos'}
                       </p>
                       <p className="text-xs text-zinc-600 mt-0.5">
                         Galeria do celular · Pasta do computador · Arraste aqui

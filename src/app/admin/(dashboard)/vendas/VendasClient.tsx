@@ -5,7 +5,7 @@ import { Plus, TrendingUp, X, ChevronDown, Target, CheckCircle, XCircle, Search,
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, paymentMethodLabel, cn } from '@/lib/utils'
 import { useSales, useProducts, useAdminStore, usePlan } from '@/contexts/AdminStore'
-import { saveSaleAtomic, setSalePaymentTerms } from '@/lib/db'
+import { saveSaleAtomic, setSalePaymentTerms, setSaleTradeIn } from '@/lib/db'
 import { pendingSaleJournal, type PendingSale } from '@/lib/pending-sale'
 import type { Sale, PaymentMethod } from '@/types'
 
@@ -97,6 +97,10 @@ export function VendasClient() {
   const [formAPrazo, setFormAPrazo] = useState(false)
   const [formEntrada, setFormEntrada] = useState('')
   const [formVencimento, setFormVencimento] = useState('')
+  // ── Troca de aparelho ──
+  const [formTemTroca, setFormTemTroca] = useState(false)
+  const [formTrocaAparelho, setFormTrocaAparelho] = useState('')
+  const [formTrocaValor, setFormTrocaValor] = useState('')
 
   // ── Edição de venda ──
   const [editSale, setEditSale] = useState<SaleWithStatus | null>(null)
@@ -259,8 +263,9 @@ export function VendasClient() {
     newSaleId.current ??= crypto.randomUUID()
     const saleId = newSaleId.current
     if (await persist({ ...payload, id: saleId, revision: 0, status: 'aprovado' })) {
-      // A condição de pagamento é gravada depois: save_sale_atomic é dona do
-      // estoque e do total, e não foi estendida para não arriscar suas defesas.
+      // A condição de pagamento e a troca sao gravadas depois: save_sale_atomic
+      // e dona do estoque e do total, e nao foi estendida para nao arriscar
+      // suas defesas.
       if (formAPrazo) {
         try {
           const atualizada = await setSalePaymentTerms(storeId, saleId, {
@@ -273,10 +278,24 @@ export function VendasClient() {
           setError('A venda foi registrada, mas não foi possível marcá-la como a prazo. Ajuste pela tela de Devedores.')
         }
       }
+      if (formTemTroca && Number(formTrocaValor.replace(',', '.')) > 0) {
+        try {
+          const comTroca = await setSaleTradeIn(
+            storeId, saleId, formTrocaAparelho.trim(),
+            Number(formTrocaValor.replace(',', '.')),
+          )
+          setSalesRaw(prev => prev.map(s => s.id === comTroca.id ? comTroca : s))
+        } catch (e) {
+          setError(e instanceof Error
+            ? `A venda foi registrada, mas a troca não: ${e.message}`
+            : 'A venda foi registrada, mas não foi possível gravar a troca.')
+        }
+      }
       newSaleId.current = null
       setShowForm(false)
       setFormProduct(''); setFormQty('1'); setFormCustomer('')
       setFormAPrazo(false); setFormEntrada(''); setFormVencimento('')
+      setFormTemTroca(false); setFormTrocaAparelho(''); setFormTrocaValor('')
     }
   }
 
@@ -582,6 +601,47 @@ export function VendasClient() {
               </div>
               {hasModule('FINANCEIRO') && (
                 <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 space-y-3">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" checked={formTemTroca}
+                      onChange={e => setFormTemTroca(e.target.checked)}
+                      className="accent-[var(--accent)]" />
+                    <span className="text-sm text-zinc-300">Recebeu aparelho na troca</span>
+                  </label>
+                  {formTemTroca && (() => {
+                    const prod = storeProducts.find(p => p.id === formProduct)
+                    const totalVenda = prod ? (prod.promo_price ?? prod.price) * (Number(formQty) || 1) : 0
+                    const avaliacao = Number(formTrocaValor.replace(',', '.')) || 0
+                    const diferenca = totalVenda - avaliacao
+                    return (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-400 mb-1.5">Aparelho recebido</label>
+                          <input value={formTrocaAparelho}
+                            onChange={e => setFormTrocaAparelho(e.target.value)}
+                            placeholder="Ex: iPhone 11 128GB" className={inputCls} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-zinc-400 mb-1.5">Valor avaliado (R$)</label>
+                          <input type="number" step="0.01" min="0" value={formTrocaValor}
+                            onChange={e => setFormTrocaValor(e.target.value)}
+                            placeholder="0,00" className={inputCls} />
+                        </div>
+                        {avaliacao > 0 && prod && (
+                          <div className={cn('rounded-lg px-3 py-2 text-sm border',
+                            diferenca >= 0
+                              ? 'border-[var(--accent)]/30 bg-[var(--accent)]/[0.08] text-[var(--accent)]'
+                              : 'border-orange-500/30 bg-orange-500/[0.08] text-orange-300')}>
+                            {diferenca >= 0
+                              ? <>Cliente ainda paga <strong>{formatCurrency(diferenca)}</strong></>
+                              : <>Troco para o cliente: <strong>{formatCurrency(-diferenca)}</strong></>}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+
+                  <div className="pt-3 border-t border-white/[0.06]" />
+
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input type="checkbox" checked={formAPrazo}
                       onChange={e => setFormAPrazo(e.target.checked)}

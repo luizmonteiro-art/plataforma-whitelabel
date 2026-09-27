@@ -294,6 +294,21 @@ export async function setSalePaymentTerms(
   return data as Sale
 }
 
+/**
+ * Registra o aparelho recebido na troca. Valor zero (ou descrição vazia)
+ * limpa a troca da venda.
+ */
+export async function setSaleTradeIn(
+  storeId: string, saleId: string, device: string, value: number,
+) {
+  const { data, error } = await db().rpc('set_sale_trade_in', {
+    p_store_id: storeId, p_sale_id: saleId, p_device: device || null, p_value: value,
+  })
+  if (error?.code === 'PGRST202') throw new Error('Troca indisponível: a atualização do banco ainda não foi aplicada.')
+  if (error) throw error
+  return data as Sale
+}
+
 // ─── expenses (despesas) ──────────────────────────────────────────
 
 export async function getExpenses(storeId: string): Promise<Expense[]> {

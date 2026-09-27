@@ -56,11 +56,30 @@ export function calcSaleProfit(sale: Sale, products: Product[]): number {
   return bruto - desconto
 }
 
-/** Saldo em aberto de uma venda. Zero quando quitada. */
+/**
+ * Saldo em aberto de uma venda. Zero quando quitada.
+ *
+ * O aparelho recebido na troca abate como se fosse pagamento: ele não entra no
+ * total da venda (o total é o preço do produto), mas é valor que a loja já
+ * recebeu.
+ */
 export function calcSaldoDevedor(sale: Sale): number {
   if (sale.status === 'cancelado') return 0
   const pago = sale.valor_pago ?? sale.total
-  return Math.max(0, Number((sale.total - pago).toFixed(2)))
+  const troca = sale.trade_in_value ?? 0
+  return Math.max(0, Number((sale.total - pago - troca).toFixed(2)))
+}
+
+/**
+ * Troco devido ao cliente: quando o aparelho entregue vale mais do que ele
+ * levou, a loja é que fica devendo a diferença em dinheiro.
+ */
+export function calcTrocoDevido(sale: Sale): number {
+  if (sale.status === 'cancelado') return 0
+  const troca = sale.trade_in_value ?? 0
+  if (troca <= 0) return 0
+  const pago = sale.valor_pago ?? 0
+  return Math.max(0, Number((troca + pago - sale.total).toFixed(2)))
 }
 
 export function isVencido(sale: Sale): boolean {
