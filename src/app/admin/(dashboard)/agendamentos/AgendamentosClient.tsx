@@ -5,7 +5,7 @@ import { Calendar, CheckCircle, X, Clock, MessageCircle, Star, ArrowLeft, AlertT
 import { useRouter } from 'next/navigation'
 import { formatDateTime, appointmentStatusLabel, cn } from '@/lib/utils'
 import { useAppointments, useAdminStore, useStoreConfig } from '@/contexts/AdminStore'
-import { upsertAppointment } from '@/lib/db'
+import { upsertAppointment, updateAppointment } from '@/lib/db'
 import type { Appointment, AppointmentStatus } from '@/types'
 
 interface Props { initialAppointments: Appointment[] }
@@ -31,7 +31,7 @@ export function AgendamentosClient({ initialAppointments: _ }: Props) {
   const [filter, setFilter] = useState<AppointmentStatus | 'todos'>('todos')
 
   const updateStatus = async (id: string, status: AppointmentStatus) => {
-    await upsertAppointment(storeId, { id, status }).catch(console.error)
+    await updateAppointment(storeId, id, { status }).catch(() => alert('Não foi possível alterar o agendamento. Verifique sua conexão.'))
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
   }
 

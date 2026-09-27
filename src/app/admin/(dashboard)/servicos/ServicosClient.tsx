@@ -5,7 +5,7 @@ import { Plus, Wrench, MessageCircle, X, ChevronDown, Edit2, Paperclip, CheckCir
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, serviceStatusLabel, serviceStatusColor, cn } from '@/lib/utils'
 import { useServiceOrders, useAdminStore, useStoreConfig } from '@/contexts/AdminStore'
-import { upsertServiceOrder, deleteServiceOrder } from '@/lib/db'
+import { upsertServiceOrder, updateServiceOrder, deleteServiceOrder } from '@/lib/db'
 import { novoIdOrdemServico } from '@/lib/ids'
 import type { ServiceOrder, ServiceStatus } from '@/types'
 
@@ -75,7 +75,7 @@ export function ServicosClient({ initialOrders: _ }: Props) {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status, updated_at } : o))
     if (editOrder?.id === id) setEditOrder(prev => prev ? { ...prev, status } : null)
     try {
-      await upsertServiceOrder(storeId, { id, status, updated_at })
+      await updateServiceOrder(storeId, id, { status, updated_at })
     } catch {
       // desfaz o otimismo: o card voltaria pra coluna errada no próximo reload
       if (anterior) {
@@ -89,7 +89,12 @@ export function ServicosClient({ initialOrders: _ }: Props) {
   const finalizeOrder = async (id: string) => {
     const order = orders.find(o => o.id === id)
     if (!order) return
-    await upsertServiceOrder(storeId, { id, status: 'entregue', updated_at: new Date().toISOString() }).catch(console.error)
+    try {
+      await updateServiceOrder(storeId, id, { status: 'entregue', updated_at: new Date().toISOString() })
+    } catch {
+      alert('Não foi possível finalizar a ordem de serviço. Verifique sua conexão e tente novamente.')
+      return
+    }
     setOrders(prev => prev.filter(o => o.id !== id))
     setArchived(prev => [...prev, { ...order, status: 'entregue', archived_at: new Date().toISOString() }])
     if (editOrder?.id === id) setEditOrder(null)

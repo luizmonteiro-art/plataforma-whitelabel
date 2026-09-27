@@ -309,6 +309,48 @@ export async function setSaleTradeIn(
   return data as Sale
 }
 
+/**
+ * Altera campos de uma linha que JÁ EXISTE.
+ *
+ * Não use `upsert` para isso. O upsert tenta INSERIR primeiro, e o INSERT
+ * estoura nas colunas obrigatórias que o patch não traz — o `ON CONFLICT` nem
+ * chega a ser avaliado. Comprovado contra produção: mudar só o status de uma
+ * O.S. devolvia
+ *
+ *   null value in column "customer_name" violates not-null constraint
+ *
+ * Por isso toda alteração parcial (mudar etapa, ligar/desligar, reordenar)
+ * passa por aqui, e `upsert` fica só para gravar o registro inteiro.
+ */
+async function alterarLinha<T>(
+  tabela: string, storeId: string, id: string, campos: Record<string, unknown>,
+): Promise<T> {
+  const { data, error } = await db()
+    .from(tabela)
+    .update(campos)
+    .eq('id', id)
+    .eq('store_id', storeId)
+    .select()
+    .single()
+  if (error) throw error
+  return data as T
+}
+
+export const updateServiceOrder = (storeId: string, id: string, campos: Partial<ServiceOrder>) =>
+  alterarLinha<ServiceOrder>('service_orders', storeId, id, campos)
+
+export const updateQuote = (storeId: string, id: string, campos: Partial<Quote>) =>
+  alterarLinha<Quote>('quotes', storeId, id, campos)
+
+export const updateAppointment = (storeId: string, id: string, campos: Partial<Appointment>) =>
+  alterarLinha<Appointment>('appointments', storeId, id, campos)
+
+export const updateService = (storeId: string, id: string, campos: Partial<Service>) =>
+  alterarLinha<Service>('services', storeId, id, campos)
+
+export const updateBanner = (storeId: string, id: string, campos: Partial<Banner>) =>
+  alterarLinha<Banner>('banners', storeId, id, campos)
+
 // ─── expenses (despesas) ──────────────────────────────────────────
 
 export async function getExpenses(storeId: string): Promise<Expense[]> {
@@ -507,6 +549,10 @@ export async function upsertPost(storeId: string, post: Partial<Post> & { id?: s
   if (error) throw error
   return data as Post
 }
+
+/** Alteração parcial de post — ver `alterarLinha` para o motivo de não usar upsert. */
+export const updatePost = (storeId: string, id: string, campos: Partial<Post>) =>
+  alterarLinha<Post>('posts', storeId, id, campos)
 
 export async function deletePost(storeId: string, id: string) {
   const { error } = await db()

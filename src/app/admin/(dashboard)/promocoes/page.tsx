@@ -7,6 +7,7 @@ import { formatCurrency, cn } from '@/lib/utils'
 import {
   getBanners, upsertBanner, deleteBanner as deleteBannerDb, getProducts, uploadImage,
   getPosts, upsertPost, deletePost as deletePostDb, updateProductPromo,
+  updateBanner, updatePost,
 } from '@/lib/db'
 import { useAdminStore } from '@/contexts/AdminStore'
 import type { Banner, Product } from '@/types'
@@ -82,7 +83,7 @@ export default function PromocoesAdminPage() {
     setBanners(prev => {
       const next = prev.map(b => b.id === id ? { ...b, is_active: !b.is_active } : b)
       const updated = next.find(b => b.id === id)
-      if (updated) upsertBanner(storeId, { id, is_active: updated.is_active }).catch(console.error)
+      if (updated) updateBanner(storeId, id, { is_active: updated.is_active }).catch(() => alert('Não foi possível alterar o banner.'))
       return next
     })
   }
@@ -96,8 +97,8 @@ export default function PromocoesAdminPage() {
       const swap = dir === 'up' ? idx - 1 : idx + 1
       ;[next[idx], next[swap]] = [next[swap], next[idx]]
       // persist new order positions
-      upsertBanner(storeId, { id: next[idx].id, order: idx }).catch(console.error)
-      upsertBanner(storeId, { id: next[swap].id, order: swap }).catch(console.error)
+      updateBanner(storeId, next[idx].id, { order: idx }).catch(() => alert('Não foi possível reordenar os banners.'))
+      updateBanner(storeId, next[swap].id, { order: swap }).catch(() => {})
       return next
     })
   }
@@ -122,7 +123,7 @@ export default function PromocoesAdminPage() {
     try {
       const image_url = await uploadImage(file, 'banners', storeId)
       setBanners(prev => prev.map(b => b.id === id ? { ...b, image_url } : b))
-      await upsertBanner(storeId, { id, image_url }).catch(console.error)
+      await updateBanner(storeId, id, { image_url }).catch(() => alert('Não foi possível trocar a imagem do banner.'))
     } catch (err) {
       console.error(err)
       alert('Não foi possível trocar a imagem do banner. Tente de novo.')
@@ -188,7 +189,7 @@ export default function PromocoesAdminPage() {
     setPosts(prev => {
       const next = prev.map(p => p.id === id ? { ...p, is_active: !p.is_active } : p)
       const u = next.find(p => p.id === id)
-      if (u) upsertPost(storeId, { id, is_active: u.is_active }).catch(console.error)
+      if (u) updatePost(storeId, id, { is_active: u.is_active }).catch(() => alert('Não foi possível alterar o post.'))
       return next
     })
   }

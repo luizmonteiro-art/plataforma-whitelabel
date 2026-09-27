@@ -71,21 +71,35 @@ export function ProductCard({ product, className }: ProductCardProps) {
       >
         {images.length > 0 ? (
           <>
-            {product.images.map((src, i) => (
-              <Image
-                key={i}
-                src={src}
-                alt={product.name}
-                fill
-                className={cn(
-                  'object-cover transition-all duration-500',
-                  i === safeIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.04] pointer-events-none'
-                )}
-                priority={i === 0}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                onError={() => setImgError(prev => ({ ...prev, [i]: true }))}
-              />
-            ))}
+            {/*
+              Só a foto visível e a vizinha imediata entram no DOM. Antes o
+              card montava TODAS as fotos do produto empilhadas com opacidade
+              zero — como estão dentro da área visível, o navegador baixava
+              todas, e um produto com 5 fotos custava 5x a banda para mostrar 1.
+              A vizinha fica carregada para o swipe não piscar.
+            */}
+            {product.images.map((src, i) => {
+              const distancia = Math.min(
+                Math.abs(i - safeIndex),
+                product.images.length - Math.abs(i - safeIndex),
+              )
+              if (distancia > 1) return null
+              return (
+                <Image
+                  key={i}
+                  src={src}
+                  alt={product.name}
+                  fill
+                  className={cn(
+                    'object-cover transition-all duration-500',
+                    i === safeIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.04] pointer-events-none'
+                  )}
+                  priority={i === 0}
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  onError={() => setImgError(prev => ({ ...prev, [i]: true }))}
+                />
+              )
+            })}
 
             {/* Dots de navegação */}
             {hasMultiple && (

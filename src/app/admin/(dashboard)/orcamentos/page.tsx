@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Trash2, MessageCircle, X, FileText, Copy, CheckCircle, ArrowLeft, Wrench, ChevronDown, Printer } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateTime, cn } from '@/lib/utils'
-import { getServices, getQuotes, upsertQuote, deleteQuote, getStoreConfig, upsertServiceOrder } from '@/lib/db'
+import { getServices, getQuotes, upsertQuote, updateQuote, deleteQuote, getStoreConfig, upsertServiceOrder } from '@/lib/db'
 import { novoIdOrdemServico } from '@/lib/ids'
 import { useServiceOrders, useAdminStore } from '@/contexts/AdminStore'
 import type { Service, Quote, QuoteItem, QuoteStatus, ServiceOrder } from '@/types'
@@ -102,11 +102,22 @@ export default function OrcamentosPage() {
   const resetForm = () => { setName(''); setPhone(''); setDevice(''); setItems([emptyItem()]); setDesconto(0); setObs(''); }
 
   const createOrcamento = async () => {
-    if (!name || !device || items.some(i => !i.descricao)) return
+    // Antes isto era um `return` mudo: o lojista clicava em salvar, nada
+    // acontecia e nada explicava o porquê.
+    // Linhas em branco são descartadas em vez de travar o salvamento.
+    const itensValidos = items.filter(i => i.descricao.trim())
+    const faltando: string[] = []
+    if (!name.trim()) faltando.push('o nome do cliente')
+    if (!device.trim()) faltando.push('o aparelho')
+    if (itensValidos.length === 0) faltando.push('pelo menos um item com descrição')
+    if (faltando.length > 0) {
+      alert(`Para gerar o orçamento, preencha ${faltando.join(', ')}.`)
+      return
+    }
     const orc: Orcamento = {
       id: crypto.randomUUID(),
       customer_name: name, customer_phone: phone, device,
-      items, desconto, observacoes: obs, validade,
+      items: itensValidos, desconto, observacoes: obs, validade,
       status: 'pendente',
       created_at: new Date().toISOString(),
     }
@@ -126,7 +137,7 @@ export default function OrcamentosPage() {
     setOrcamentos(prev => prev.map(o => o.id === id ? { ...o, status } : o))
     if (viewing?.id === id) setViewing(prev => prev ? { ...prev, status } : null)
     try {
-      await upsertQuote(storeId, { id, status })
+      await updateQuote(storeId, id, { status })
     } catch {
       // desfaz o otimismo: o status não chegou ao banco
       if (anterior) {

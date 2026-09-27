@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useServices, useAdminStore } from '@/contexts/AdminStore'
-import { upsertService, deleteService } from '@/lib/db'
+import { upsertService, updateService, deleteService } from '@/lib/db'
 import { formatCurrency, cn } from '@/lib/utils'
 import type { Service } from '@/types'
 
@@ -110,7 +110,7 @@ export default function AssistenciaPage() {
     const service = services.find(s => s.id === id)
     if (!service) return
     const is_active = !service.is_active
-    await upsertService(storeId, { id, is_active }).catch(console.error)
+    await updateService(storeId, id, { is_active }).catch(() => alert('Não foi possível alterar o serviço. Verifique sua conexão.'))
     setServices(prev => prev.map(s => s.id === id ? { ...s, is_active } : s))
   }
 
