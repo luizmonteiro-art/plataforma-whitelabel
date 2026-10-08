@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Lock, AlertCircle, ShieldCheck } from 'lucide-react'
 import { getSupabaseBrowser, supabaseConfigured } from '@/lib/supabase-browser'
-import { ModusLogo } from '@/components/brand/ModusLogo'
+import { ModsLogo } from '@/components/brand/ModsLogo'
 
 export default function SuperadminLoginPage() {
   const router = useRouter()
@@ -48,7 +48,7 @@ export default function SuperadminLoginPage() {
 
       <div className="relative w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="mb-5 flex justify-center"><ModusLogo size={56} descriptor="CONTROL · ACESSO" /></div>
+          <div className="mb-5 flex justify-center"><ModsLogo width={188} priority /></div>
           <h1 className="text-xl font-bold text-white tracking-tight">Central de controle</h1>
           <p className="text-sm text-zinc-500 flex items-center justify-center gap-1.5 mt-1">
             <ShieldCheck size={12} className="text-[#79e2ad]/70" />
@@ -67,7 +67,7 @@ export default function SuperadminLoginPage() {
               <label className="block text-xs font-medium text-zinc-400 mb-1.5">E-mail</label>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                placeholder="luiz@plataforma.com"
+                placeholder="seu@email.com"
                 className="w-full bg-[#0d211b] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#79e2ad]/50 transition-all"
               />
             </div>

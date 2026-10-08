@@ -8,7 +8,7 @@ import {
   Power, Search, Settings2, Store, Trash2, X,
 } from 'lucide-react'
 import { PLANS } from '@/lib/plans'
-import { ModusLogo } from '@/components/brand/ModusLogo'
+import { ModsLogo } from '@/components/brand/ModsLogo'
 import {
   addRequestInternalNote,
   createStore,
@@ -22,15 +22,25 @@ import {
   type StoreRow,
 } from './actions'
 
-const PLATFORM_HOST = process.env.NEXT_PUBLIC_PLATFORM_HOST ?? 'plataforma.com'
-
 function storeHref(slug: string): string {
   return `/?store=${encodeURIComponent(slug)}`
+}
+
+function storeSlug(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
 function adminLoginUrl(slug: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   return `${origin}/admin/login?store=${encodeURIComponent(slug)}`
+}
+
+function whatsappDigits(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  return digits.startsWith('55') && (digits.length === 12 || digits.length === 13)
+    ? digits
+    : `55${digits}`
 }
 
 function firstStoreConfig(store: StoreRow): { store_name?: string | null; whatsapp?: string | null; accent_color?: string | null } | null {
@@ -115,7 +125,7 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
 
   const daysSince = (s: string | null) => {
     if (!s) return null
-    return Math.floor((nowTs - new Date(s).getTime()) / 86400_000)
+    return Math.max(0, Math.floor((nowTs - new Date(s).getTime()) / 86400_000))
   }
 
   const trialLeft = (s: string | null) => {
@@ -124,7 +134,7 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
   }
 
   const openNew = (prefill?: Partial<CreateStoreInput>) => {
-    setForm({ ...emptyForm, ...prefill })
+    setForm({ ...emptyForm, ...prefill, slug: storeSlug(prefill?.slug || prefill?.store_name || '') })
     setShowForm(true)
   }
 
@@ -189,8 +199,7 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
 
   const advanceRequest = (request: RequestRow) => {
     const nextStatus = REQUEST_PIPELINE_NEXT[request.status]
-    if (!nextStatus) return
-    setReqStatus(request, nextStatus)
+    if (nextStatus) setReqStatus(request, nextStatus)
   }
 
   const removeRequest = (request: RequestRow) => {
@@ -370,7 +379,7 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
 
       <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <header className="mb-8 flex items-center justify-between">
-          <ModusLogo descriptor="CONTROL · OPERAÇÃO" />
+          <ModsLogo width={150} priority />
           <button onClick={logout} className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs text-zinc-300 backdrop-blur transition-all hover:bg-white/[0.06] hover:text-white">
             <LogOut size={13} /> Sair
           </button>
@@ -382,17 +391,17 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-sm text-zinc-300 backdrop-blur">
                 <span className="flex h-2.5 w-2.5 rounded-full bg-[#79e2ad] shadow-[0_0_12px_rgba(121,226,173,0.85)]" />
-                Estrutura comercial e operacional da MODUS
+                Painel de operação MODS
               </div>
               <h2 className="font-display mt-5 text-4xl font-bold leading-[0.95] tracking-[-0.04em] text-white sm:text-5xl">
                 Uma base para gerar,
                 <span className="block text-[#c9f7df]">organizar e ativar lojas</span>
                 <span className="block bg-gradient-to-r from-[#79e2ad] via-[#c9f7df] to-[#79e2ad] bg-clip-text text-transparent">
-                  sem atrito desnecessario.
+                  sem atrito desnecessário.
                 </span>
               </h2>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-300 sm:text-base">
-                Aqui o fluxo precisa ser simples: captar, qualificar, provisionar, ativar e acompanhar. O painel foi puxado para a mesma identidade da landing para parecer produto e nao remendo.
+                Acompanhe pedidos recebidos pela landing, organize o próximo passo de cada lead e prepare lojas em um só lugar.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -489,12 +498,13 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
             <div className="space-y-2">
               {filteredRequests.map((request) => {
                 const st = REQUEST_STATUS[request.status] ?? REQUEST_STATUS.pendente
+                const age = daysSince(request.created_at)
                 return (
                   <div key={request.id} className="rounded-[26px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))] p-4 shadow-[0_18px_46px_rgba(0,0,0,0.16)]">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold text-white">{request.store_name}</p>
+                          <p className="break-words text-sm font-semibold text-white">{request.store_name}</p>
                           <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${st.cls}`}>{st.label}</span>
                           <span className="rounded-full border border-white/[0.08] px-2 py-0.5 text-[10px] text-zinc-400">{PLANS[request.plan_id]?.name ?? request.plan_id}</span>
                           {request.internal_notes.length > 0 && (
@@ -503,18 +513,18 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 text-xs text-zinc-500">
+                        <p className="mt-1 break-words text-xs text-zinc-500">
                           {request.contact_name} · {request.email} · {request.whatsapp}
                         </p>
                         {request.customer_notes && (
-                          <p className="mt-1 line-clamp-2 max-w-2xl text-xs italic text-zinc-600">&ldquo;{request.customer_notes}&rdquo;</p>
+                        <p className="mt-1 line-clamp-2 max-w-2xl break-words text-xs italic text-zinc-600">&ldquo;{request.customer_notes}&rdquo;</p>
                         )}
                         <p className="mt-1 text-[10px] text-zinc-700">
                           Recebido em {fmtDate(request.created_at)}
-                          {daysSince(request.created_at) !== null ? ` · ha ${daysSince(request.created_at)}d` : ''}
+                          {age === 0 ? ' · hoje' : age !== null ? ` · há ${age} ${age === 1 ? 'dia' : 'dias'}` : ''}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                      <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
                         <button
                           onClick={() => {
                             setSelectedRequestId(request.id)
@@ -525,7 +535,7 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
                           <FileText size={11} /> Detalhes
                         </button>
                         <a
-                          href={`https://wa.me/55${request.whatsapp.replace(/\D/g, '')}`}
+                          href={`https://wa.me/${whatsappDigits(request.whatsapp)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-lg border border-white/[0.08] px-2.5 py-1.5 text-[11px] text-zinc-300 hover:bg-white/[0.05] transition-all"
@@ -647,14 +657,14 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
                           </span>
                         )}
                       </div>
-                      <p className="mt-0.5 text-xs text-zinc-500">{store.admin_email}</p>
+                      <p className="mt-0.5 break-all text-xs text-zinc-500">{store.admin_email}</p>
                       <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-zinc-600">
                         {cfg?.whatsapp && <span>WhatsApp: {cfg.whatsapp}</span>}
                         <span>Criada em {fmtDate(store.created_at)}</span>
                         {store.trial_expires_at && <span>Trial ate {fmtDate(store.trial_expires_at)}</span>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
                       <button onClick={() => setSelectedStoreId(store.id)} className="rounded-lg border border-[#79e2ad]/25 bg-[#c9f7df]/8 px-2.5 py-1.5 text-[11px] text-[#c9f7df] transition-all hover:bg-[#c9f7df]/12">
                         Ativacao
                       </button>
@@ -683,14 +693,14 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
       </div>
 
       {selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 p-4 backdrop-blur-sm" onClick={() => { setSelectedRequestId(null); setInternalNoteDraft('') }}>
-          <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-5xl overflow-hidden rounded-[34px] border border-white/[0.08] bg-[#0d211b] shadow-[0_40px_120px_rgba(0,0,0,0.48)]">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/72 p-3 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => { setSelectedRequestId(null); setInternalNoteDraft('') }}>
+          <div onClick={(e) => e.stopPropagation()} className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-5xl overflow-x-hidden overflow-y-auto rounded-[28px] border border-white/[0.08] bg-[#0d211b] shadow-[0_40px_120px_rgba(0,0,0,0.48)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[34px]">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(121,226,173,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(49,94,77,0.22),transparent_26%)]" />
             <div className="relative border-b border-white/[0.06] px-6 py-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#79e2ad]/70">Lead detail</p>
-                  <h3 className="font-display mt-2 text-3xl font-bold tracking-tight text-white">{selectedRequest.store_name}</h3>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#79e2ad]/70">Detalhes do lead</p>
+                  <h3 className="font-display mt-2 break-words text-2xl font-bold tracking-tight text-white sm:text-3xl">{selectedRequest.store_name}</h3>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
                     <span className={`rounded-full border px-2.5 py-1 ${REQUEST_STATUS[selectedRequest.status]?.cls ?? REQUEST_STATUS.pendente.cls}`}>{REQUEST_STATUS[selectedRequest.status]?.label ?? selectedRequest.status}</span>
                     <span className="rounded-full border border-white/[0.08] px-2.5 py-1">{PLANS[selectedRequest.plan_id]?.name ?? selectedRequest.plan_id}</span>
@@ -703,8 +713,8 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
               </div>
             </div>
 
-            <div className="relative grid gap-6 p-6 lg:grid-cols-[1.08fr_0.92fr]">
-              <div className="space-y-5">
+            <div className="relative grid min-w-0 grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-[1.08fr_0.92fr]">
+              <div className="min-w-0 space-y-5">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <DetailCard label="Contato" value={selectedRequest.contact_name} />
                   <DetailCard label="Email" value={selectedRequest.email} />
@@ -713,12 +723,12 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
                 </div>
 
                 <div className="rounded-[26px] border border-white/[0.06] bg-white/[0.03] p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-sm font-semibold text-white">Brief do lead</p>
                       <p className="mt-1 text-xs text-zinc-500">Informacoes vindas do formulario original.</p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex min-w-0 flex-wrap gap-2">
                       {selectedRequest.modules_wanted?.length > 0 ? selectedRequest.modules_wanted.map((module) => (
                         <span key={module} className="rounded-full border border-white/[0.08] px-2.5 py-1 text-[10px] text-zinc-400">{module}</span>
                       )) : (
@@ -726,13 +736,13 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
                       )}
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-white/[0.06] bg-[#10271f] p-4 text-sm leading-7 text-zinc-300">
+                  <div className="break-words rounded-2xl border border-white/[0.06] bg-[#10271f] p-4 text-sm leading-7 text-zinc-300">
                     {selectedRequest.customer_notes || 'O lead nao deixou observacoes no formulario.'}
                   </div>
                 </div>
 
                 <div className="rounded-[26px] border border-[#79e2ad]/12 bg-[linear-gradient(180deg,rgba(121,226,173,0.08),rgba(255,255,255,0.02))] p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-white">Observacoes internas</p>
                       <p className="mt-1 text-xs text-zinc-500">Notas privadas do comercial e operacao.</p>
@@ -765,8 +775,8 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
                       <EmptyHint text="Nenhuma observacao interna ainda." />
                     ) : selectedRequest.internal_notes.map((note) => (
                       <div key={note.id} className="rounded-2xl border border-white/[0.06] bg-[#10271f] p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-[11px] uppercase tracking-[0.18em] text-[#79e2ad]/70">{note.author}</p>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <p className="break-all text-[11px] uppercase tracking-[0.18em] text-[#79e2ad]/70">{note.author}</p>
                           <p className="text-[11px] text-zinc-600">{fmtDateTime(note.created_at)}</p>
                         </div>
                         <p className="mt-2 text-sm leading-7 text-zinc-300">{note.text}</p>
@@ -795,7 +805,7 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
                     >
                       Criar loja deste lead
                     </button>
-                    <a href={`https://wa.me/55${selectedRequest.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="rounded-2xl border border-white/[0.08] px-4 py-3 text-center text-sm text-zinc-300 transition-all hover:bg-white/[0.05]">
+                    <a href={`https://wa.me/${whatsappDigits(selectedRequest.whatsapp)}`} target="_blank" rel="noopener noreferrer" className="rounded-2xl border border-white/[0.08] px-4 py-3 text-center text-sm text-zinc-300 transition-all hover:bg-white/[0.05]">
                       Abrir WhatsApp
                     </a>
                   </div>
@@ -853,13 +863,13 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
         const completed = checklist.filter((item) => item.done).length
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 p-4 backdrop-blur-sm" onClick={() => setSelectedStoreId(null)}>
-            <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-3xl overflow-hidden rounded-[34px] border border-white/[0.08] bg-[#0d211b] shadow-[0_40px_120px_rgba(0,0,0,0.48)]">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/72 p-3 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setSelectedStoreId(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-3xl overflow-x-hidden overflow-y-auto rounded-[28px] border border-white/[0.08] bg-[#0d211b] shadow-[0_40px_120px_rgba(0,0,0,0.48)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[34px]">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(121,226,173,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(49,94,77,0.22),transparent_26%)]" />
               <div className="relative border-b border-white/[0.06] px-6 py-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-[#79e2ad]/70">Activation checklist</p>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-[#79e2ad]/70">Checklist de ativação</p>
                     <h3 className="font-display mt-2 text-3xl font-bold tracking-tight text-white">{cfg?.store_name?.trim() || selectedStore.slug}</h3>
                     <p className="mt-2 text-sm text-zinc-400">Checklist operacional para tirar a loja do provisionamento e levar para ativacao consistente.</p>
                   </div>
@@ -923,8 +933,8 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
       })()}
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={() => setShowForm(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl border border-white/[0.08] bg-[#0d211b] shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-3 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setShowForm(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-3xl border border-white/[0.08] bg-[#0d211b] shadow-2xl sm:max-h-[calc(100dvh-2rem)]">
             <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
               <h3 className="text-sm font-semibold text-white">Nova loja</h3>
               <button onClick={() => setShowForm(false)} className="rounded-lg p-1.5 text-zinc-500 hover:bg-white/[0.06] hover:text-white"><X size={16} /></button>
@@ -933,7 +943,7 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
               <Field label="Nome da loja">
                 <input value={form.store_name} onChange={(e) => setForm((state) => ({ ...state, store_name: e.target.value, slug: state.slug || e.target.value }))} placeholder="Ex: TechCell" className={inputCls} />
               </Field>
-              <Field label="Slug (subdominio)" hint={`${form.slug || 'loja'}.${PLATFORM_HOST}`}>
+              <Field label="Identificador da loja" hint={storeHref(storeSlug(form.slug || form.store_name || 'loja'))}>
                 <input value={form.slug} onChange={(e) => setForm((state) => ({ ...state, slug: e.target.value }))} placeholder="mcell" className={inputCls} />
               </Field>
               <div className="grid grid-cols-2 gap-3">
@@ -1029,7 +1039,7 @@ function DetailCard({ label, value, mono }: { label: string; value: string; mono
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
       <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">{label}</p>
-      <p className={`mt-2 text-sm text-white ${mono ? 'font-mono' : ''}`}>{value}</p>
+      <p className={`mt-2 break-words text-sm text-white ${mono ? 'font-mono' : ''}`}>{value}</p>
     </div>
   )
 }

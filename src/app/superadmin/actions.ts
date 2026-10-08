@@ -147,6 +147,10 @@ function escapeXml(value: string): string {
     .replace(/>/g, '&gt;')
 }
 
+function safeAccentColor(value: string | undefined): string {
+  return value && /^#[0-9a-fA-F]{6}$/.test(value) ? value : '#79e2ad'
+}
+
 function makeHeroImage(storeName: string, accentColor: string): string {
   const safeStoreName = escapeXml(storeName)
   return toDataSvg(`
@@ -161,11 +165,11 @@ function makeHeroImage(storeName: string, accentColor: string): string {
       <rect width="1600" height="900" fill="url(#bg)" />
       <circle cx="1250" cy="180" r="220" fill="${accentColor}" fill-opacity="0.18" />
       <circle cx="280" cy="740" r="260" fill="#daf1de" fill-opacity="0.06" />
-      <text x="120" y="230" fill="#daf1de" font-family="Arial, sans-serif" font-size="48" opacity="0.72">MODUS white-label</text>
+      <text x="120" y="230" fill="#daf1de" font-family="Arial, sans-serif" font-size="48" opacity="0.72">CONTEÚDO DE EXEMPLO</text>
       <text x="120" y="360" fill="#ffffff" font-family="Arial, sans-serif" font-size="102" font-weight="700">${safeStoreName}</text>
-      <text x="120" y="455" fill="#c5d6ce" font-family="Arial, sans-serif" font-size="40">Estrutura inicial pronta para vender, captar e atender.</text>
+      <text x="120" y="455" fill="#c5d6ce" font-family="Arial, sans-serif" font-size="40">Substitua antes de publicar sua vitrine.</text>
       <rect x="120" y="560" width="360" height="86" rx="26" fill="${accentColor}" />
-      <text x="180" y="614" fill="#071311" font-family="Arial, sans-serif" font-size="34" font-weight="700">Comprar agora</text>
+      <text x="180" y="614" fill="#071311" font-family="Arial, sans-serif" font-size="34" font-weight="700">Prévia da vitrine</text>
     </svg>
   `)
 }
@@ -177,9 +181,9 @@ function makeProductImage(title: string, accentColor: string, tone: string): str
       <rect width="1200" height="1200" rx="54" fill="${tone}" />
       <rect x="120" y="120" width="960" height="960" rx="44" fill="#0d1513" stroke="${accentColor}" stroke-opacity="0.25" />
       <circle cx="920" cy="280" r="92" fill="${accentColor}" fill-opacity="0.18" />
-      <text x="120" y="220" fill="#8eb69b" font-family="Arial, sans-serif" font-size="40" letter-spacing="5">MODUS SELECT</text>
+      <text x="120" y="220" fill="#8eb69b" font-family="Arial, sans-serif" font-size="40" letter-spacing="5">PRODUTO DE EXEMPLO</text>
       <text x="120" y="560" fill="#ffffff" font-family="Arial, sans-serif" font-size="86" font-weight="700">${safeTitle}</text>
-      <text x="120" y="650" fill="#d7e2dc" font-family="Arial, sans-serif" font-size="42">Pronto para uso e vitrine imediata</text>
+      <text x="120" y="650" fill="#d7e2dc" font-family="Arial, sans-serif" font-size="42">Substitua foto, descrição e preço</text>
     </svg>
   `)
 }
@@ -217,15 +221,15 @@ async function seedStoreStarterContent(
   input: CreateStoreInput,
 ) {
   const storeName = input.store_name?.trim() || store.slug
-  const accentColor = input.accent_color || '#22c55e'
+  const accentColor = safeAccentColor(input.accent_color)
   const heroImage = makeHeroImage(storeName, accentColor)
 
   const products = [
     {
       store_id: store.id,
-      name: 'iPhone 13 128GB',
+       name: '[EXEMPLO] iPhone 13 128GB',
       slug: 'iphone-13-128gb',
-      description: 'Aparelho em excelente estado, bateria revisada e garantia da loja.',
+       description: 'Conteúdo de exemplo. Substitua descrição, preço, estoque e foto por dados reais antes de publicar.',
       price: 3490,
       promo_price: 3290,
       stock_qty: 2,
@@ -234,14 +238,14 @@ async function seedStoreStarterContent(
       condition: 'seminovo',
       images: [makeProductImage('iPhone 13', accentColor, '#14201d')],
       is_featured: true,
-      is_active: true,
+       is_active: false,
       specs: { memoria: '128GB', cor: 'Meia-noite', garantia: '90 dias' },
     },
     {
       store_id: store.id,
-      name: 'Galaxy S23 256GB',
+       name: '[EXEMPLO] Galaxy S23 256GB',
       slug: 'galaxy-s23-256gb',
-      description: 'Smartphone premium pronto para entrega com nota fiscal.',
+       description: 'Conteúdo de exemplo. Substitua descrição, preço, estoque e foto por dados reais antes de publicar.',
       price: 3290,
       stock_qty: 1,
       category: 'android',
@@ -249,37 +253,37 @@ async function seedStoreStarterContent(
       condition: 'lacrado',
       images: [makeProductImage('Galaxy S23', accentColor, '#111b1a')],
       is_featured: true,
-      is_active: true,
+       is_active: false,
       specs: { memoria: '256GB', cor: 'Preto', garantia: '12 meses' },
     },
     {
       store_id: store.id,
-      name: 'Capinha Premium MagSafe',
+       name: '[EXEMPLO] Capinha Premium MagSafe',
       slug: 'capinha-premium-magsafe',
-      description: 'Protecao reforcada com acabamento premium para linha iPhone.',
+       description: 'Conteúdo de exemplo. Confirme características, compatibilidade e preço antes de publicar.',
       price: 129,
       stock_qty: 8,
       category: 'capinha',
-      brand: 'MODUS Select',
+       brand: 'Exemplo',
       condition: 'novo',
       images: [makeProductImage('Capinha', accentColor, '#162622')],
       is_featured: false,
-      is_active: true,
+       is_active: false,
       specs: { material: 'TPU + policarbonato', compatibilidade: 'iPhone 12 ao 15' },
     },
     {
       store_id: store.id,
-      name: 'Carregador Turbo 25W',
+       name: '[EXEMPLO] Carregador Turbo 25W',
       slug: 'carregador-turbo-25w',
-      description: 'Fonte bivolt com cabo incluso para venda imediata na vitrine.',
+       description: 'Conteúdo de exemplo. Confirme características, compatibilidade e preço antes de publicar.',
       price: 99,
       stock_qty: 10,
       category: 'carregador',
-      brand: 'MODUS Select',
+       brand: 'Exemplo',
       condition: 'novo',
       images: [makeProductImage('Carregador', accentColor, '#182320')],
       is_featured: false,
-      is_active: true,
+       is_active: false,
       specs: { potencia: '25W', conexao: 'USB-C', garantia: '30 dias' },
     },
   ]
@@ -287,29 +291,29 @@ async function seedStoreStarterContent(
   const services = [
     {
       store_id: store.id,
-      name: 'Troca de tela',
-      description: 'Servico rapido para telas quebradas com garantia e teste na entrega.',
+       name: '[EXEMPLO] Troca de tela',
+       description: 'Serviço de exemplo. Defina escopo, prazo e preço reais antes de publicar.',
       price_from: 280,
       duration_minutes: 90,
-      is_active: true,
+       is_active: false,
       icon: 'Monitor',
     },
     {
       store_id: store.id,
-      name: 'Troca de bateria',
-      description: 'Substituicao com bateria nova e revisao geral do aparelho.',
+       name: '[EXEMPLO] Troca de bateria',
+       description: 'Serviço de exemplo. Defina escopo, prazo e preço reais antes de publicar.',
       price_from: 180,
       duration_minutes: 60,
-      is_active: true,
+       is_active: false,
       icon: 'Battery',
     },
     {
       store_id: store.id,
-      name: 'Limpeza e recuperacao',
-      description: 'Diagnostico de mau contato, oxidação e falhas intermitentes.',
+       name: '[EXEMPLO] Limpeza e recuperação',
+       description: 'Serviço de exemplo. Defina escopo, prazo e preço reais antes de publicar.',
       price_from: 120,
       duration_minutes: 45,
-      is_active: true,
+       is_active: false,
       icon: 'Sparkles',
     },
   ]
@@ -317,24 +321,24 @@ async function seedStoreStarterContent(
   const banners = [
     {
       store_id: store.id,
-      title: `${storeName} pronta para vender`,
-      subtitle: 'Catalogo inicial, atendimento e identidade ja publicados.',
+       title: `${storeName}: banner de exemplo`,
+       subtitle: 'Substitua por uma mensagem real antes de publicar.',
       image_url: heroImage,
-      badge: 'Lancamento',
+       badge: 'Exemplo',
       cta_text: 'Ver catalogo',
       cta_href: '/loja',
-      is_active: true,
+       is_active: false,
       order: 1,
     },
     {
       store_id: store.id,
-      title: 'Assistencia com agendamento online',
-      subtitle: 'Receba pedidos de reparo e gere servicos com mais velocidade.',
+       title: 'Agendamento: banner de exemplo',
+       subtitle: 'Confirme os serviços e horários da sua loja antes de publicar.',
       image_url: heroImage,
-      badge: 'Atendimento',
+       badge: 'Exemplo',
       cta_text: 'Agendar servico',
       cta_href: '/agendar',
-      is_active: true,
+       is_active: false,
       order: 2,
     },
   ]
@@ -343,28 +347,28 @@ async function seedStoreStarterContent(
     {
       store_id: store.id,
       image_url: products[0].images[0],
-      caption: 'Novo destaque em estoque com entrega rapida e garantia local.',
-      tag: 'Destaque',
+       caption: 'Publicação de exemplo. Substitua pelas informações reais da loja.',
+       tag: 'Exemplo',
       link: '/loja',
-      is_active: true,
+       is_active: false,
       order: 1,
     },
     {
       store_id: store.id,
       image_url: products[1].images[0],
-      caption: 'Linha premium pronta para impulsionar a vitrine logo no primeiro dia.',
-      tag: 'Novidade',
+       caption: 'Publicação de exemplo. Substitua pelas informações reais da loja.',
+       tag: 'Exemplo',
       link: '/loja',
-      is_active: true,
+       is_active: false,
       order: 2,
     },
     {
       store_id: store.id,
       image_url: products[3].images[0],
-      caption: 'Acessorios com ticket rapido para girar vendas e melhorar margem.',
-      tag: 'Oferta',
+       caption: 'Publicação de exemplo. Substitua pelas informações reais da loja.',
+       tag: 'Exemplo',
       link: '/loja',
-      is_active: true,
+       is_active: false,
       order: 3,
     },
   ]
@@ -420,6 +424,7 @@ async function ensureSuperadmin(): Promise<ActionResult | null> {
 }
 
 export async function listStores(): Promise<StoreRow[]> {
+  if (await ensureSuperadmin()) return []
   const admin = getSupabaseAdmin()
   if (!admin) return []
   const { data } = await admin
@@ -430,6 +435,7 @@ export async function listStores(): Promise<StoreRow[]> {
 }
 
 export async function listRequests(): Promise<RequestRow[]> {
+  if (await ensureSuperadmin()) return []
   const admin = getSupabaseAdmin()
   if (!admin) return []
 
@@ -516,9 +522,12 @@ export async function createStore(input: CreateStoreInput): Promise<ActionResult
   if (!PLANS[input.plan_id]) return { ok: false, error: 'Plano invalido.' }
   if (!input.admin_email) return { ok: false, error: 'E-mail do lojista e obrigatorio.' }
   const storeName = input.store_name?.trim() || slug
-  const accentColor = input.accent_color || '#22c55e'
+  const accentColor = safeAccentColor(input.accent_color)
   const starterLogo = makeStarterLogo(storeName, accentColor)
-  const cleanWhatsapp = (input.whatsapp || '').replace(/\D/g, '') || '11999999999'
+  const cleanWhatsapp = (input.whatsapp || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '')
+  if (cleanWhatsapp && !/^\d{10,11}$/.test(cleanWhatsapp)) {
+    return { ok: false, error: 'WhatsApp deve ter DDD e 10 ou 11 dígitos.' }
+  }
 
   const { data: existing } = await admin.from('stores').select('id').eq('slug', slug).maybeSingle()
   if (existing) return { ok: false, error: `O slug "${slug}" ja esta em uso.` }
@@ -544,7 +553,7 @@ export async function createStore(input: CreateStoreInput): Promise<ActionResult
     whatsapp: cleanWhatsapp,
     phone: cleanWhatsapp,
     accent_color: accentColor,
-    about: `${storeName} ja nasce com vitrine online, produtos em destaque e atendimento pronto para acelerar as primeiras vendas.`,
+    about: `A vitrine de ${storeName} está em preparação. Produtos, serviços e informações serão publicados após revisão.`,
     logo_url: starterLogo,
   })
 
@@ -602,7 +611,7 @@ export async function createStore(input: CreateStoreInput): Promise<ActionResult
   revalidatePath('/superadmin')
   return {
     ok: true,
-    message: `Loja "${slug}" criada em trial de ${TRIAL_DAYS} dias com vitrine inicial pronta.` + warning,
+    message: `Loja "${slug}" criada em trial de ${TRIAL_DAYS} dias com conteúdo demonstrativo inativo.` + warning,
     tempPassword,
     slug,
   }
