@@ -1,4 +1,5 @@
 # 📱 M CELL — Documento de Handoff Técnico
+> **Atualização MODS (08/10/2026):** este documento é histórico. A Vercel de produção usa o Supabase `qikvzzskeeahydouhkpc`, confirmado no JavaScript público do login. O projeto `ehapqacpykunwwczuahw` citado abaixo não é o destino da migração comercial atual.
 > Gerado em: junho/2026 — Para continuação por outro desenvolvedor
 
 > **Documento histórico.** Para o estado confirmado em 6 de setembro de 2026, leia

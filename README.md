@@ -1,5 +1,7 @@
 # M CELL — Sistema de Loja & Assistência Técnica
 
+> **Atualização MODS (08/10/2026):** este README descreve a configuração histórica da M CELL. A plataforma pública atual é `https://usemods.com.br`, e o JavaScript do login em produção confirma o Supabase `qikvzzskeeahydouhkpc`. Para o novo comercial, consulte `docs/comercial-mods-implementacao-2026-10-08.md`. Não aplique migrações usando o projeto antigo listado abaixo.
+
 > Sistema SaaS multi-tenant para loja de celulares. Desenvolvido em Next.js 16 + Supabase.
 
 ---

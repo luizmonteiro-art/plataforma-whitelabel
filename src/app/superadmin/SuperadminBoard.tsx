@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   ArrowRight, AlertTriangle, Check, CheckCircle2, Clock, Copy, ExternalLink,
   FileText, Inbox, KeyRound, Loader2, LogOut, MessageCircle, Plus,
@@ -412,6 +413,11 @@ export function SuperadminBoard({ stores, requests, envStatus }: Props) {
             </div>
           </div>
         </section>
+
+        <Link href="/superadmin/comercial" className="mb-8 flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-[#79e2ad]/25 bg-[#79e2ad]/10 px-5 py-3 text-sm font-semibold text-[#c9f7df] transition-colors hover:bg-[#79e2ad]/15 focus-visible:outline-2 focus-visible:outline-[#79e2ad]">
+          <span>Projetos, contratos, mensalidades e financeiro da MODS</span>
+          <ArrowRight size={18} className="shrink-0" />
+        </Link>
 
         {missingEnv.length > 0 && (
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/[0.06] px-4 py-3 text-sm text-yellow-300">

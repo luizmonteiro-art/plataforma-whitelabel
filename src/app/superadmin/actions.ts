@@ -386,7 +386,7 @@ async function seedStoreStarterContent(
   if (postsError) throw new Error('Falha ao criar feed inicial: ' + postsError.message)
 }
 
-async function ensureSuperadmin(): Promise<ActionResult | null> {
+export async function ensureSuperadmin(): Promise<{ ok: false; error: string } | null> {
   if (!SUPERADMIN_EMAIL) {
     return { ok: false, error: 'SUPERADMIN_EMAIL nao configurado no servidor.' }
   }
