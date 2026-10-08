@@ -25,9 +25,11 @@ Valores são gravados em centavos inteiros. Proposta, contrato, mensalidade cont
 
 ## Publicação
 
-O código e a migração estão preparados localmente. Antes de disponibilizar a rota em produção, aplicar a migração no Supabase `qikvzzskeeahydouhkpc` e verificar as tabelas/funções. Essa referência foi conferida na `.env.local` e nos arquivos JavaScript públicos do login atual em `plataforma-whitelabel.vercel.app`; README e HANDOFF antigos apontam a um projeto anterior. A Vercel tem as variáveis necessárias cadastradas em Production, mas os valores secretos são write-only e não foram inspecionados.
+Migração aplicada em 08/10/2026 no Supabase `qikvzzskeeahydouhkpc` pelo SQL Editor. A execução retornou sucesso. As cinco tabelas `commercial_*` foram conferidas com RLS ativo e sem privilégio de leitura direta para `anon` ou `authenticated`. As tabelas preexistentes `stores` e `store_requests` continuaram presentes. Essa referência de projeto foi conferida na `.env.local` e nos arquivos JavaScript públicos do login; README e HANDOFF antigos apontam a um projeto anterior. Os valores secretos da Vercel não foram inspecionados.
 
-Depois da migração, publicar o checkout, verificar redirecionamento sem sessão, entrada autenticada e consulta às listas. Não criar contratos ou recebimentos sintéticos na base real. Para os projetos antigos, preencher os dados a partir de contratos, comprovantes ou controles confirmados e registrar a fonte na ficha.
+Deploy de produção `dpl_Fa1qwDuyTqwEy5kkGrMRgha2kmbm` concluído com build e TypeScript aprovados; a Vercel atribuiu o alias `https://usemods.com.br`. A rota `/superadmin/comercial` redirecionou para login sem sessão no domínio próprio. Em sessão já autenticada no hostname `plataforma-whitelabel.vercel.app`, a visão geral carregou os leads existentes, e as abas Projetos, Financeiro e Mensalidades abriram com listas vazias e formulários disponíveis. A página pública `/captacao` continuou carregando em `usemods.com.br`. A entrada autenticada no domínio próprio não foi repetida porque a sessão existente está vinculada ao hostname da Vercel.
+
+Nenhum contrato, mensalidade ou recebimento sintético foi criado na base real. Para cadastrar projetos antigos, preencher os dados a partir de contratos, comprovantes ou controles confirmados e registrar a fonte na ficha.
 
 ## Próximas melhorias quando houver volume
 
